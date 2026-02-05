@@ -367,8 +367,8 @@ onUnmounted(() => {
 }
 
 .grid-header-corner {
-  background: var(--color-surface);
-  padding: 16px;
+  background: var(--color-bg);
+  padding: 12px;
   position: sticky;
   left: 0;
   top: 0;
@@ -376,33 +376,36 @@ onUnmounted(() => {
 }
 
 .grid-header {
-  background: var(--color-surface);
-  padding: 16px;
-  font-weight: 600;
-  font-size: 0.95rem;
+  background: var(--color-bg);
+  padding: 12px 16px;
+  font-weight: 500;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   gap: 8px;
   position: sticky;
   top: 0;
   z-index: 1;
+  color: var(--color-text-secondary);
+  letter-spacing: -0.01em;
 }
 
 .grid-header.is-today {
   box-shadow: inset 2px 0 0 0 var(--color-success), inset -2px 0 0 0 var(--color-success), inset 0 2px 0 0 var(--color-success);
+  color: var(--color-text);
 }
 
 .column-title {
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .column-count {
-  background: var(--color-bg);
-  color: var(--color-text-secondary);
-  font-size: 0.75rem;
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
   font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .grid-row-label {
@@ -430,7 +433,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   height: 20px;
-  background: linear-gradient(to bottom, transparent, rgba(0, 63, 110, 0.1));
+  background: linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.1));
   opacity: 0;
   transition: opacity 0.2s;
   pointer-events: none;

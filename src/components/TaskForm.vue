@@ -102,7 +102,7 @@ const handleCreateWorkstream = (wsData) => {
 
 <template>
   <div v-if="show" class="modal-overlay" @click="handleOverlayClick">
-    <div class="modal">
+    <div class="modal task-form-modal">
       <div class="modal-header">
         <h2 class="modal-title">
           {{ isEditing ? 'Edit Task' : 'Add Task' }}
@@ -110,7 +110,7 @@ const handleCreateWorkstream = (wsData) => {
         <button class="modal-close" @click="emit('close')">&times;</button>
       </div>
 
-      <form @submit.prevent="handleSubmit">
+      <form @submit.prevent="handleSubmit" class="task-form">
         <div class="modal-body">
           <div class="form-group">
             <label class="form-label" for="task-title">Title</label>
@@ -171,7 +171,7 @@ const handleCreateWorkstream = (wsData) => {
           </div>
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer-sticky">
           <button
             v-if="isEditing"
             type="button"
@@ -202,9 +202,33 @@ const handleCreateWorkstream = (wsData) => {
 </template>
 
 <style scoped>
-.modal-footer {
+.task-form-modal {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.task-form-modal .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 16px;
+}
+
+.modal-footer-sticky {
   display: flex;
   gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
 }
 
 .btn:disabled {

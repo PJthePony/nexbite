@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from 'vue'
-import { getTagColor } from '../composables/useTags'
 
 const props = defineProps({
   selectedTags: {
@@ -48,14 +47,6 @@ const handleKeydown = (e) => {
     addNewTag()
   }
 }
-
-const getTagStyle = (tag) => {
-  const color = getTagColor(tag)
-  return {
-    backgroundColor: color.bg,
-    color: color.text
-  }
-}
 </script>
 
 <template>
@@ -66,7 +57,6 @@ const getTagStyle = (tag) => {
         :key="tag"
         class="tag-option"
         :class="{ 'is-selected': isSelected(tag) }"
-        :style="getTagStyle(tag)"
         @click="toggleTag(tag)"
         type="button"
       >
@@ -97,7 +87,6 @@ const getTagStyle = (tag) => {
         v-for="tag in selectedTags"
         :key="tag"
         class="task-tag"
-        :style="getTagStyle(tag)"
       >
         {{ tag }}
         <button
@@ -115,6 +104,35 @@ const getTagStyle = (tag) => {
 <style scoped>
 .tag-picker-container {
   margin-top: 8px;
+}
+
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-option {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.tag-option:hover {
+  border-color: var(--color-border-light);
+  color: var(--color-text);
+}
+
+.tag-option.is-selected {
+  background: var(--color-text);
+  color: var(--color-surface);
+  border-color: var(--color-text);
 }
 
 .selected-tags {
@@ -136,16 +154,23 @@ const getTagStyle = (tag) => {
   display: flex;
   align-items: center;
   gap: 4px;
+  padding: 2px 8px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
 }
 
 .tag-remove {
   background: none;
   border: none;
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   font-size: 1rem;
   line-height: 1;
   cursor: pointer;
   padding: 0;
+  margin-left: 2px;
 }
 
 .tag-remove:hover {
