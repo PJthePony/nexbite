@@ -1,35 +1,57 @@
 import { ref, computed } from 'vue'
+import { supabase } from '../lib/supabase'
+import { useAuth } from './useAuth'
 import { useTasks } from './useTasks'
 import { useWeekLogic, LOCATIONS, DAY_LOCATIONS } from './useWeekLogic'
 
-const STORAGE_KEY = 'weekly-task-manager-reviews'
-
-function loadReviewState() {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : {
-      lastWeeklyReview: null,
-      lastDailyReview: null,
-      lastWeekStart: null
-    }
-  } catch {
-    return {
-      lastWeeklyReview: null,
-      lastDailyReview: null,
-      lastWeekStart: null
-    }
-  }
-}
-
-function saveReviewState(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-}
+const reviewState = ref({
+  lastWeeklyReview: null,
+  lastDailyReview: null,
+  lastWeekStart: null
+})
+const reviewLoaded = ref(false)
 
 export function useReviews() {
+  const { user } = useAuth()
   const { tasks, bulkMoveToLocation, bulkDelete } = useTasks()
   const { getCurrentWeekStart, isNewWeek, isNewDay, currentDayLocation, getPriorDayLocations } = useWeekLogic()
 
-  const reviewState = ref(loadReviewState())
+  const getUserId = () => user.value?.id
+
+  // Load review state from Supabase
+  const loadReviewState = async () => {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('user_id', getUserId())
+      .single()
+
+    if (data) {
+      reviewState.value = {
+        lastWeeklyReview: data.last_weekly_review,
+        lastDailyReview: data.last_daily_review,
+        lastWeekStart: data.last_week_start
+      }
+    }
+    // If no data or error (no row yet), keep defaults
+    reviewLoaded.value = true
+  }
+
+  // Save review state to Supabase
+  const saveReviewState = async () => {
+    const { error } = await supabase
+      .from('reviews')
+      .upsert({
+        user_id: getUserId(),
+        last_weekly_review: reviewState.value.lastWeeklyReview,
+        last_daily_review: reviewState.value.lastDailyReview,
+        last_week_start: reviewState.value.lastWeekStart
+      })
+
+    if (error) {
+      console.error('Failed to save review state:', error)
+    }
+  }
 
   const needsWeeklyReview = computed(() => {
     return isNewWeek(reviewState.value.lastWeekStart)
@@ -72,21 +94,21 @@ export function useReviews() {
     )
   }
 
-  const performWeeklyRollover = () => {
+  const performWeeklyRollover = async () => {
     // Move "Next Week" tasks to "This Week"
     const nextWeekTasks = tasks.value.filter(t =>
       t.location === LOCATIONS.NEXT_WEEK
     )
-    bulkMoveToLocation(nextWeekTasks.map(t => t.id), LOCATIONS.THIS_WEEK)
+    await bulkMoveToLocation(nextWeekTasks.map(t => t.id), LOCATIONS.THIS_WEEK)
 
     // Move incomplete day tasks to "This Week"
     const incompleteDayTasks = tasks.value.filter(t =>
       DAY_LOCATIONS.includes(t.location) && !t.completed
     )
-    bulkMoveToLocation(incompleteDayTasks.map(t => t.id), LOCATIONS.THIS_WEEK)
+    await bulkMoveToLocation(incompleteDayTasks.map(t => t.id), LOCATIONS.THIS_WEEK)
   }
 
-  const completeWeeklyReview = (laterDecisions) => {
+  const completeWeeklyReview = async (laterDecisions) => {
     // laterDecisions is an object: { taskId: 'keep' | 'this-week' | 'delete' }
     const toThisWeek = []
     const toDelete = []
@@ -101,21 +123,21 @@ export function useReviews() {
     })
 
     if (toThisWeek.length > 0) {
-      bulkMoveToLocation(toThisWeek, LOCATIONS.THIS_WEEK)
+      await bulkMoveToLocation(toThisWeek, LOCATIONS.THIS_WEEK)
     }
 
     if (toDelete.length > 0) {
-      bulkDelete(toDelete)
+      await bulkDelete(toDelete)
     }
 
     // Update review state
     reviewState.value.lastWeeklyReview = new Date().toISOString()
     reviewState.value.lastWeekStart = getCurrentWeekStart()
     reviewState.value.lastDailyReview = new Date().toISOString().split('T')[0]
-    saveReviewState(reviewState.value)
+    await saveReviewState()
   }
 
-  const completeDailyReview = (decisions) => {
+  const completeDailyReview = async (decisions) => {
     // decisions is an object: { taskId: 'today' | 'this-week' | 'later' | 'delete' }
     const toToday = []
     const toThisWeek = []
@@ -140,24 +162,24 @@ export function useReviews() {
     })
 
     if (toToday.length > 0) {
-      bulkMoveToLocation(toToday, currentDayLocation.value)
+      await bulkMoveToLocation(toToday, currentDayLocation.value)
     }
 
     if (toThisWeek.length > 0) {
-      bulkMoveToLocation(toThisWeek, LOCATIONS.THIS_WEEK)
+      await bulkMoveToLocation(toThisWeek, LOCATIONS.THIS_WEEK)
     }
 
     if (toLater.length > 0) {
-      bulkMoveToLocation(toLater, LOCATIONS.LATER)
+      await bulkMoveToLocation(toLater, LOCATIONS.LATER)
     }
 
     if (toDelete.length > 0) {
-      bulkDelete(toDelete)
+      await bulkDelete(toDelete)
     }
 
     // Update review state
     reviewState.value.lastDailyReview = new Date().toISOString().split('T')[0]
-    saveReviewState(reviewState.value)
+    await saveReviewState()
   }
 
   return {
@@ -169,6 +191,7 @@ export function useReviews() {
     getDailyRolloverTasks,
     performWeeklyRollover,
     completeWeeklyReview,
-    completeDailyReview
+    completeDailyReview,
+    loadReviewState
   }
 }

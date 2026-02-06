@@ -1,38 +1,95 @@
 import { ref, computed, watch } from 'vue'
-
-const STORAGE_KEY = 'weekly-task-manager-tasks'
+import { supabase } from '../lib/supabase'
+import { useAuth } from './useAuth'
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
 }
 
-function loadFromStorage() {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY)
-    return data ? JSON.parse(data) : []
-  } catch {
-    return []
+// Map snake_case DB columns to camelCase JS properties
+function mapDbToLocal(dbTask) {
+  return {
+    id: dbTask.id,
+    title: dbTask.title,
+    notes: dbTask.notes,
+    completed: dbTask.completed,
+    location: dbTask.location,
+    workstream: dbTask.workstream,
+    tags: dbTask.tags || [],
+    createdAt: dbTask.created_at,
+    completedAt: dbTask.completed_at,
+    sortOrder: dbTask.sort_order,
+    parentTaskId: dbTask.parent_task_id,
+    biteTaskIds: [] // derived after load
   }
 }
 
-function saveToStorage(tasks) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
+// Map camelCase JS properties to snake_case DB columns
+function mapLocalToDb(task, userId) {
+  return {
+    id: task.id,
+    user_id: userId,
+    title: task.title,
+    notes: task.notes,
+    completed: task.completed,
+    location: task.location,
+    workstream: task.workstream,
+    tags: task.tags,
+    created_at: task.createdAt,
+    completed_at: task.completedAt,
+    sort_order: task.sortOrder,
+    parent_task_id: task.parentTaskId
+  }
 }
 
-const tasks = ref(loadFromStorage())
+// Derive biteTaskIds from parentTaskId references
+function refreshBiteTaskIds(tasksList) {
+  const map = {}
+  tasksList.forEach(t => {
+    if (t.parentTaskId) {
+      if (!map[t.parentTaskId]) map[t.parentTaskId] = []
+      map[t.parentTaskId].push(t.id)
+    }
+  })
+  tasksList.forEach(t => {
+    t.biteTaskIds = map[t.id] || []
+  })
+}
 
-watch(tasks, (newTasks) => {
-  saveToStorage(newTasks)
-}, { deep: true })
+// Singleton state
+const tasks = ref([])
+const isLoaded = ref(false)
 
 export function useTasks() {
+  const { user } = useAuth()
+
+  const getUserId = () => user.value?.id
+
+  // Load all tasks from Supabase
+  const loadTasks = async () => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('sort_order', { ascending: true })
+
+    if (error) {
+      console.error('Failed to load tasks:', error)
+      return
+    }
+
+    tasks.value = (data || []).map(mapDbToLocal)
+    refreshBiteTaskIds(tasks.value)
+    isLoaded.value = true
+  }
+
   const getNextSortOrder = (location) => {
     const locationTasks = tasks.value.filter(t => t.location === location)
     if (locationTasks.length === 0) return 0
     return Math.max(...locationTasks.map(t => t.sortOrder ?? 0)) + 1
   }
 
-  const addTask = (title, location, notes = '', tags = [], workstream = null) => {
+  const addTask = async (title, location, notes = '', tags = [], workstream = null) => {
+    const userId = getUserId()
     const task = {
       id: generateId(),
       title,
@@ -47,7 +104,20 @@ export function useTasks() {
       parentTaskId: null,
       biteTaskIds: []
     }
+
+    // Optimistic update
     tasks.value.push(task)
+
+    // Persist to Supabase
+    const { error } = await supabase
+      .from('tasks')
+      .insert(mapLocalToDb(task, userId))
+
+    if (error) {
+      console.error('Failed to save task:', error)
+      tasks.value = tasks.value.filter(t => t.id !== task.id)
+    }
+
     return task
   }
 
@@ -55,7 +125,8 @@ export function useTasks() {
     return tasks.value.find(t => t.id === id) || null
   }
 
-  const biteTask = (parentId, biteTitle, biteLocation, parentNewLocation) => {
+  const biteTask = async (parentId, biteTitle, biteLocation, parentNewLocation) => {
+    const userId = getUserId()
     const parent = tasks.value.find(t => t.id === parentId)
     if (!parent) return null
 
@@ -74,42 +145,127 @@ export function useTasks() {
       parentTaskId: parentId,
       biteTaskIds: []
     }
-    tasks.value.push(bite)
 
-    // Update the parent: add bite reference and move it
-    if (!parent.biteTaskIds) parent.biteTaskIds = []
-    parent.biteTaskIds.push(bite.id)
+    // Optimistic update
+    tasks.value.push(bite)
     parent.location = parentNewLocation
+    refreshBiteTaskIds(tasks.value)
+
+    // Persist bite task and parent update
+    const { error: biteError } = await supabase
+      .from('tasks')
+      .insert(mapLocalToDb(bite, userId))
+
+    if (biteError) {
+      console.error('Failed to save bite task:', biteError)
+    }
+
+    const { error: parentError } = await supabase
+      .from('tasks')
+      .update({ location: parentNewLocation })
+      .eq('id', parentId)
+
+    if (parentError) {
+      console.error('Failed to update parent task:', parentError)
+    }
 
     return bite
   }
 
-  const updateTask = (id, updates) => {
+  const updateTask = async (id, updates) => {
     const index = tasks.value.findIndex(t => t.id === id)
-    if (index !== -1) {
-      tasks.value[index] = { ...tasks.value[index], ...updates }
+    if (index === -1) return
+
+    // Optimistic update
+    const oldTask = { ...tasks.value[index] }
+    tasks.value[index] = { ...tasks.value[index], ...updates }
+
+    // Build DB update object (map camelCase to snake_case)
+    const dbUpdates = {}
+    if ('title' in updates) dbUpdates.title = updates.title
+    if ('notes' in updates) dbUpdates.notes = updates.notes
+    if ('completed' in updates) dbUpdates.completed = updates.completed
+    if ('location' in updates) dbUpdates.location = updates.location
+    if ('workstream' in updates) dbUpdates.workstream = updates.workstream
+    if ('tags' in updates) dbUpdates.tags = updates.tags
+    if ('completedAt' in updates) dbUpdates.completed_at = updates.completedAt
+    if ('sortOrder' in updates) dbUpdates.sort_order = updates.sortOrder
+    if ('parentTaskId' in updates) dbUpdates.parent_task_id = updates.parentTaskId
+
+    const { error } = await supabase
+      .from('tasks')
+      .update(dbUpdates)
+      .eq('id', id)
+
+    if (error) {
+      console.error('Failed to update task:', error)
+      // Rollback
+      tasks.value[index] = oldTask
     }
   }
 
-  const deleteTask = (id) => {
+  const deleteTask = async (id) => {
     const index = tasks.value.findIndex(t => t.id === id)
-    if (index !== -1) {
-      tasks.value.splice(index, 1)
+    if (index === -1) return
+
+    // Optimistic update
+    const removed = tasks.value.splice(index, 1)[0]
+    refreshBiteTaskIds(tasks.value)
+
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Failed to delete task:', error)
+      // Rollback
+      tasks.value.splice(index, 0, removed)
+      refreshBiteTaskIds(tasks.value)
     }
   }
 
-  const toggleTask = (id) => {
+  const toggleTask = async (id) => {
     const task = tasks.value.find(t => t.id === id)
-    if (task) {
-      task.completed = !task.completed
-      task.completedAt = task.completed ? Date.now() : null
+    if (!task) return
+
+    // Optimistic update
+    const wasCompleted = task.completed
+    task.completed = !task.completed
+    task.completedAt = task.completed ? Date.now() : null
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        completed: task.completed,
+        completed_at: task.completedAt
+      })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Failed to toggle task:', error)
+      // Rollback
+      task.completed = wasCompleted
+      task.completedAt = wasCompleted ? task.completedAt : null
     }
   }
 
-  const moveTask = (id, newLocation) => {
+  const moveTask = async (id, newLocation) => {
     const task = tasks.value.find(t => t.id === id)
-    if (task) {
-      task.location = newLocation
+    if (!task) return
+
+    const oldLocation = task.location
+    // Optimistic update
+    task.location = newLocation
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({ location: newLocation })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Failed to move task:', error)
+      task.location = oldLocation
     }
   }
 
@@ -185,43 +341,110 @@ export function useTasks() {
     )
   }
 
-  const bulkMoveToLocation = (taskIds, location) => {
+  const bulkMoveToLocation = async (taskIds, location) => {
+    // Optimistic update
     taskIds.forEach(id => {
       const task = tasks.value.find(t => t.id === id)
       if (task) {
         task.location = location
       }
     })
+
+    // Batch update in Supabase
+    const updates = taskIds.map(id => ({
+      id,
+      user_id: getUserId(),
+      location
+    }))
+
+    const { error } = await supabase
+      .from('tasks')
+      .upsert(updates, { onConflict: 'id' })
+
+    if (error) {
+      console.error('Failed to bulk move tasks:', error)
+    }
   }
 
-  const bulkDelete = (taskIds) => {
+  const bulkDelete = async (taskIds) => {
+    // Optimistic update
+    const removed = tasks.value.filter(t => taskIds.includes(t.id))
     tasks.value = tasks.value.filter(t => !taskIds.includes(t.id))
+    refreshBiteTaskIds(tasks.value)
+
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .in('id', taskIds)
+
+    if (error) {
+      console.error('Failed to bulk delete tasks:', error)
+      // Rollback
+      tasks.value.push(...removed)
+      refreshBiteTaskIds(tasks.value)
+    }
   }
 
-  const reorderTasks = (location, orderedTaskIds, workstream = undefined) => {
-    // Update sortOrder for all tasks in the given location based on new order
-    // If workstream is provided, also update the workstream
+  const reorderTasks = async (location, orderedTaskIds, workstream = undefined) => {
+    const userId = getUserId()
+
+    // Optimistic update
     orderedTaskIds.forEach((taskId, index) => {
       const task = tasks.value.find(t => t.id === taskId)
       if (task) {
         task.sortOrder = index
-        task.location = location // Ensure location is updated for moved tasks
+        task.location = location
         if (workstream !== undefined) {
           task.workstream = workstream
         }
       }
     })
+
+    // Batch update to Supabase
+    const updates = orderedTaskIds.map((taskId, index) => {
+      const update = {
+        id: taskId,
+        user_id: userId,
+        sort_order: index,
+        location
+      }
+      if (workstream !== undefined) {
+        update.workstream = workstream
+      }
+      return update
+    })
+
+    const { error } = await supabase
+      .from('tasks')
+      .upsert(updates, { onConflict: 'id' })
+
+    if (error) {
+      console.error('Failed to reorder tasks:', error)
+    }
   }
 
-  const setWorkstream = (taskId, workstream) => {
+  const setWorkstream = async (taskId, workstream) => {
     const task = tasks.value.find(t => t.id === taskId)
-    if (task) {
-      task.workstream = workstream
+    if (!task) return
+
+    const oldWorkstream = task.workstream
+    task.workstream = workstream
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({ workstream })
+      .eq('id', taskId)
+
+    if (error) {
+      console.error('Failed to set workstream:', error)
+      task.workstream = oldWorkstream
     }
   }
 
   return {
     tasks,
+    isLoaded,
+    loadTasks,
     addTask,
     updateTask,
     deleteTask,
