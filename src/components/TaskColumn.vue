@@ -22,10 +22,14 @@ const props = defineProps({
   hideWhenEmpty: {
     type: Boolean,
     default: false
+  },
+  allTasks: {
+    type: Array,
+    default: () => []
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'update:tasks', 'createWorkstream'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'createWorkstream', 'multi-drop'])
 
 const taskCount = computed(() => {
   return props.tasks.filter(t => !t.completed).length
@@ -103,11 +107,15 @@ const handleAdd = (location, workstream) => {
         :workstream-color="getWorkstreamColor(ws)"
         :tasks="getTasksForWorkstream(ws)"
         :location="column.id"
+        :all-tasks="allTasks"
+        :is-today="isToday"
         @add="handleAdd"
         @toggle="emit('toggle', $event)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
+        @bite="emit('bite', $event)"
         @update:tasks="handleUpdateTasks(ws, $event)"
+        @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
       />
     </div>
   </div>

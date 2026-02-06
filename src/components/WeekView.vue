@@ -13,10 +13,14 @@ const props = defineProps({
   workstreams: {
     type: Array,
     default: () => []
+  },
+  allTasks: {
+    type: Array,
+    default: () => []
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'move', 'reorder', 'createWorkstream', 'reorderWorkstreams'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'move', 'reorder', 'createWorkstream', 'reorderWorkstreams', 'multi-drop'])
 
 const { isToday, currentDayLocation } = useWeekLogic()
 
@@ -261,12 +265,16 @@ onUnmounted(() => {
       :workstream-color="null"
       :tasks="getTasksForCell(column.id, null)"
       :location="column.id"
+      :all-tasks="allTasks"
+      :is-today="isToday(column.id)"
       :class="{ 'is-today': isToday(column.id), 'is-last-row': orderedWorkstreamNames.length === 0 }"
       @add="(location, workstream) => emit('add', location, workstream)"
       @toggle="emit('toggle', $event)"
       @edit="emit('edit', $event)"
       @delete="emit('delete', $event)"
+      @bite="emit('bite', $event)"
       @update:tasks="(tasks) => handleUpdateTasks(column.id, tasks, null)"
+      @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
     />
 
     <!-- Draggable workstream rows -->
@@ -297,12 +305,16 @@ onUnmounted(() => {
         :workstream-color="getWorkstreamColor(wsName)"
         :tasks="getTasksForCell(column.id, wsName)"
         :location="column.id"
+        :all-tasks="allTasks"
+        :is-today="isToday(column.id)"
         :class="{ 'is-today': isToday(column.id), 'is-last-row': isLastRow(wsName) }"
         @add="(location, workstream) => emit('add', location, workstream)"
         @toggle="emit('toggle', $event)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
+        @bite="emit('bite', $event)"
         @update:tasks="(tasks) => handleUpdateTasks(column.id, tasks, wsName)"
+        @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
       />
     </template>
     </div>
@@ -327,12 +339,15 @@ onUnmounted(() => {
         :tasks="tasksByLocation[column.id] || []"
         :is-today="isToday(column.id)"
         :workstreams="workstreams"
+        :all-tasks="allTasks"
         @add="(location, workstream) => emit('add', location, workstream)"
         @toggle="emit('toggle', $event)"
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
+        @bite="emit('bite', $event)"
         @update:tasks="(tasks, ws) => handleUpdateTasks(column.id, tasks, ws)"
         @create-workstream="emit('createWorkstream', $event)"
+        @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
       />
     </div>
 

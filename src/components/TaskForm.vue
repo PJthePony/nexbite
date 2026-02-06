@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import TagPicker from './TagPicker.vue'
 import WorkstreamPicker from './WorkstreamPicker.vue'
 import { ALL_COLUMNS } from '../composables/useWeekLogic'
@@ -28,10 +28,21 @@ const props = defineProps({
   workstreams: {
     type: Array,
     default: () => []
+  },
+  parentTask: {
+    type: Object,
+    default: null
+  },
+  biteTasks: {
+    type: Array,
+    default: () => []
   }
 })
 
-const emit = defineEmits(['close', 'save', 'delete', 'createWorkstream'])
+const emit = defineEmits(['close', 'save', 'delete', 'createWorkstream', 'bite', 'editLinked'])
+
+const isBite = computed(() => props.task && !!props.task.parentTaskId)
+const hasBites = computed(() => props.biteTasks.length > 0)
 
 const title = ref('')
 const notes = ref('')
@@ -169,6 +180,38 @@ const handleCreateWorkstream = (wsData) => {
               :available-tags="availableTags"
             />
           </div>
+
+          <!-- Linked tasks info -->
+          <div v-if="isEditing && isBite && parentTask" class="form-group linked-tasks-section">
+            <label class="form-label">Parent Task</label>
+            <div
+              class="linked-task-item"
+              @click.prevent="emit('editLinked', parentTask); emit('close')"
+            >
+              <span class="linked-task-title">{{ parentTask.title }}</span>
+              <span class="linked-task-arrow">&rarr;</span>
+            </div>
+          </div>
+
+          <div v-if="isEditing && hasBites" class="form-group linked-tasks-section">
+            <label class="form-label">Bites</label>
+            <div
+              v-for="bite in biteTasks"
+              :key="bite.id"
+              class="linked-task-item"
+              :class="{ 'is-completed': bite.completed }"
+              @click.prevent="emit('editLinked', bite); emit('close')"
+            >
+              <input
+                type="checkbox"
+                class="linked-task-checkbox"
+                :checked="bite.completed"
+                disabled
+              />
+              <span class="linked-task-title">{{ bite.title }}</span>
+              <span class="linked-task-arrow">&rarr;</span>
+            </div>
+          </div>
         </div>
 
         <div class="modal-footer-sticky">
@@ -179,6 +222,14 @@ const handleCreateWorkstream = (wsData) => {
             @click="handleDelete"
           >
             Delete
+          </button>
+          <button
+            v-if="isEditing"
+            type="button"
+            class="btn btn-bite"
+            @click="emit('bite', task); emit('close')"
+          >
+            Take a Bite
           </button>
           <div style="flex: 1"></div>
           <button
@@ -242,5 +293,59 @@ select.form-input {
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
+}
+
+.linked-tasks-section {
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.linked-task-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.linked-task-item:hover {
+  background: var(--color-border);
+}
+
+.linked-task-item.is-completed .linked-task-title {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+.linked-task-checkbox {
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  accent-color: var(--color-primary);
+}
+
+.linked-task-title {
+  flex: 1;
+  font-size: 0.85rem;
+  word-break: break-word;
+}
+
+.linked-task-arrow {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.btn-bite {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-bite:hover {
+  background: var(--color-border);
 }
 </style>

@@ -231,6 +231,18 @@ input, textarea {
   color: var(--color-text-muted);
 }
 
+.task-item.is-compact {
+  padding: 6px 10px;
+}
+
+.task-item.is-compact .task-title {
+  font-size: 0.8rem;
+}
+
+.task-item.is-compact .task-notes-indicator {
+  font-size: 0.65rem;
+}
+
 .task-header {
   display: flex;
   align-items: flex-start;
@@ -889,6 +901,35 @@ input, textarea {
   }
 }
 
+/* Bite indicators on task cards */
+.task-bite-indicator {
+  font-size: 0.7rem;
+  margin-top: 4px;
+  padding: 2px 0;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-bite-indicator.bite-child {
+  font-style: italic;
+}
+
+.task-bite-indicator.bite-parent {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.task-action-btn.bite {
+  color: var(--color-text-muted);
+}
+
+.task-action-btn.bite:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
 /* Drag and drop ghost */
 .sortable-ghost {
   opacity: 0.4;
@@ -900,4 +941,74 @@ input, textarea {
 
 .sortable-drag {
   opacity: 1 !important;
+}
+
+/* Multi-select */
+.task-item.is-selected {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.05) !important;
+}
+
+.task-item.is-faded-for-drag {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Drop target highlight */
+.cell-tasks:has(.sortable-ghost),
+.workstream-tasks:has(.sortable-ghost) {
+  background: rgba(59, 130, 246, 0.06);
+  border-radius: var(--radius-sm);
+  outline: 2px dashed rgba(59, 130, 246, 0.3);
+  outline-offset: -2px;
+}
+
+.multi-drag-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-align: center;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.select-mode .task-item {
+  cursor: pointer;
+}
+
+.select-mode-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: badge-enter 0.15s ease-out;
+}
+
+.select-mode-badge .select-count {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+}
+
+@keyframes badge-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

@@ -1,7 +1,11 @@
 <script setup>
 import { computed } from 'vue'
+import Sortable from 'sortablejs'
 import draggable from 'vuedraggable'
 import TaskItem from './TaskItem.vue'
+import { useMultiSelect } from '../composables/useMultiSelect'
+
+const { selectedTaskIds, startDrag, endDrag } = useMultiSelect()
 
 const props = defineProps({
   workstream: {
@@ -19,10 +23,28 @@ const props = defineProps({
   location: {
     type: String,
     required: true
+  },
+  allTasks: {
+    type: Array,
+    default: () => []
+  },
+  isToday: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'update:tasks'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'multi-drop'])
+
+const getParentTask = (task) => {
+  if (!task.parentTaskId) return null
+  return props.allTasks.find(t => t.id === task.parentTaskId) || null
+}
+
+const getBiteCount = (task) => {
+  if (!task.biteTaskIds || task.biteTaskIds.length === 0) return 0
+  return task.biteTaskIds.length
+}
 
 const localTasks = computed({
   get: () => props.tasks,
@@ -35,6 +57,34 @@ const localTasks = computed({
     emit('update:tasks', updatedTasks)
   }
 })
+
+const handleDragStart = (evt) => {
+  const taskId = localTasks.value[evt.oldIndex]?.id
+  if (taskId) startDrag(taskId)
+
+  // Modify the fallback ghost to show "N tasks" for multi-select drags
+  if (taskId && selectedTaskIds.value.has(taskId) && selectedTaskIds.value.size > 1) {
+    const ghost = Sortable.ghost
+    if (ghost) {
+      const count = selectedTaskIds.value.size
+      ghost.innerHTML = `<div class="multi-drag-label">${count} ${count === 1 ? 'task' : 'tasks'}</div>`
+    }
+  }
+}
+
+const handleDragEnd = () => {
+  endDrag()
+}
+
+const handleDragChange = (evt) => {
+  // Fires when a task is added to this cell from another cell
+  if (evt.added && selectedTaskIds.value.size > 0) {
+    const addedTask = evt.added.element
+    if (selectedTaskIds.value.has(addedTask.id)) {
+      emit('multi-drop', props.location, props.workstream, addedTask.id)
+    }
+  }
+}
 
 const cellStyle = computed(() => {
   if (props.workstreamColor) {
@@ -60,15 +110,23 @@ const handleAdd = () => {
       ghost-class="sortable-ghost"
       chosen-class="sortable-chosen"
       drag-class="sortable-drag"
+      :force-fallback="true"
       :animation="150"
+      @start="handleDragStart"
+      @end="handleDragEnd"
+      @change="handleDragChange"
     >
       <template #item="{ element }">
         <TaskItem
           :task="element"
           :workstream-color="workstreamColor"
+          :parent-task="getParentTask(element)"
+          :bite-count="getBiteCount(element)"
+          :compact="!isToday"
           @toggle="emit('toggle', $event)"
           @edit="emit('edit', $event)"
           @delete="emit('delete', $event)"
+          @bite="emit('bite', $event)"
         />
       </template>
     </draggable>

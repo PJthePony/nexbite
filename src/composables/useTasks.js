@@ -43,10 +43,45 @@ export function useTasks() {
       tags,
       createdAt: Date.now(),
       completedAt: null,
-      sortOrder: getNextSortOrder(location)
+      sortOrder: getNextSortOrder(location),
+      parentTaskId: null,
+      biteTaskIds: []
     }
     tasks.value.push(task)
     return task
+  }
+
+  const getTaskById = (id) => {
+    return tasks.value.find(t => t.id === id) || null
+  }
+
+  const biteTask = (parentId, biteTitle, biteLocation, parentNewLocation) => {
+    const parent = tasks.value.find(t => t.id === parentId)
+    if (!parent) return null
+
+    // Create the bite task, inheriting workstream and tags from parent
+    const bite = {
+      id: generateId(),
+      title: biteTitle,
+      notes: '',
+      completed: false,
+      location: biteLocation,
+      workstream: parent.workstream,
+      tags: [...(parent.tags || [])],
+      createdAt: Date.now(),
+      completedAt: null,
+      sortOrder: getNextSortOrder(biteLocation),
+      parentTaskId: parentId,
+      biteTaskIds: []
+    }
+    tasks.value.push(bite)
+
+    // Update the parent: add bite reference and move it
+    if (!parent.biteTaskIds) parent.biteTaskIds = []
+    parent.biteTaskIds.push(bite.id)
+    parent.location = parentNewLocation
+
+    return bite
   }
 
   const updateTask = (id, updates) => {
@@ -193,6 +228,8 @@ export function useTasks() {
     toggleTask,
     moveTask,
     setWorkstream,
+    getTaskById,
+    biteTask,
     getTasksByLocation,
     getFilteredTasks,
     searchTasks,
