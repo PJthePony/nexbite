@@ -35,7 +35,7 @@ const {
 } = useTasks()
 
 const { recentTags, allTags } = useTags()
-const { allWorkstreams, addWorkstream, reorderWorkstreams, deleteWorkstream, loadWorkstreams, isLoaded: workstreamsLoaded } = useWorkstreams()
+const { allWorkstreams, addWorkstream, updateWorkstream, reorderWorkstreams, deleteWorkstream, loadWorkstreams, isLoaded: workstreamsLoaded } = useWorkstreams()
 const { isToday, currentDayLocation } = useWeekLogic()
 const {
   needsWeeklyReview,
@@ -311,6 +311,10 @@ const handleReorderWorkstreams = (orderedNames) => {
   reorderWorkstreams(orderedNames)
 }
 
+const handleUpdateWorkstreamColor = (wsName, color) => {
+  updateWorkstream(wsName, { color })
+}
+
 // Bite handlers
 const handleBiteTask = (task) => {
   biteParentTask.value = task
@@ -410,6 +414,7 @@ watch(tasks, () => {
         @move="handleMoveTask"
         @reorder="handleReorder"
         @reorder-workstreams="handleReorderWorkstreams"
+        @update-workstream-color="handleUpdateWorkstreamColor"
         @multi-drop="handleMultiDrop"
       />
     </main>

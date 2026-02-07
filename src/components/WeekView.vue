@@ -4,6 +4,7 @@ import draggable from 'vuedraggable'
 import WorkstreamCell from './WorkstreamCell.vue'
 import TaskColumn from './TaskColumn.vue'
 import { useWeekLogic, ALL_COLUMNS } from '../composables/useWeekLogic'
+import { WORKSTREAM_COLORS } from '../composables/useWorkstreams'
 
 const props = defineProps({
   tasksByLocation: {
@@ -20,7 +21,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'move', 'reorder', 'createWorkstream', 'reorderWorkstreams', 'multi-drop'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'move', 'reorder', 'createWorkstream', 'reorderWorkstreams', 'multi-drop', 'update-workstream-color'])
 
 const { isToday, currentDayLocation } = useWeekLogic()
 
@@ -188,6 +189,26 @@ const handleDropOnTasks = () => {
   draggedWorkstream.value = null
 }
 
+// Workstream color editing
+const editingColorWorkstream = ref(null)
+
+const toggleColorPicker = (wsName) => {
+  if (editingColorWorkstream.value === wsName) {
+    editingColorWorkstream.value = null
+  } else {
+    editingColorWorkstream.value = wsName
+  }
+}
+
+const selectWorkstreamColor = (wsName, color) => {
+  emit('update-workstream-color', wsName, { bg: color.bg, text: color.text })
+  editingColorWorkstream.value = null
+}
+
+const closeColorPicker = () => {
+  editingColorWorkstream.value = null
+}
+
 const gridTemplateColumns = computed(() => {
   // workstream label column + one column per day
   return `120px repeat(${visibleColumns.value.length}, minmax(220px, 1fr))`
@@ -218,6 +239,7 @@ const scrollToToday = () => {
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', checkMobile)
+  window.addEventListener('click', closeColorPicker)
 
   // Scroll to today after DOM is ready
   nextTick(() => {
@@ -227,6 +249,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+  window.removeEventListener('click', closeColorPicker)
 })
 </script>
 
@@ -294,7 +317,22 @@ onUnmounted(() => {
         @drop="handleDrop($event, wsName)"
       >
         <span class="drag-handle">⋮⋮</span>
-        <span class="workstream-label">{{ wsName }}</span>
+        <span class="workstream-label" @click.stop="toggleColorPicker(wsName)">{{ wsName }}</span>
+
+        <!-- Color picker popover -->
+        <div v-if="editingColorWorkstream === wsName" class="ws-color-popover" @click.stop>
+          <div class="ws-color-options">
+            <button
+              v-for="(color, index) in WORKSTREAM_COLORS"
+              :key="index"
+              class="ws-color-option"
+              :class="{ 'is-selected': getWorkstreamColor(wsName)?.bg === color.bg }"
+              :style="{ backgroundColor: color.bg, borderColor: color.text }"
+              :title="color.name"
+              @click.stop="selectWorkstreamColor(wsName, color)"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Cells for each column -->
@@ -488,6 +526,53 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   writing-mode: horizontal-tb;
+}
+
+/* Workstream color picker */
+.grid-row-label {
+  position: relative;
+}
+
+.workstream-label {
+  cursor: pointer;
+}
+
+.ws-color-popover {
+  position: absolute;
+  top: 100%;
+  left: 8px;
+  z-index: 10;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 8px;
+  min-width: 140px;
+}
+
+.ws-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ws-color-option {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.ws-color-option:hover {
+  transform: scale(1.2);
+}
+
+.ws-color-option.is-selected {
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px currentColor;
 }
 
 .week-grid :deep(.workstream-cell) {
