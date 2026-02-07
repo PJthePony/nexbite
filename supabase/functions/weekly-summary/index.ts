@@ -44,16 +44,21 @@ Deno.serve(async (req: Request) => {
     // Initialize Supabase admin client (bypasses RLS)
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: {
+        headers: { Authorization: `Bearer ${supabaseServiceKey}` },
+      },
+    });
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY")!;
     const mailgunKey = Deno.env.get("MAILGUN_API_KEY")!;
     const mailgunDomain = Deno.env.get("MAILGUN_DOMAIN")!;
 
     // Get all distinct user IDs from tasks
-    const { data: userRows, error: usersError } = await supabase
+    const { data: userRows, error: usersError, count } = await supabase
       .from("tasks")
-      .select("user_id")
+      .select("user_id", { count: "exact" })
       .limit(1000);
 
     if (usersError) {
@@ -127,6 +132,16 @@ Deno.serve(async (req: Request) => {
             t.completed && t.completed_at && t.completed_at >= sevenDaysAgo
         );
 
+        // Tasks completed in the PRIOR week (7-14 days ago) for comparison
+        const fourteenDaysAgo = sevenDaysAgo - 7 * 24 * 60 * 60 * 1000;
+        const completedLastWeek = tasks.filter(
+          (t) =>
+            t.completed &&
+            t.completed_at &&
+            t.completed_at >= fourteenDaysAgo &&
+            t.completed_at < sevenDaysAgo
+        );
+
         // Tasks created in the past 7 days
         const createdThisWeek = tasks.filter(
           (t) => t.created_at && t.created_at >= sevenDaysAgo
@@ -134,6 +149,13 @@ Deno.serve(async (req: Request) => {
 
         // Pending tasks (not completed)
         const pendingTasks = tasks.filter((t) => !t.completed);
+
+        // Upcoming tasks — things slotted for next-week or this-week that aren't done
+        const upcomingTasks = tasks.filter(
+          (t) =>
+            !t.completed &&
+            (t.location === "next-week" || t.location === "this-week")
+        );
 
         if (completedThisWeek.length === 0) {
           console.log(`User ${userId} has 0 completions, skipping`);
@@ -159,6 +181,22 @@ Deno.serve(async (req: Request) => {
           byWorkstream[ws].push(t);
         });
 
+        // Group upcoming tasks by workstream
+        const upcomingByWorkstream: Record<string, Task[]> = {};
+        upcomingTasks.forEach((t) => {
+          const ws = t.workstream || "No Workstream";
+          if (!upcomingByWorkstream[ws]) upcomingByWorkstream[ws] = [];
+          upcomingByWorkstream[ws].push(t);
+        });
+
+        // Group last week's completions by workstream for comparison
+        const lastWeekByWorkstream: Record<string, Task[]> = {};
+        completedLastWeek.forEach((t) => {
+          const ws = t.workstream || "No Workstream";
+          if (!lastWeekByWorkstream[ws]) lastWeekByWorkstream[ws] = [];
+          lastWeekByWorkstream[ws].push(t);
+        });
+
         // Build structured data for AI
         const taskSummaryData = Object.entries(byWorkstream)
           .map(([ws, wsTasks]) => {
@@ -182,18 +220,49 @@ Deno.serve(async (req: Request) => {
           })
           .join("\n\n");
 
+        const upcomingSummaryData = Object.entries(upcomingByWorkstream)
+          .map(([ws, wsTasks]) => {
+            const taskLines = wsTasks
+              .map((t) => `  - ${t.title} (${t.location === "this-week" ? "this week" : "next week"})`)
+              .join("\n");
+            return `${ws}:\n${taskLines}`;
+          })
+          .join("\n\n");
+
+        const lastWeekSummaryData = Object.entries(lastWeekByWorkstream)
+          .map(([ws, wsTasks]) => {
+            const taskLines = wsTasks.map((t) => `  - ${t.title}`).join("\n");
+            return `${ws}:\n${taskLines}`;
+          })
+          .join("\n\n");
+
+        // Week-over-week delta
+        const delta = completedThisWeek.length - completedLastWeek.length;
+        const deltaStr = delta > 0 ? `+${delta}` : `${delta}`;
+
         // Call OpenAI
-        const aiPrompt = `You are a helpful productivity assistant. Write a brief, encouraging weekly accomplishment summary for the user based on their completed tasks this week. Be specific about what they achieved, highlight patterns of progress, and end with a motivating note for the week ahead. Keep it to 3-5 sentences max.
+        const aiPrompt = `You are writing a weekly status report summary as if the user were reporting to their boss. The tone should be professional but warm — confident, concise, and results-oriented. Structure your response in exactly 3 short paragraphs with these headers:
 
-Stats:
-- Completed: ${completedThisWeek.length} tasks
-- Created: ${createdThisWeek.length} new tasks
-- Pending: ${pendingTasks.length} tasks remaining
+**Progress This Week:** Summarize the key accomplishments. Group by workstream when it makes sense. Be specific about what was delivered, not just task names. If bites were completed toward a larger parent task, frame it as progress toward that goal.
 
-Completed tasks by workstream:
+**What Changed:** Compare this week to last week. Note if output went up or down, if new workstreams got attention, or if focus shifted. If there's no last-week data, note that this is the first tracked week.
+
+**Plan for Next Week:** Based on the upcoming/pending tasks, describe what's on deck. Highlight any large goals that have pending bites or next steps.
+
+Keep the entire summary under 200 words. Do not use bullet points — write in paragraph form.
+
+THIS WEEK — ${completedThisWeek.length} tasks completed (${deltaStr} vs last week):
 ${taskSummaryData}
 
-Note: "bites" are smaller sub-tasks broken off from larger tasks. Mention progress on parent tasks when bites were completed.`;
+LAST WEEK — ${completedLastWeek.length} tasks completed:
+${lastWeekSummaryData || "(no data)"}
+
+UPCOMING — ${upcomingTasks.length} tasks queued:
+${upcomingSummaryData || "(nothing scheduled yet)"}
+
+OVERALL: ${pendingTasks.length} tasks pending across all locations.
+
+Note: "bites" are smaller sub-tasks broken off from larger tasks. When bites of a parent task were completed, describe progress toward the parent goal.`;
 
         const openaiRes = await fetch(
           "https://api.openai.com/v1/chat/completions",
@@ -206,22 +275,31 @@ Note: "bites" are smaller sub-tasks broken off from larger tasks. Mention progre
             body: JSON.stringify({
               model: "gpt-4o-mini",
               messages: [{ role: "user", content: aiPrompt }],
-              max_tokens: 500,
+              max_tokens: 800,
               temperature: 0.7,
             }),
           }
         );
 
+        let aiSummary: string;
+
         if (!openaiRes.ok) {
           const errText = await openaiRes.text();
-          console.error(`OpenAI error for ${userId}: ${errText}`);
-          continue;
-        }
+          console.error(`OpenAI error for ${userId} (${openaiRes.status}): ${errText}`);
+          // Fallback: generate a status-report style summary without AI
+          const wsNames = Object.keys(byWorkstream).join(", ");
+          const upWsNames = Object.keys(upcomingByWorkstream).join(", ");
+          aiSummary = `**Progress This Week:** Completed ${completedThisWeek.length} tasks across ${Object.keys(byWorkstream).length} workstreams (${wsNames}).
 
-        const openaiData = await openaiRes.json();
-        const aiSummary =
-          openaiData.choices?.[0]?.message?.content ||
-          "Great work this week! Keep it up.";
+**What Changed:** ${completedLastWeek.length > 0 ? `Output moved from ${completedLastWeek.length} to ${completedThisWeek.length} tasks (${deltaStr}).` : "This is the first tracked week — no prior data to compare."} ${pendingTasks.length} tasks remain in the backlog.
+
+**Plan for Next Week:** ${upcomingTasks.length > 0 ? `${upcomingTasks.length} tasks are queued across ${upWsNames}.` : "No tasks scheduled yet for next week."}`;
+        } else {
+          const openaiData = await openaiRes.json();
+          aiSummary =
+            openaiData.choices?.[0]?.message?.content ||
+            "Great work this week! Keep it up.";
+        }
 
         // Build HTML email
         const html = buildEmailHtml({
@@ -229,7 +307,10 @@ Note: "bites" are smaller sub-tasks broken off from larger tasks. Mention progre
           completedCount: completedThisWeek.length,
           createdCount: createdThisWeek.length,
           pendingCount: pendingTasks.length,
+          lastWeekCount: completedLastWeek.length,
+          delta,
           byWorkstream,
+          upcomingByWorkstream,
           biteMap,
           allTasks: tasks,
         });
@@ -347,7 +428,10 @@ function buildEmailHtml(data: {
   completedCount: number;
   createdCount: number;
   pendingCount: number;
+  lastWeekCount: number;
+  delta: number;
   byWorkstream: Record<string, Task[]>;
+  upcomingByWorkstream: Record<string, Task[]>;
   biteMap: Record<string, string[]>;
   allTasks: Task[];
 }) {
@@ -356,11 +440,17 @@ function buildEmailHtml(data: {
     completedCount,
     createdCount,
     pendingCount,
+    lastWeekCount,
+    delta,
     byWorkstream,
+    upcomingByWorkstream,
     allTasks,
   } = data;
 
-  const workstreamSections = Object.entries(byWorkstream)
+  const deltaLabel = delta > 0 ? `+${delta}` : `${delta}`;
+  const deltaColor = delta > 0 ? "#1a5f4a" : delta < 0 ? "#c0392b" : "#888";
+
+  const completedSections = Object.entries(byWorkstream)
     .map(([ws, wsTasks]) => {
       const taskItems = wsTasks
         .map((t) => {
@@ -376,11 +466,34 @@ function buildEmailHtml(data: {
 
       return `
         <div style="margin-bottom:20px;">
-          <h3 style="margin:0 0 8px 0;font-size:16px;color:#1a5f4a;border-bottom:2px solid #e8f4ef;padding-bottom:4px;">${escapeHtml(ws)}</h3>
+          <h3 style="margin:0 0 8px 0;font-size:15px;color:#1a5f4a;border-bottom:2px solid #e8f4ef;padding-bottom:4px;">${escapeHtml(ws)} <span style="color:#888;font-weight:400;font-size:13px;">(${wsTasks.length})</span></h3>
           <ul style="margin:0;padding-left:20px;list-style:none;">${taskItems}</ul>
         </div>`;
     })
     .join("");
+
+  const upcomingSections = Object.entries(upcomingByWorkstream)
+    .map(([ws, wsTasks]) => {
+      const taskItems = wsTasks
+        .map((t) => {
+          const loc = t.location === "this-week" ? "this week" : "next week";
+          return `<li style="margin-bottom:6px;color:#555;">&#x1F4CB; ${escapeHtml(t.title)} <span style="color:#aaa;font-size:12px;">(${loc})</span></li>`;
+        })
+        .join("");
+
+      return `
+        <div style="margin-bottom:16px;">
+          <h3 style="margin:0 0 8px 0;font-size:15px;color:#1565c0;border-bottom:2px solid #e3f2fd;padding-bottom:4px;">${escapeHtml(ws)}</h3>
+          <ul style="margin:0;padding-left:20px;list-style:none;">${taskItems}</ul>
+        </div>`;
+    })
+    .join("");
+
+  // Convert markdown-style **bold** to HTML <strong> tags in AI summary
+  const formattedSummary = escapeHtml(aiSummary)
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\n\n/g, "</p><p style=\"margin:12px 0 0;color:#555;font-size:15px;line-height:1.6;\">")
+    .replace(/\n/g, "<br>");
 
   return `<!DOCTYPE html>
 <html>
@@ -392,41 +505,58 @@ function buildEmailHtml(data: {
   <div style="max-width:600px;margin:0 auto;padding:20px;">
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#1a5f4a,#2d8a6e);border-radius:12px 12px 0 0;padding:30px;text-align:center;">
-      <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;">NexBite Weekly Review</h1>
-      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Your accomplishments this week</p>
+      <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;">Weekly Status Report</h1>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">NexBite — Week in Review</p>
     </div>
 
     <!-- Stats Bar -->
     <div style="background:#fff;padding:20px;border-bottom:1px solid #eee;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td width="33%" align="center" style="padding:8px;">
+          <td width="25%" align="center" style="padding:8px;">
             <div style="font-size:28px;font-weight:700;color:#1a5f4a;">${completedCount}</div>
-            <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Completed</div>
+            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Completed</div>
           </td>
-          <td width="33%" align="center" style="padding:8px;border-left:1px solid #eee;border-right:1px solid #eee;">
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
+            <div style="font-size:28px;font-weight:700;color:${deltaColor};">${deltaLabel}</div>
+            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">vs Last Week</div>
+          </td>
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
             <div style="font-size:28px;font-weight:700;color:#1565c0;">${createdCount}</div>
-            <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Created</div>
+            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Created</div>
           </td>
-          <td width="33%" align="center" style="padding:8px;">
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
             <div style="font-size:28px;font-weight:700;color:#e65100;">${pendingCount}</div>
-            <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Pending</div>
+            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Pending</div>
           </td>
         </tr>
       </table>
     </div>
 
-    <!-- AI Summary -->
+    <!-- Status Report Summary -->
     <div style="background:#fff;padding:24px;border-bottom:1px solid #eee;">
-      <h2 style="margin:0 0 12px;font-size:18px;color:#333;">AI Summary</h2>
-      <p style="margin:0;color:#555;font-size:15px;line-height:1.6;">${escapeHtml(aiSummary)}</p>
+      <h2 style="margin:0 0 14px;font-size:18px;color:#333;">Status Report</h2>
+      <p style="margin:0;color:#555;font-size:15px;line-height:1.6;">${formattedSummary}</p>
     </div>
 
-    <!-- Task List by Workstream -->
-    <div style="background:#fff;padding:24px;border-radius:0 0 12px 12px;">
-      <h2 style="margin:0 0 16px;font-size:18px;color:#333;">Completed Tasks</h2>
-      ${workstreamSections}
+    <!-- Completed Tasks by Workstream -->
+    <div style="background:#fff;padding:24px;border-bottom:1px solid #eee;">
+      <h2 style="margin:0 0 16px;font-size:18px;color:#333;">What Got Done</h2>
+      ${completedSections}
     </div>
+
+    <!-- Upcoming / Next Week -->
+    ${upcomingSections ? `
+    <div style="background:#fff;padding:24px;border-radius:0 0 12px 12px;">
+      <h2 style="margin:0 0 16px;font-size:18px;color:#333;">On Deck</h2>
+      ${upcomingSections}
+    </div>
+    ` : `
+    <div style="background:#fff;padding:24px;border-radius:0 0 12px 12px;">
+      <h2 style="margin:0 0 8px;font-size:18px;color:#333;">On Deck</h2>
+      <p style="margin:0;color:#888;font-style:italic;">Nothing scheduled yet for next week.</p>
+    </div>
+    `}
 
     <!-- CTA -->
     <div style="text-align:center;padding:24px;">
