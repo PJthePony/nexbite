@@ -179,7 +179,7 @@ const handleCreateWorkstream = (wsData) => {
 
           <div v-if="isLater" class="form-group">
             <label class="form-label" for="task-activate-at">
-              Auto-move to Next Week on
+              Revisit on
               <span class="form-label-hint">(optional)</span>
             </label>
             <div class="activate-at-row">
