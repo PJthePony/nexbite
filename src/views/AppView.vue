@@ -31,7 +31,8 @@ const {
   biteTask,
   reorderTasks,
   loadTasks,
-  isLoaded: tasksLoaded
+  isLoaded: tasksLoaded,
+  promoteScheduledTasks
 } = useTasks()
 
 const { recentTags, allTags } = useTags()
@@ -192,6 +193,9 @@ onMounted(async () => {
     loadReviewState()
   ])
 
+  // Promote any "Later" tasks whose scheduled date has arrived
+  await promoteScheduledTasks()
+
   const params = new URLSearchParams(window.location.search)
 
   if (params.has('seed')) {
@@ -240,11 +244,12 @@ const handleSaveTask = (taskData) => {
       notes: taskData.notes,
       location: taskData.location,
       workstream: taskData.workstream,
-      tags: taskData.tags
+      tags: taskData.tags,
+      activateAt: taskData.activateAt
     })
   } else {
     // Add new task
-    addTask(taskData.title, taskData.location, taskData.notes, taskData.tags, taskData.workstream)
+    addTask(taskData.title, taskData.location, taskData.notes, taskData.tags, taskData.workstream, taskData.activateAt)
   }
 }
 

@@ -921,6 +921,14 @@ input, textarea {
   color: var(--color-text-secondary);
 }
 
+.task-activate-at {
+  font-size: 0.7rem;
+  margin-top: 4px;
+  padding: 2px 0;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
 .task-action-btn.bite {
   color: var(--color-text-muted);
 }

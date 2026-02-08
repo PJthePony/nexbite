@@ -32,6 +32,13 @@ const emit = defineEmits(['toggle', 'edit', 'delete', 'bite'])
 const isBite = computed(() => !!props.task.parentTaskId)
 const hasBites = computed(() => props.biteCount > 0)
 
+const formattedActivateAt = computed(() => {
+  if (!props.task.activateAt) return null
+  const [year, month, day] = props.task.activateAt.split('-')
+  const d = new Date(+year, +month - 1, +day)
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+})
+
 const isTaskSelected = computed(() => checkIsSelected(props.task.id))
 const hasSelection = computed(() => selectedTaskIds.value.size > 0)
 // Fade this task during drag if it's selected but not the one being dragged
@@ -122,6 +129,9 @@ const cardStyle = computed(() => {
       </div>
       <div v-if="hasBites" class="task-bite-indicator bite-parent">
         {{ biteCount }} {{ biteCount === 1 ? 'bite' : 'bites' }}
+      </div>
+      <div v-if="formattedActivateAt" class="task-activate-at">
+        &#x2192; Next Week on {{ formattedActivateAt }}
       </div>
       <div v-if="task.tags && task.tags.length > 0" class="task-tags">
         <span

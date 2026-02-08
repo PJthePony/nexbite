@@ -49,6 +49,16 @@ const notes = ref('')
 const location = ref('')
 const workstream = ref(null)
 const tags = ref([])
+const activateAt = ref(null)
+
+const isLater = computed(() => location.value === 'later')
+
+// Minimum date for the date picker: tomorrow
+const minActivateDate = computed(() => {
+  const d = new Date()
+  d.setDate(d.getDate() + 1)
+  return d.toISOString().split('T')[0]
+})
 
 const isEditing = ref(false)
 
@@ -62,6 +72,7 @@ watch(() => props.show, (newVal) => {
       location.value = props.task.location
       workstream.value = props.task.workstream || null
       tags.value = [...(props.task.tags || [])]
+      activateAt.value = props.task.activateAt || null
     } else {
       // Adding new task
       isEditing.value = false
@@ -70,6 +81,7 @@ watch(() => props.show, (newVal) => {
       location.value = props.defaultLocation || ''
       workstream.value = props.defaultWorkstream || null
       tags.value = []
+      activateAt.value = null
     }
   }
 })
@@ -82,7 +94,8 @@ const handleSubmit = () => {
     notes: notes.value.trim(),
     location: location.value,
     workstream: workstream.value,
-    tags: tags.value
+    tags: tags.value,
+    activateAt: location.value === 'later' ? (activateAt.value || null) : null
   }
 
   if (isEditing.value && props.task) {
@@ -162,6 +175,31 @@ const handleCreateWorkstream = (wsData) => {
                 {{ col.label }}
               </option>
             </select>
+          </div>
+
+          <div v-if="isLater" class="form-group">
+            <label class="form-label" for="task-activate-at">
+              Auto-move to Next Week on
+              <span class="form-label-hint">(optional)</span>
+            </label>
+            <div class="activate-at-row">
+              <input
+                id="task-activate-at"
+                type="date"
+                v-model="activateAt"
+                class="form-input"
+                :min="minActivateDate"
+              />
+              <button
+                v-if="activateAt"
+                type="button"
+                class="activate-at-clear"
+                @click="activateAt = null"
+                title="Clear date"
+              >
+                &times;
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -347,5 +385,41 @@ select.form-input {
 
 .btn-bite:hover {
   background: var(--color-border);
+}
+
+.form-label-hint {
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: 0.85em;
+}
+
+.activate-at-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activate-at-row .form-input {
+  flex: 1;
+}
+
+.activate-at-clear {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.activate-at-clear:hover {
+  background: var(--color-border);
+  color: var(--color-text);
 }
 </style>

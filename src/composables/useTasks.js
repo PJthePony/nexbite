@@ -18,6 +18,7 @@ function mapDbToLocal(dbTask) {
     tags: dbTask.tags || [],
     createdAt: dbTask.created_at,
     completedAt: dbTask.completed_at,
+    activateAt: dbTask.activate_at,
     sortOrder: dbTask.sort_order,
     parentTaskId: dbTask.parent_task_id,
     biteTaskIds: [] // derived after load
@@ -37,6 +38,7 @@ function mapLocalToDb(task, userId) {
     tags: task.tags,
     created_at: task.createdAt,
     completed_at: task.completedAt,
+    activate_at: task.activateAt,
     sort_order: task.sortOrder,
     parent_task_id: task.parentTaskId
   }
@@ -88,7 +90,7 @@ export function useTasks() {
     return Math.max(...locationTasks.map(t => t.sortOrder ?? 0)) + 1
   }
 
-  const addTask = async (title, location, notes = '', tags = [], workstream = null) => {
+  const addTask = async (title, location, notes = '', tags = [], workstream = null, activateAt = null) => {
     const userId = getUserId()
     const task = {
       id: generateId(),
@@ -100,6 +102,7 @@ export function useTasks() {
       tags,
       createdAt: Date.now(),
       completedAt: null,
+      activateAt,
       sortOrder: getNextSortOrder(location),
       parentTaskId: null,
       biteTaskIds: []
@@ -189,6 +192,7 @@ export function useTasks() {
     if ('workstream' in updates) dbUpdates.workstream = updates.workstream
     if ('tags' in updates) dbUpdates.tags = updates.tags
     if ('completedAt' in updates) dbUpdates.completed_at = updates.completedAt
+    if ('activateAt' in updates) dbUpdates.activate_at = updates.activateAt
     if ('sortOrder' in updates) dbUpdates.sort_order = updates.sortOrder
     if ('parentTaskId' in updates) dbUpdates.parent_task_id = updates.parentTaskId
 
@@ -255,17 +259,59 @@ export function useTasks() {
     if (!task) return
 
     const oldLocation = task.location
+    const oldActivateAt = task.activateAt
     // Optimistic update
     task.location = newLocation
+    // Clear activateAt when moving away from later
+    if (newLocation !== 'later') {
+      task.activateAt = null
+    }
+
+    const dbUpdate = { location: newLocation }
+    if (newLocation !== 'later') {
+      dbUpdate.activate_at = null
+    }
 
     const { error } = await supabase
       .from('tasks')
-      .update({ location: newLocation })
+      .update(dbUpdate)
       .eq('id', id)
 
     if (error) {
       console.error('Failed to move task:', error)
       task.location = oldLocation
+      task.activateAt = oldActivateAt
+    }
+  }
+
+  // Promote "later" tasks whose activate_at date has arrived
+  const promoteScheduledTasks = async () => {
+    const today = new Date().toISOString().split('T')[0]
+    const toPromote = tasks.value.filter(t =>
+      t.location === 'later' && t.activateAt && t.activateAt <= today && !t.completed
+    )
+    if (toPromote.length === 0) return
+
+    const ids = toPromote.map(t => t.id)
+    // Optimistic update
+    toPromote.forEach(t => {
+      t.location = 'next-week'
+      t.activateAt = null
+    })
+
+    const updates = ids.map(id => ({
+      id,
+      user_id: getUserId(),
+      location: 'next-week',
+      activate_at: null
+    }))
+
+    const { error } = await supabase
+      .from('tasks')
+      .upsert(updates, { onConflict: 'id' })
+
+    if (error) {
+      console.error('Failed to promote scheduled tasks:', error)
     }
   }
 
@@ -459,6 +505,7 @@ export function useTasks() {
     getIncompleteTasksFromPriorDays,
     bulkMoveToLocation,
     bulkDelete,
-    reorderTasks
+    reorderTasks,
+    promoteScheduledTasks
   }
 }
