@@ -37,7 +37,7 @@ const {
 
 const { recentTags, allTags } = useTags()
 const { allWorkstreams, addWorkstream, updateWorkstream, reorderWorkstreams, deleteWorkstream, loadWorkstreams, isLoaded: workstreamsLoaded } = useWorkstreams()
-const { isToday, currentDayLocation } = useWeekLogic()
+const { isToday, currentDayLocation, getWeekStartDate } = useWeekLogic()
 const {
   needsWeeklyReview,
   needsDailyReview,
@@ -81,12 +81,20 @@ const dailyRolloverTasks = ref([])
 const showBiteModal = ref(false)
 const biteParentTask = ref(null)
 
+// Hide completed tasks from prior weeks in day/week columns
+const weekStartMs = getWeekStartDate().getTime()
+
 // Compute tasks by location with filtering
 const tasksByLocation = computed(() => {
   const byLocation = {}
 
   ALL_COLUMNS.forEach(col => {
     let columnTasks = tasks.value.filter(t => t.location === col.id)
+
+    // Hide tasks completed before this week started (they belong to a prior week)
+    columnTasks = columnTasks.filter(t =>
+      !t.completed || !t.completedAt || t.completedAt >= weekStartMs
+    )
 
     // Apply search filter
     if (searchQuery.value) {
