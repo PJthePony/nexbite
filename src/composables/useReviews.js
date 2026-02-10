@@ -106,6 +106,14 @@ export function useReviews() {
       DAY_LOCATIONS.includes(t.location) && !t.completed
     )
     await bulkMoveToLocation(incompleteDayTasks.map(t => t.id), LOCATIONS.THIS_WEEK)
+
+    // Remove completed tasks from day columns and this-week (they're from last week)
+    const completedOldTasks = tasks.value.filter(t =>
+      (DAY_LOCATIONS.includes(t.location) || t.location === LOCATIONS.THIS_WEEK) && t.completed
+    )
+    if (completedOldTasks.length > 0) {
+      await bulkDelete(completedOldTasks.map(t => t.id))
+    }
   }
 
   const completeWeeklyReview = async (laterDecisions) => {
