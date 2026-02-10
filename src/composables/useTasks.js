@@ -299,16 +299,10 @@ export function useTasks() {
       t.activateAt = null
     })
 
-    const updates = ids.map(id => ({
-      id,
-      user_id: getUserId(),
-      location: 'next-week',
-      activate_at: null
-    }))
-
     const { error } = await supabase
       .from('tasks')
-      .upsert(updates, { onConflict: 'id' })
+      .update({ location: 'next-week', activate_at: null })
+      .in('id', ids)
 
     if (error) {
       console.error('Failed to promote scheduled tasks:', error)
@@ -388,6 +382,8 @@ export function useTasks() {
   }
 
   const bulkMoveToLocation = async (taskIds, location) => {
+    if (taskIds.length === 0) return
+
     // Optimistic update
     taskIds.forEach(id => {
       const task = tasks.value.find(t => t.id === id)
@@ -396,16 +392,10 @@ export function useTasks() {
       }
     })
 
-    // Batch update in Supabase
-    const updates = taskIds.map(id => ({
-      id,
-      user_id: getUserId(),
-      location
-    }))
-
     const { error } = await supabase
       .from('tasks')
-      .upsert(updates, { onConflict: 'id' })
+      .update({ location })
+      .in('id', taskIds)
 
     if (error) {
       console.error('Failed to bulk move tasks:', error)
@@ -432,8 +422,6 @@ export function useTasks() {
   }
 
   const reorderTasks = async (location, orderedTaskIds, workstream = undefined) => {
-    const userId = getUserId()
-
     // Optimistic update
     orderedTaskIds.forEach((taskId, index) => {
       const task = tasks.value.find(t => t.id === taskId)
@@ -446,27 +434,24 @@ export function useTasks() {
       }
     })
 
-    // Batch update to Supabase
-    const updates = orderedTaskIds.map((taskId, index) => {
-      const update = {
-        id: taskId,
-        user_id: userId,
-        sort_order: index,
-        location
-      }
+    // Update each task individually
+    const promises = orderedTaskIds.map((taskId, index) => {
+      const dbUpdate = { sort_order: index, location }
       if (workstream !== undefined) {
-        update.workstream = workstream
+        dbUpdate.workstream = workstream
       }
-      return update
+      return supabase
+        .from('tasks')
+        .update(dbUpdate)
+        .eq('id', taskId)
     })
 
-    const { error } = await supabase
-      .from('tasks')
-      .upsert(updates, { onConflict: 'id' })
-
-    if (error) {
-      console.error('Failed to reorder tasks:', error)
-    }
+    const results = await Promise.all(promises)
+    results.forEach(({ error }, i) => {
+      if (error) {
+        console.error(`Failed to reorder task ${orderedTaskIds[i]}:`, error)
+      }
+    })
   }
 
   const setWorkstream = async (taskId, workstream) => {
