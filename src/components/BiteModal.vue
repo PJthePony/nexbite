@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
-import { ALL_COLUMNS } from '../composables/useWeekLogic'
+import { ALL_COLUMNS, DAY_LOCATIONS } from '../composables/useWeekLogic'
 
 const props = defineProps({
   show: {
@@ -23,11 +23,42 @@ const biteTitle = ref('')
 const biteLocation = ref('')
 const parentDestination = ref('')
 
+const getSmartParentDestination = (parentLocation, currentDay) => {
+  const dayIndex = DAY_LOCATIONS.indexOf(parentLocation)
+  const currentDayIndex = DAY_LOCATIONS.indexOf(currentDay)
+
+  // Parent is in a day column
+  if (dayIndex !== -1) {
+    if (dayIndex <= currentDayIndex) {
+      // Parent is today or in the past — move to next day
+      const nextDayIndex = currentDayIndex + 1
+      if (nextDayIndex < DAY_LOCATIONS.length) {
+        return DAY_LOCATIONS[nextDayIndex]
+      }
+      // If today is Friday, move to next-week
+      return 'next-week'
+    }
+    // Parent is in a future day — stay where it is
+    return parentLocation
+  }
+
+  // Parent is in this-week, next-week, or later — stay where it is
+  if (['next-week', 'later', 'this-week'].includes(parentLocation)) {
+    return parentLocation
+  }
+
+  // Fallback
+  return 'next-week'
+}
+
 watch(() => props.show, (newVal) => {
   if (newVal && props.parentTask) {
     biteTitle.value = ''
     biteLocation.value = props.currentDayLocation
-    parentDestination.value = 'next-week'
+    parentDestination.value = getSmartParentDestination(
+      props.parentTask.location,
+      props.currentDayLocation
+    )
   }
 })
 
