@@ -88,10 +88,12 @@ input, textarea {
 }
 
 .app-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--color-text);
+  display: flex;
+  align-items: center;
+}
+
+.app-logo {
+  display: block;
 }
 
 .app-main {

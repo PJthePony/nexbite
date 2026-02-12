@@ -396,7 +396,12 @@ watch(tasks, () => {
   <!-- Main app -->
   <div v-else class="app-container" :class="{ 'select-mode': isSelectMode || selectedTaskIds.size > 0 }">
     <header class="app-header">
-      <h1 class="app-title">NexBite</h1>
+      <div class="app-title">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="app-logo">
+          <rect width="36" height="36" rx="8" fill="#475569"/>
+          <text x="18" y="24" text-anchor="middle" font-family="'IBM Plex Sans', sans-serif" font-weight="700" font-size="16" letter-spacing="-0.5" fill="#f8fafc">pjt</text>
+        </svg>
+      </div>
 
       <TagFilter
         :tags="allTags"
