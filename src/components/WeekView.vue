@@ -98,15 +98,26 @@ const isLastRow = (wsName) => {
   return wsName === wsNames[wsNames.length - 1]
 }
 
+const mobileInitialized = ref(false)
+
 const checkMobile = () => {
+  const wasMobile = isMobile.value
   isMobile.value = window.innerWidth <= 768
-  if (isMobile.value) {
+
+  // Only snap to today on the first time we enter mobile mode
+  if (isMobile.value && !mobileInitialized.value) {
+    mobileInitialized.value = true
     const todayIndex = visibleColumns.value.findIndex(col =>
       col.id === currentDayLocation.value
     )
     if (todayIndex !== -1) {
       currentColumnIndex.value = todayIndex
     }
+  }
+
+  // Reset if we leave mobile so re-entering will snap to today again
+  if (!isMobile.value) {
+    mobileInitialized.value = false
   }
 }
 
