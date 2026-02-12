@@ -815,7 +815,7 @@ onUnmounted(() => {
 
 .nav-pill {
   flex-shrink: 0;
-  padding: 6px 12px;
+  padding: 10px 14px;
   border-radius: 16px;
   font-size: 0.78rem;
   font-weight: 500;

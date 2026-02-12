@@ -20,14 +20,14 @@ export const DAY_LOCATIONS = [
 ]
 
 export const ALL_COLUMNS = [
-  { id: LOCATIONS.THIS_WEEK, label: 'This Week', hideWhenEmpty: true },
-  { id: LOCATIONS.MONDAY, label: 'Monday', isDay: true },
-  { id: LOCATIONS.TUESDAY, label: 'Tuesday', isDay: true },
-  { id: LOCATIONS.WEDNESDAY, label: 'Wednesday', isDay: true },
-  { id: LOCATIONS.THURSDAY, label: 'Thursday', isDay: true },
-  { id: LOCATIONS.FRIDAY, label: 'Friday', isDay: true },
-  { id: LOCATIONS.NEXT_WEEK, label: 'Next Week' },
-  { id: LOCATIONS.LATER, label: 'Later' }
+  { id: LOCATIONS.THIS_WEEK, label: 'This Week', shortLabel: 'Wk', hideWhenEmpty: true },
+  { id: LOCATIONS.MONDAY, label: 'Monday', shortLabel: 'Mon', isDay: true },
+  { id: LOCATIONS.TUESDAY, label: 'Tuesday', shortLabel: 'Tue', isDay: true },
+  { id: LOCATIONS.WEDNESDAY, label: 'Wednesday', shortLabel: 'Wed', isDay: true },
+  { id: LOCATIONS.THURSDAY, label: 'Thursday', shortLabel: 'Thu', isDay: true },
+  { id: LOCATIONS.FRIDAY, label: 'Friday', shortLabel: 'Fri', isDay: true },
+  { id: LOCATIONS.NEXT_WEEK, label: 'Next Week', shortLabel: 'Next' },
+  { id: LOCATIONS.LATER, label: 'Later', shortLabel: 'Later' }
 ]
 
 export function useWeekLogic() {

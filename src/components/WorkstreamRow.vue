@@ -31,10 +31,18 @@ const props = defineProps({
   isToday: {
     type: Boolean,
     default: false
+  },
+  isCurrentlyViewed: {
+    type: Boolean,
+    default: false
+  },
+  isMobile: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'multi-drop'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'multi-drop', 'mobile-drag-start', 'mobile-drag-end'])
 
 const getParentTask = (task) => {
   if (!task.parentTaskId) return null
@@ -78,10 +86,17 @@ const handleDragStart = (evt) => {
       ghost.innerHTML = `<div class="multi-drag-label">${count} ${count === 1 ? 'task' : 'tasks'}</div>`
     }
   }
+
+  if (props.isMobile) {
+    emit('mobile-drag-start')
+  }
 }
 
 const handleDragEnd = () => {
   endDrag()
+  if (props.isMobile) {
+    emit('mobile-drag-end')
+  }
 }
 
 const handleDragChange = (evt) => {
@@ -133,6 +148,8 @@ const handleAdd = () => {
       drag-class="sortable-drag"
       :force-fallback="true"
       :animation="150"
+      :delay="isMobile ? 300 : 0"
+      :delay-on-touch-only="true"
       @start="handleDragStart"
       @end="handleDragEnd"
       @change="handleDragChange"
@@ -144,7 +161,8 @@ const handleAdd = () => {
           :parent-task="getParentTask(element)"
           :bite-count="getBiteCount(element)"
           :completed-bite-count="getCompletedBiteCount(element)"
-          :compact="!isToday"
+          :compact="!isToday && !isCurrentlyViewed"
+          :is-mobile="isMobile"
           @toggle="emit('toggle', $event)"
           @edit="emit('edit', $event)"
           @delete="emit('delete', $event)"

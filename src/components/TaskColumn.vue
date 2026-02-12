@@ -23,13 +23,21 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  isCurrentlyViewed: {
+    type: Boolean,
+    default: false
+  },
+  isMobile: {
+    type: Boolean,
+    default: false
+  },
   allTasks: {
     type: Array,
     default: () => []
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'createWorkstream', 'multi-drop'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'createWorkstream', 'multi-drop', 'mobile-drag-start', 'mobile-drag-end'])
 
 const taskCount = computed(() => {
   return props.tasks.filter(t => !t.completed).length
@@ -109,6 +117,8 @@ const handleAdd = (location, workstream) => {
         :location="column.id"
         :all-tasks="allTasks"
         :is-today="isToday"
+        :is-currently-viewed="isCurrentlyViewed"
+        :is-mobile="isMobile"
         @add="handleAdd"
         @toggle="emit('toggle', $event)"
         @edit="emit('edit', $event)"
@@ -116,6 +126,8 @@ const handleAdd = (location, workstream) => {
         @bite="emit('bite', $event)"
         @update:tasks="handleUpdateTasks(ws, $event)"
         @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
+        @mobile-drag-start="emit('mobile-drag-start')"
+        @mobile-drag-end="emit('mobile-drag-end')"
       />
     </div>
   </div>

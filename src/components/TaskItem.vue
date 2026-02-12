@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useMultiSelect } from '../composables/useMultiSelect'
 import { getTagColor } from '../composables/useTags'
 
@@ -27,6 +27,10 @@ const props = defineProps({
     default: 0
   },
   compact: {
+    type: Boolean,
+    default: false
+  },
+  isMobile: {
     type: Boolean,
     default: false
   }
@@ -85,10 +89,139 @@ const cardStyle = computed(() => {
   }
   return {}
 })
+
+// --- Mobile swipe-to-delete ---
+const swipeOffset = ref(0)
+const swipeRevealed = ref(false)
+const taskSwipeStartX = ref(0)
+const taskSwipeStartY = ref(0)
+const isTaskSwiping = ref(false)
+
+const REVEAL_WIDTH = 64
+const TASK_SWIPE_THRESHOLD = 32
+
+const handleTaskSwipeStart = (e) => {
+  taskSwipeStartX.value = e.touches[0].clientX
+  taskSwipeStartY.value = e.touches[0].clientY
+  isTaskSwiping.value = false
+}
+
+const handleTaskSwipeMove = (e) => {
+  const dx = e.touches[0].clientX - taskSwipeStartX.value
+  const dy = e.touches[0].clientY - taskSwipeStartY.value
+
+  // If primarily vertical, bail out
+  if (!isTaskSwiping.value && Math.abs(dy) > Math.abs(dx)) return
+
+  if (Math.abs(dx) > 10) {
+    isTaskSwiping.value = true
+    e.stopPropagation()
+  }
+
+  if (isTaskSwiping.value) {
+    const base = swipeRevealed.value ? -REVEAL_WIDTH : 0
+    const offset = Math.min(0, Math.max(-REVEAL_WIDTH - 20, base + dx))
+    swipeOffset.value = offset
+    e.preventDefault()
+  }
+}
+
+const handleTaskSwipeEnd = () => {
+  if (!isTaskSwiping.value) return
+
+  if (swipeOffset.value < -TASK_SWIPE_THRESHOLD) {
+    swipeOffset.value = -REVEAL_WIDTH
+    swipeRevealed.value = true
+  } else {
+    swipeOffset.value = 0
+    swipeRevealed.value = false
+  }
+  isTaskSwiping.value = false
+}
+
+const handleSwipeDelete = () => {
+  swipeOffset.value = 0
+  swipeRevealed.value = false
+  emit('delete', props.task.id)
+}
+
+const closeSwipe = () => {
+  swipeOffset.value = 0
+  swipeRevealed.value = false
+}
 </script>
 
 <template>
+  <!-- Mobile: swipe-to-delete wrapper -->
+  <div v-if="isMobile && !compact" class="task-swipe-container">
+    <div class="task-swipe-actions">
+      <button class="swipe-action-btn delete-action" @click.stop="handleSwipeDelete">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+      </button>
+    </div>
+    <div
+      class="task-item task-item-mobile"
+      :class="{ 'is-completed': task.completed, 'is-selected': isTaskSelected, 'is-faded-for-drag': isFadedDuringDrag, 'has-bites': hasBites }"
+      :style="{ ...cardStyle, transform: `translateX(${swipeOffset}px)`, transition: isTaskSwiping ? 'none' : 'transform 0.2s ease' }"
+      @touchstart="handleTaskSwipeStart"
+      @touchmove="handleTaskSwipeMove"
+      @touchend="handleTaskSwipeEnd"
+      @mousedown="handleMouseDown"
+      @click="swipeRevealed ? closeSwipe() : handleClick()"
+    >
+      <div class="task-header">
+        <input
+          type="checkbox"
+          class="task-checkbox"
+          :checked="task.completed"
+          @click.stop="emit('toggle', task.id)"
+          @change.stop
+        />
+        <div class="task-content">
+          <div class="task-title">
+            <span
+              v-if="workstreamColor"
+              class="ws-dot"
+              :style="{ backgroundColor: workstreamColor.text }"
+            ></span>
+            {{ task.title }}
+          </div>
+          <div v-if="task.notes" class="task-notes-indicator">
+            Has notes
+          </div>
+        </div>
+      </div>
+      <div v-if="isBite && parentTask" class="task-bite-indicator bite-child">
+        bite of: {{ parentTask.title }}
+      </div>
+      <div v-if="hasBites" class="task-bite-parent-indicator">
+        <span class="bite-summary">{{ completedBiteCount }}/{{ biteCount }} bites</span>
+        <div class="bite-progress-track">
+          <div class="bite-progress-fill" :style="{ width: biteProgress + '%' }"></div>
+        </div>
+      </div>
+      <div v-if="formattedActivateAt" class="task-activate-at">
+        &#x2192; Next Week on {{ formattedActivateAt }}
+      </div>
+      <div v-if="task.tags && task.tags.length > 0" class="task-tags">
+        <span
+          v-for="tag in task.tags"
+          :key="tag"
+          class="task-tag"
+          :style="{ backgroundColor: getTagColor(tag).bg, color: getTagColor(tag).text }"
+        >
+          {{ tag }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop / compact: original rendering -->
   <div
+    v-else
     class="task-item"
     :class="{ 'is-completed': task.completed, 'is-compact': compact, 'is-selected': isTaskSelected, 'is-faded-for-drag': isFadedDuringDrag, 'has-bites': hasBites }"
     :style="cardStyle"
