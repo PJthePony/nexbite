@@ -1,20 +1,20 @@
 :root {
-  /* Palette C: Soft Neutrals + Muted Teal */
-  --color-bg: #f7f8f6;
+  /* Palette E: Slate & Coral */
+  --color-bg: #f8fafc;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
-  --color-border: #dfe3dc;
-  --color-border-light: #cdd2c9;
-  --color-text: #1a1f16;
-  --color-text-secondary: #6b7264;
-  --color-text-muted: #98a08f;
-  --color-primary: #2a7d6e;
-  --color-primary-hover: #1f6b5e;
-  --color-accent: #b08d57;
-  --color-success: #3d8b5a;
-  --color-danger: #c44f4f;
-  --color-today: #f2f7f5;
-  --color-today-border: #2a7d6e;
+  --color-border: #e2e8f0;
+  --color-border-light: #cbd5e1;
+  --color-text: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-primary: #475569;
+  --color-primary-hover: #334155;
+  --color-accent: #f97316;
+  --color-success: #059669;
+  --color-danger: #ef4444;
+  --color-today: #f1f5f9;
+  --color-today-border: #475569;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -592,7 +592,7 @@ input, textarea {
   outline: none;
   border-color: var(--color-primary);
   background: var(--color-surface);
-  box-shadow: 0 0 0 3px rgba(42, 125, 110, 0.1);
+  box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.1);
 }
 
 .form-input::placeholder {
@@ -652,7 +652,7 @@ input, textarea {
 }
 
 .btn-ghost:hover {
-  background: rgba(42, 125, 110, 0.06);
+  background: rgba(71, 85, 105, 0.06);
   border-color: var(--color-primary);
 }
 
@@ -723,7 +723,7 @@ input, textarea {
   outline: none;
   border-color: var(--color-primary);
   background: var(--color-surface);
-  box-shadow: 0 0 0 3px rgba(42, 125, 110, 0.1);
+  box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.1);
 }
 
 .search-input::placeholder {
@@ -883,45 +883,34 @@ input, textarea {
   .week-view.is-mobile {
     position: relative;
     overflow: hidden;
+    width: 100%;
   }
 
   .mobile-columns-wrapper {
     display: flex;
-    transition: transform 0.3s ease;
     touch-action: pan-y;
+    width: 100%;
   }
 
   .task-column {
-    min-width: 100vw;
-    max-width: 100vw;
+    min-width: 100%;
+    max-width: 100%;
+    width: 100%;
+    flex-shrink: 0;
     border-radius: 0;
-    min-height: calc(100vh - 120px);
+    min-height: calc(100dvh - 120px);
+    overflow-x: hidden;
   }
 
   .task-column.is-today {
     border: none;
     border-top: 3px solid var(--color-primary);
-    box-shadow: inset 0 3px 8px rgba(42, 125, 110, 0.06);
+    box-shadow: inset 0 3px 8px rgba(71, 85, 105, 0.06);
   }
 
-  .column-indicator {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    padding: 12px;
-    background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
-  }
-
-  .indicator-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--color-border);
-  }
-
-  .indicator-dot.is-active {
-    background: var(--color-primary);
+  .column-nav-bar {
+    position: sticky;
+    bottom: 0;
   }
 
   .search-bar {
@@ -946,8 +935,42 @@ input, textarea {
     padding: 0;
   }
 
-  .task-actions {
-    opacity: 1;
+  /* Swipe-to-delete on mobile */
+  .task-swipe-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+  }
+
+  .task-swipe-actions {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .swipe-action-btn {
+    width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    border: none;
+    gap: 2px;
+  }
+
+  .swipe-action-btn.delete-action {
+    background: var(--color-danger);
+  }
+
+  .task-item-mobile {
+    position: relative;
+    z-index: 1;
   }
 }
 
@@ -1038,8 +1061,8 @@ input, textarea {
 /* Multi-select */
 .task-item.is-selected {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px rgba(42, 125, 110, 0.3);
-  background: rgba(42, 125, 110, 0.05) !important;
+  box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.3);
+  background: rgba(71, 85, 105, 0.05) !important;
 }
 
 .task-item.is-faded-for-drag {
@@ -1050,9 +1073,9 @@ input, textarea {
 /* Drop target highlight */
 .cell-tasks:has(.sortable-ghost),
 .workstream-tasks:has(.sortable-ghost) {
-  background: rgba(42, 125, 110, 0.06);
+  background: rgba(71, 85, 105, 0.06);
   border-radius: var(--radius-sm);
-  outline: 2px dashed rgba(42, 125, 110, 0.3);
+  outline: 2px dashed rgba(71, 85, 105, 0.3);
   outline-offset: -2px;
 }
 

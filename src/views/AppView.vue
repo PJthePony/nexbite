@@ -135,9 +135,9 @@ const seedTestData = async () => {
   tasks.value.splice(0, tasks.value.length)
 
   // Create workstreams
-  await addWorkstream('Product', { bg: '#e0eaf2', text: '#3a5f7a' })
-  await addWorkstream('Engineering', { bg: '#e6f2ef', text: '#1f6b5e' })
-  await addWorkstream('Design', { bg: '#eae4f0', text: '#6b4d8a' })
+  await addWorkstream('Product', { bg: '#b8c4ce', text: '#1b2838' })
+  await addWorkstream('Engineering', { bg: '#7eb8b0', text: '#0e3830' })
+  await addWorkstream('Design', { bg: '#8898b0', text: '#1a2440' })
 
   // --- Today (friday) tasks ---
   await addTask('Review PR #342 - auth refactor', 'friday', 'Check edge cases around token refresh', ['code-review'], 'Engineering')

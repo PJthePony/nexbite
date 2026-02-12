@@ -2,18 +2,18 @@ import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
-// 10 predefined colors for workstreams - harmonized with Palette C (Soft Neutrals + Muted Teal)
+// 10 predefined colors for workstreams - Concrete & Signal palette
 export const WORKSTREAM_COLORS = [
-  { name: 'Teal', bg: '#e6f2ef', text: '#1f6b5e' },
-  { name: 'Slate', bg: '#e0eaf2', text: '#3a5f7a' },
-  { name: 'Gold', bg: '#f2ebe0', text: '#8b6d3f' },
-  { name: 'Plum', bg: '#eae4f0', text: '#6b4d8a' },
-  { name: 'Sage', bg: '#e8eee4', text: '#3d6b3a' },
-  { name: 'Copper', bg: '#f2ece6', text: '#8b6040' },
-  { name: 'Rose', bg: '#f0e6e6', text: '#8b4a4a' },
-  { name: 'Forest', bg: '#e4ede8', text: '#3d6b56' },
-  { name: 'Stone', bg: '#ebe8e4', text: '#6b5d4f' },
-  { name: 'Moss', bg: '#e6eee2', text: '#4f6b3a' },
+  { name: 'Concrete', bg: '#b8c4ce', text: '#1b2838' },
+  { name: 'Signal Orange', bg: '#e8a87c', text: '#5c2c0e' },
+  { name: 'Patina', bg: '#7eb8b0', text: '#0e3830' },
+  { name: 'Brick', bg: '#d48888', text: '#521818' },
+  { name: 'Aluminum', bg: '#a0a8b4', text: '#1e2630' },
+  { name: 'Caution', bg: '#c8b870', text: '#3a3410' },
+  { name: 'Gunmetal', bg: '#8898b0', text: '#1a2440' },
+  { name: 'Oxidized', bg: '#88b498', text: '#163024' },
+  { name: 'Rust', bg: '#c4a498', text: '#3e201a' },
+  { name: 'Charcoal', bg: '#989898', text: '#1e1e1e' },
 ]
 
 // Shared state across all usages (singleton)

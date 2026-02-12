@@ -3,18 +3,18 @@ import { useTasks } from './useTasks'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
-// 10 curated tag colors - harmonized with Palette C (Soft Neutrals + Muted Teal)
+// 10 curated tag colors - Concrete & Signal palette
 const TAG_COLORS = [
-  { bg: '#e6f2ef', text: '#1f6b5e' },  // Teal (primary family)
-  { bg: '#e8eee4', text: '#3d6b3a' },  // Sage
-  { bg: '#f2ebe0', text: '#8b6d3f' },  // Warm Gold (accent family)
-  { bg: '#eae4f0', text: '#6b4d8a' },  // Muted Purple
-  { bg: '#e0eaf2', text: '#3a5f7a' },  // Slate Blue
-  { bg: '#f2ece6', text: '#8b6040' },  // Copper
-  { bg: '#f0e6e6', text: '#8b4a4a' },  // Dusty Rose
-  { bg: '#e4ede8', text: '#3d6b56' },  // Forest
-  { bg: '#ebe8e4', text: '#6b5d4f' },  // Warm Stone
-  { bg: '#e6eee2', text: '#4f6b3a' },  // Moss
+  { bg: '#b8c4ce', text: '#1b2838' },  // Concrete
+  { bg: '#e8a87c', text: '#5c2c0e' },  // Signal Orange
+  { bg: '#7eb8b0', text: '#0e3830' },  // Patina
+  { bg: '#d48888', text: '#521818' },  // Brick
+  { bg: '#a0a8b4', text: '#1e2630' },  // Aluminum
+  { bg: '#c8b870', text: '#3a3410' },  // Caution
+  { bg: '#8898b0', text: '#1a2440' },  // Gunmetal
+  { bg: '#88b498', text: '#163024' },  // Oxidized
+  { bg: '#c4a498', text: '#3e201a' },  // Rust
+  { bg: '#989898', text: '#1e1e1e' },  // Charcoal
 ]
 
 // Hash a string to a number for consistent color assignment

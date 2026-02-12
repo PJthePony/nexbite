@@ -139,7 +139,7 @@ const handleSubmit = async () => {
 .form-group input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(42, 125, 110, 0.1);
+  box-shadow: 0 0 0 3px rgba(71, 85, 105, 0.1);
 }
 
 .form-group input:disabled {

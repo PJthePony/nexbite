@@ -31,9 +31,26 @@ const gridWrapper = ref(null)
 // Mobile state
 const isMobile = ref(false)
 const currentColumnIndex = ref(0)
+
+// Swipe day-switching state
 const touchStartX = ref(0)
-const touchEndX = ref(0)
-const isDragging = ref(false)
+const touchStartY = ref(0)
+const touchStartTime = ref(0)
+const touchCurrentX = ref(0)
+const isSwiping = ref(false)
+const swipeDecided = ref(false)
+const interimOffset = ref(0)
+
+const SWIPE_ANGLE_THRESHOLD = 25
+const SWIPE_DISTANCE_THRESHOLD = 80
+const SWIPE_VELOCITY_THRESHOLD = 0.3
+const SWIPE_DECIDE_DISTANCE = 12
+
+// Mobile drag-to-edge state
+const mobileDragActive = ref(false)
+const edgeScrollTimer = ref(null)
+const EDGE_ZONE_WIDTH = 40
+const EDGE_SCROLL_DELAY = 500
 
 // Get visible columns (filter out hidden ones)
 const visibleColumns = computed(() => {
@@ -94,36 +111,126 @@ const checkMobile = () => {
 }
 
 const handleTouchStart = (e) => {
+  // Don't start day-swiping if touch is on a task swipe container
+  if (e.target.closest('.task-swipe-container')) return
+
   touchStartX.value = e.touches[0].clientX
-  isDragging.value = true
+  touchStartY.value = e.touches[0].clientY
+  touchStartTime.value = Date.now()
+  touchCurrentX.value = touchStartX.value
+  isSwiping.value = false
+  swipeDecided.value = false
+  interimOffset.value = 0
 }
 
 const handleTouchMove = (e) => {
-  if (!isDragging.value) return
-  touchEndX.value = e.touches[0].clientX
+  if (swipeDecided.value && !isSwiping.value) return
+
+  const dx = e.touches[0].clientX - touchStartX.value
+  const dy = e.touches[0].clientY - touchStartY.value
+  const absDx = Math.abs(dx)
+  const absDy = Math.abs(dy)
+
+  if (!swipeDecided.value) {
+    const totalMove = Math.sqrt(dx * dx + dy * dy)
+    if (totalMove < SWIPE_DECIDE_DISTANCE) return
+
+    const angle = Math.atan2(absDy, absDx) * (180 / Math.PI)
+    if (angle < SWIPE_ANGLE_THRESHOLD) {
+      isSwiping.value = true
+      swipeDecided.value = true
+    } else {
+      swipeDecided.value = true
+      isSwiping.value = false
+      return
+    }
+  }
+
+  if (isSwiping.value) {
+    touchCurrentX.value = e.touches[0].clientX
+    interimOffset.value = dx
+    e.preventDefault()
+  }
 }
 
 const handleTouchEnd = () => {
-  if (!isDragging.value) return
-  isDragging.value = false
+  if (!isSwiping.value) {
+    interimOffset.value = 0
+    return
+  }
 
-  const diff = touchStartX.value - touchEndX.value
-  const threshold = 50
+  const dx = touchCurrentX.value - touchStartX.value
+  const elapsed = Date.now() - touchStartTime.value
+  const velocity = Math.abs(dx) / elapsed
 
-  if (Math.abs(diff) > threshold) {
-    if (diff > 0 && currentColumnIndex.value < visibleColumns.value.length - 1) {
+  const shouldSwipe = Math.abs(dx) > SWIPE_DISTANCE_THRESHOLD
+                    || velocity > SWIPE_VELOCITY_THRESHOLD
+
+  if (shouldSwipe) {
+    if (dx < 0 && currentColumnIndex.value < visibleColumns.value.length - 1) {
       currentColumnIndex.value++
-    } else if (diff < 0 && currentColumnIndex.value > 0) {
+    } else if (dx > 0 && currentColumnIndex.value > 0) {
       currentColumnIndex.value--
     }
   }
 
-  touchStartX.value = 0
-  touchEndX.value = 0
+  isSwiping.value = false
+  swipeDecided.value = false
+  interimOffset.value = 0
 }
 
 const goToColumn = (index) => {
   currentColumnIndex.value = index
+}
+
+// Mobile drag-to-edge: scroll columns when dragging near screen edges
+const handleMobileDragStart = () => {
+  if (!isMobile.value) return
+  mobileDragActive.value = true
+
+  // Listen for touchmove on the document to detect edge proximity
+  document.addEventListener('touchmove', handleDragEdgeDetection, { passive: true })
+}
+
+const handleMobileDragEnd = () => {
+  mobileDragActive.value = false
+  clearEdgeScrollTimer()
+  document.removeEventListener('touchmove', handleDragEdgeDetection)
+}
+
+const handleDragEdgeDetection = (e) => {
+  if (!mobileDragActive.value || !e.touches[0]) return
+
+  const x = e.touches[0].clientX
+  const screenWidth = window.innerWidth
+
+  if (x < EDGE_ZONE_WIDTH && currentColumnIndex.value > 0) {
+    startEdgeScroll(-1)
+  } else if (x > screenWidth - EDGE_ZONE_WIDTH && currentColumnIndex.value < visibleColumns.value.length - 1) {
+    startEdgeScroll(1)
+  } else {
+    clearEdgeScrollTimer()
+  }
+}
+
+const startEdgeScroll = (direction) => {
+  if (edgeScrollTimer.value) return // Already scrolling
+  edgeScrollTimer.value = setTimeout(() => {
+    if (!mobileDragActive.value) return
+    currentColumnIndex.value = Math.max(0, Math.min(visibleColumns.value.length - 1, currentColumnIndex.value + direction))
+    edgeScrollTimer.value = null
+    // Continue scrolling if still at edge
+    if (mobileDragActive.value) {
+      startEdgeScroll(direction)
+    }
+  }, EDGE_SCROLL_DELAY)
+}
+
+const clearEdgeScrollTimer = () => {
+  if (edgeScrollTimer.value) {
+    clearTimeout(edgeScrollTimer.value)
+    edgeScrollTimer.value = null
+  }
 }
 
 const handleUpdateTasks = (columnId, newTasks, workstream) => {
@@ -273,6 +380,8 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
   window.removeEventListener('click', closeColorPicker)
+  clearEdgeScrollTimer()
+  document.removeEventListener('touchmove', handleDragEdgeDetection)
 })
 </script>
 
@@ -404,14 +513,19 @@ onUnmounted(() => {
   >
     <div
       class="mobile-columns-wrapper"
-      :style="{ transform: `translateX(-${currentColumnIndex * 100}vw)` }"
+      :style="{
+        transform: `translateX(calc(-${currentColumnIndex * 100}% + ${interimOffset}px))`,
+        transition: isSwiping ? 'none' : 'transform 0.3s ease'
+      }"
     >
       <TaskColumn
-        v-for="column in visibleColumns"
+        v-for="(column, index) in visibleColumns"
         :key="column.id"
         :column="column"
         :tasks="tasksByLocation[column.id] || []"
         :is-today="isToday(column.id)"
+        :is-currently-viewed="index === currentColumnIndex"
+        :is-mobile="true"
         :workstreams="workstreams"
         :all-tasks="allTasks"
         @add="(location, workstream) => emit('add', location, workstream)"
@@ -422,19 +536,29 @@ onUnmounted(() => {
         @update:tasks="(tasks, ws) => handleUpdateTasks(column.id, tasks, ws)"
         @create-workstream="emit('createWorkstream', $event)"
         @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
+        @mobile-drag-start="handleMobileDragStart"
+        @mobile-drag-end="handleMobileDragEnd"
       />
     </div>
 
-    <!-- Column indicator dots -->
-    <div class="column-indicator">
+    <!-- Edge zone indicators during drag -->
+    <div v-if="mobileDragActive" class="mobile-drag-edge left-edge"></div>
+    <div v-if="mobileDragActive" class="mobile-drag-edge right-edge"></div>
+
+    <!-- Column navigation bar -->
+    <div class="column-nav-bar">
       <button
         v-for="(column, index) in visibleColumns"
         :key="column.id"
-        class="indicator-dot"
-        :class="{ 'is-active': index === currentColumnIndex }"
+        class="nav-pill"
+        :class="{
+          'is-active': index === currentColumnIndex,
+          'is-today': isToday(column.id)
+        }"
         @click="goToColumn(index)"
-        :title="column.label"
-      />
+      >
+        {{ column.shortLabel || column.label }}
+      </button>
     </div>
   </div>
 </template>
@@ -480,7 +604,7 @@ onUnmounted(() => {
 }
 
 .grid-header.is-today {
-  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), inset 0 2px 0 0 var(--color-primary), 0 4px 20px rgba(42, 125, 110, 0.12);
+  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), inset 0 2px 0 0 var(--color-primary), 0 4px 20px rgba(71, 85, 105, 0.12);
   background: var(--color-today);
   color: var(--color-text);
   font-size: 0.92rem;
@@ -504,7 +628,7 @@ onUnmounted(() => {
 }
 
 .grid-header.is-today .column-count {
-  background: rgba(42, 125, 110, 0.12);
+  background: rgba(71, 85, 105, 0.12);
   color: var(--color-primary);
   font-weight: 600;
 }
@@ -560,7 +684,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   height: 20px;
-  background: linear-gradient(to bottom, transparent, rgba(42, 125, 110, 0.1));
+  background: linear-gradient(to bottom, transparent, rgba(71, 85, 105, 0.1));
   opacity: 0;
   transition: opacity 0.2s;
   pointer-events: none;
@@ -653,12 +777,12 @@ onUnmounted(() => {
 }
 
 .week-grid :deep(.workstream-cell.is-today) {
-  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), 0 4px 20px rgba(42, 125, 110, 0.12);
+  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), 0 4px 20px rgba(71, 85, 105, 0.12);
   background-color: var(--color-today);
 }
 
 .week-grid :deep(.workstream-cell.is-today.is-last-row) {
-  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), inset 0 -2px 0 0 var(--color-primary), 0 4px 20px rgba(42, 125, 110, 0.12);
+  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), inset 0 -2px 0 0 var(--color-primary), 0 4px 20px rgba(71, 85, 105, 0.12);
   background-color: var(--color-today);
 }
 
@@ -670,29 +794,66 @@ onUnmounted(() => {
 
 .mobile-columns-wrapper {
   display: flex;
-  transition: transform 0.3s ease;
   touch-action: pan-y;
 }
 
-.column-indicator {
+.column-nav-bar {
   display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding: 12px;
+  gap: 4px;
+  padding: 8px 12px;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  justify-content: center;
 }
 
-.indicator-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-border);
-  border: none;
+.column-nav-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-pill {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border: 1px solid transparent;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.indicator-dot.is-active {
+.nav-pill.is-active {
   background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.nav-pill.is-today:not(.is-active) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* Mobile drag-to-edge zones */
+.mobile-drag-edge {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.mobile-drag-edge.left-edge {
+  left: 0;
+  background: linear-gradient(to right, rgba(42, 125, 110, 0.15), transparent);
+}
+
+.mobile-drag-edge.right-edge {
+  right: 0;
+  background: linear-gradient(to left, rgba(42, 125, 110, 0.15), transparent);
 }
 </style>
