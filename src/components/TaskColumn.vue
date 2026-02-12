@@ -63,8 +63,8 @@ const allWorkstreamRows = computed(() => {
   // Get all workstream names from the workstreams prop, sorted alphabetically
   const wsNames = props.workstreams.map(w => w.name).sort()
 
-  // null (no workstream) is always first, then alphabetical workstreams
-  return [null, ...wsNames]
+  // null (no workstream) is always first, then only workstreams with tasks
+  return [null, ...wsNames.filter(ws => getTasksForWorkstream(ws).length > 0)]
 })
 
 const getWorkstreamColor = (workstreamName) => {

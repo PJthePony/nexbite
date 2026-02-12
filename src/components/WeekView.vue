@@ -65,9 +65,18 @@ const getTasksForCell = (columnId, workstream) => {
   return columnTasks.filter(t => (t.workstream || null) === workstream)
 }
 
+// Only show workstreams that have at least one task in any visible column
+const visibleWorkstreamNames = computed(() => {
+  return orderedWorkstreamNames.value.filter(wsName => {
+    return visibleColumns.value.some(col => {
+      return getTasksForCell(col.id, wsName).length > 0
+    })
+  })
+})
+
 // Check if a workstream is the last row (for bottom border of today column)
 const isLastRow = (wsName) => {
-  const wsNames = orderedWorkstreamNames.value
+  const wsNames = visibleWorkstreamNames.value
   if (wsNames.length === 0) return true // Tasks row is last if no workstreams
   return wsName === wsNames[wsNames.length - 1]
 }
@@ -306,7 +315,7 @@ onUnmounted(() => {
       :all-tasks="allTasks"
       :is-today="isToday(column.id)"
       :show-empty-state="isToday(column.id) && todayHasNoTasks"
-      :class="{ 'is-today': isToday(column.id), 'is-last-row': orderedWorkstreamNames.length === 0 }"
+      :class="{ 'is-today': isToday(column.id), 'is-last-row': visibleWorkstreamNames.length === 0 }"
       @add="(location, workstream) => emit('add', location, workstream)"
       @toggle="emit('toggle', $event)"
       @edit="emit('edit', $event)"
@@ -317,7 +326,7 @@ onUnmounted(() => {
     />
 
     <!-- Draggable workstream rows -->
-    <template v-for="wsName in orderedWorkstreamNames" :key="wsName">
+    <template v-for="wsName in visibleWorkstreamNames" :key="wsName">
       <!-- Workstream label (draggable) -->
       <div
         class="grid-row-label draggable-row-label"
