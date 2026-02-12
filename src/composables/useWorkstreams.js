@@ -2,18 +2,18 @@ import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
-// 10 predefined colors for workstreams
+// 10 predefined colors for workstreams - harmonized with Palette C (Soft Neutrals + Muted Teal)
 export const WORKSTREAM_COLORS = [
-  { name: 'Mint', bg: '#e8f4ef', text: '#1a5f4a' },
-  { name: 'Blue', bg: '#e3f2fd', text: '#1565c0' },
-  { name: 'Orange', bg: '#fff3e0', text: '#e65100' },
-  { name: 'Purple', bg: '#f3e5f5', text: '#7b1fa2' },
-  { name: 'Indigo', bg: '#e8eaf6', text: '#3949ab' },
-  { name: 'Amber', bg: '#fff8e1', text: '#f9a825' },
-  { name: 'Pink', bg: '#fce4ec', text: '#c2185b' },
-  { name: 'Teal', bg: '#e0f2f1', text: '#00796b' },
-  { name: 'Brown', bg: '#efebe9', text: '#5d4037' },
-  { name: 'Green', bg: '#f1f8e9', text: '#558b2f' },
+  { name: 'Teal', bg: '#e6f2ef', text: '#1f6b5e' },
+  { name: 'Slate', bg: '#e0eaf2', text: '#3a5f7a' },
+  { name: 'Gold', bg: '#f2ebe0', text: '#8b6d3f' },
+  { name: 'Plum', bg: '#eae4f0', text: '#6b4d8a' },
+  { name: 'Sage', bg: '#e8eee4', text: '#3d6b3a' },
+  { name: 'Copper', bg: '#f2ece6', text: '#8b6040' },
+  { name: 'Rose', bg: '#f0e6e6', text: '#8b4a4a' },
+  { name: 'Forest', bg: '#e4ede8', text: '#3d6b56' },
+  { name: 'Stone', bg: '#ebe8e4', text: '#6b5d4f' },
+  { name: 'Moss', bg: '#e6eee2', text: '#4f6b3a' },
 ]
 
 // Shared state across all usages (singleton)

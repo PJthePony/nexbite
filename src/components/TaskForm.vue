@@ -311,8 +311,8 @@ const handleCreateWorkstream = (wsData) => {
 
 .modal-footer-sticky {
   display: flex;
-  gap: 12px;
-  padding: 16px 24px;
+  gap: 10px;
+  padding: 14px 22px;
   border-top: 1px solid var(--color-border);
   background: var(--color-surface);
   position: sticky;

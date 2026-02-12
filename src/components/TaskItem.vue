@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useMultiSelect } from '../composables/useMultiSelect'
+import { getTagColor } from '../composables/useTags'
 
 const { isSelectMode, isSelected: checkIsSelected, toggleSelection, clearSelection, selectedTaskIds, isDraggingSelected, draggedTaskId } = useMultiSelect()
 
@@ -21,6 +22,10 @@ const props = defineProps({
     type: Number,
     default: 0
   },
+  completedBiteCount: {
+    type: Number,
+    default: 0
+  },
   compact: {
     type: Boolean,
     default: false
@@ -31,6 +36,10 @@ const emit = defineEmits(['toggle', 'edit', 'delete', 'bite'])
 
 const isBite = computed(() => !!props.task.parentTaskId)
 const hasBites = computed(() => props.biteCount > 0)
+const biteProgress = computed(() => {
+  if (props.biteCount === 0) return 0
+  return Math.round((props.completedBiteCount / props.biteCount) * 100)
+})
 
 const formattedActivateAt = computed(() => {
   if (!props.task.activateAt) return null
@@ -71,8 +80,7 @@ const handleClick = () => {
 const cardStyle = computed(() => {
   if (props.workstreamColor) {
     return {
-      backgroundColor: props.workstreamColor.bg,
-      borderColor: props.workstreamColor.text
+      borderColor: props.compact ? props.workstreamColor.text + '40' : props.workstreamColor.text
     }
   }
   return {}
@@ -82,7 +90,7 @@ const cardStyle = computed(() => {
 <template>
   <div
     class="task-item"
-    :class="{ 'is-completed': task.completed, 'is-compact': compact, 'is-selected': isTaskSelected, 'is-faded-for-drag': isFadedDuringDrag }"
+    :class="{ 'is-completed': task.completed, 'is-compact': compact, 'is-selected': isTaskSelected, 'is-faded-for-drag': isFadedDuringDrag, 'has-bites': hasBites }"
     :style="cardStyle"
     @mousedown="handleMouseDown"
     @click="handleClick"
@@ -97,7 +105,14 @@ const cardStyle = computed(() => {
         @change.stop
       />
       <div class="task-content">
-        <div class="task-title">{{ task.title }}</div>
+        <div class="task-title">
+          <span
+            v-if="compact && workstreamColor"
+            class="ws-dot"
+            :style="{ backgroundColor: workstreamColor.text }"
+          ></span>
+          {{ task.title }}
+        </div>
         <div v-if="task.notes" class="task-notes-indicator">
           Has notes
         </div>
@@ -127,8 +142,11 @@ const cardStyle = computed(() => {
       <div v-if="isBite && parentTask" class="task-bite-indicator bite-child">
         bite of: {{ parentTask.title }}
       </div>
-      <div v-if="hasBites" class="task-bite-indicator bite-parent">
-        {{ biteCount }} {{ biteCount === 1 ? 'bite' : 'bites' }}
+      <div v-if="hasBites" class="task-bite-parent-indicator">
+        <span class="bite-summary">{{ completedBiteCount }}/{{ biteCount }} bites</span>
+        <div class="bite-progress-track">
+          <div class="bite-progress-fill" :style="{ width: biteProgress + '%' }"></div>
+        </div>
       </div>
       <div v-if="formattedActivateAt" class="task-activate-at">
         &#x2192; Next Week on {{ formattedActivateAt }}
@@ -138,6 +156,7 @@ const cardStyle = computed(() => {
           v-for="tag in task.tags"
           :key="tag"
           class="task-tag"
+          :style="{ backgroundColor: getTagColor(tag).bg, color: getTagColor(tag).text }"
         >
           {{ tag }}
         </span>

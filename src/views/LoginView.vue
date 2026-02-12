@@ -139,7 +139,7 @@ const handleSubmit = async () => {
 .form-group input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(42, 125, 110, 0.1);
 }
 
 .form-group input:disabled {
@@ -185,7 +185,7 @@ const handleSubmit = async () => {
 }
 
 .login-error {
-  background: #fef2f2;
+  background: #f5e8e8;
   color: var(--color-danger);
   padding: 10px 12px;
   border-radius: var(--radius-md);

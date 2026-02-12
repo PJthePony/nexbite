@@ -3,18 +3,18 @@ import { useTasks } from './useTasks'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
-// 10 curated tag colors - background and text pairs for good contrast
+// 10 curated tag colors - harmonized with Palette C (Soft Neutrals + Muted Teal)
 const TAG_COLORS = [
-  { bg: '#e8f4ef', text: '#1a5f4a' },  // Mint
-  { bg: '#e3f2fd', text: '#1565c0' },  // Blue
-  { bg: '#fff3e0', text: '#e65100' },  // Orange
-  { bg: '#f3e5f5', text: '#7b1fa2' },  // Purple
-  { bg: '#e8eaf6', text: '#3949ab' },  // Indigo
-  { bg: '#fff8e1', text: '#f9a825' },  // Amber
-  { bg: '#fce4ec', text: '#c2185b' },  // Pink
-  { bg: '#e0f2f1', text: '#00796b' },  // Teal
-  { bg: '#efebe9', text: '#5d4037' },  // Brown
-  { bg: '#f1f8e9', text: '#558b2f' },  // Light Green
+  { bg: '#e6f2ef', text: '#1f6b5e' },  // Teal (primary family)
+  { bg: '#e8eee4', text: '#3d6b3a' },  // Sage
+  { bg: '#f2ebe0', text: '#8b6d3f' },  // Warm Gold (accent family)
+  { bg: '#eae4f0', text: '#6b4d8a' },  // Muted Purple
+  { bg: '#e0eaf2', text: '#3a5f7a' },  // Slate Blue
+  { bg: '#f2ece6', text: '#8b6040' },  // Copper
+  { bg: '#f0e6e6', text: '#8b4a4a' },  // Dusty Rose
+  { bg: '#e4ede8', text: '#3d6b56' },  // Forest
+  { bg: '#ebe8e4', text: '#6b5d4f' },  // Warm Stone
+  { bg: '#e6eee2', text: '#4f6b3a' },  // Moss
 ]
 
 // Hash a string to a number for consistent color assignment

@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager — Design System Style Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ================================================================
+       DESIGN SYSTEM — BASE STYLES
+       ================================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f5f5;
+      color: #1a1a1a;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      padding: 0;
+    }
+
+    /* ================================================================
+       LAYOUT & NAV
+       ================================================================ */
+    .ds-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+    .ds-nav-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: -0.01em;
+      margin-right: 16px;
+      white-space: nowrap;
+    }
+    .ds-nav a {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      transition: color 150ms;
+    }
+    .ds-nav a:hover { color: #fff; }
+
+    .ds-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    .ds-section {
+      margin-bottom: 64px;
+    }
+
+    .ds-section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #1a1a1a;
+    }
+
+    .ds-section-desc {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 32px;
+      max-width: 700px;
+    }
+
+    .ds-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #999;
+      margin-bottom: 12px;
+    }
+
+    .ds-option-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+      color: #1a1a1a;
+    }
+
+    .ds-option-meta {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .ds-columns-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 32px;
+    }
+
+    .ds-columns-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    .ds-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 28px;
+    }
+
+    .ds-divider {
+      border: none;
+      border-top: 1px solid #e0e0e0;
+      margin: 24px 0;
+    }
+
+    /* ================================================================
+       1. TYPOGRAPHY COMPARISON
+       ================================================================ */
+    .typo-sample { padding: 0; }
+
+    .typo-sample .t-h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 6px; line-height: 1.2; }
+    .typo-sample .t-h2 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.3; }
+    .typo-sample .t-h3 { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; line-height: 1.4; }
+    .typo-sample .t-h4 { font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+    .typo-sample .t-body { font-size: 0.875rem; font-weight: 400; margin-bottom: 6px; color: #333; line-height: 1.55; }
+    .typo-sample .t-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; color: #666; }
+    .typo-sample .t-caption { font-size: 0.7rem; font-weight: 400; color: #999; margin-bottom: 6px; }
+    .typo-sample .t-button { font-size: 0.85rem; font-weight: 600; letter-spacing: -0.01em; display: inline-block; padding: 7px 18px; background: #3b82f6; color: #fff; border-radius: 6px; margin-bottom: 6px; }
+
+    .font-a { font-family: 'Inter', -apple-system, sans-serif; }
+    .font-b { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; }
+    .font-c { font-family: 'IBM Plex Sans', -apple-system, sans-serif; }
+
+    /* ================================================================
+       2. COLOR PALETTES
+       ================================================================ */
+    .swatch-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .swatch {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.08);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .swatch-label {
+      font-size: 0.6rem;
+      color: #888;
+      text-align: center;
+      margin-top: 2px;
+      width: 48px;
+    }
+    .swatch-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Palette A — Warm neutrals + refined blue */
+    .pal-a { --p-bg: #faf9f7; --p-surface: #ffffff; --p-surface-el: #ffffff; --p-border: #e8e4df; --p-border-lt: #d4cfc8; --p-text: #1c1917; --p-text-sec: #78716c; --p-text-mut: #a8a29e; --p-primary: #4f7cac; --p-primary-hov: #3d6a9a; --p-accent: #e8985a; --p-success: #5b9a5f; --p-danger: #c75450; --p-today-bg: #fdfcfa; --p-today-border: #4f7cac; }
+    /* Palette B — Cool grays + deep indigo */
+    .pal-b { --p-bg: #f4f5f7; --p-surface: #ffffff; --p-surface-el: #ffffff; --p-border: #e1e4e8; --p-border-lt: #d0d4db; --p-text: #0d1117; --p-text-sec: #636c76; --p-text-mut: #9198a1; --p-primary: #4338ca; --p-primary-hov: #3730a3; --p-accent: #7c3aed; --p-success: #059669; --p-danger: #dc2626; --p-today-bg: #fafaff; --p-today-border: #4338ca; }
+    /* Palette C — Soft neutrals + muted teal */
+    .pal-c { --p-bg: #f7f8f6; --p-surface: #ffffff; --p-surface-el: #ffffff; --p-border: #dfe3dc; --p-border-lt: #cdd2c9; --p-text: #1a1f16; --p-text-sec: #6b7264; --p-text-mut: #98a08f; --p-primary: #2a7d6e; --p-primary-hov: #1f6b5e; --p-accent: #b08d57; --p-success: #3d8b5a; --p-danger: #c44f4f; --p-today-bg: #f9faf8; --p-today-border: #2a7d6e; }
+
+    /* ================================================================
+       3. SAMPLE TASK CARDS (within palette context)
+       ================================================================ */
+    .sample-card-area {
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .sample-task {
+      border-radius: 6px;
+      padding: 10px 12px;
+      border-width: 1px;
+      border-style: solid;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      position: relative;
+    }
+
+    .sample-task:last-child { margin-bottom: 0; }
+
+    .sample-task-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .sample-checkbox {
+      width: 16px;
+      height: 16px;
+      border: 2px solid;
+      border-radius: 4px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .sample-task-content { flex: 1; min-width: 0; }
+
+    .sample-task-title {
+      font-size: 0.85rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    .sample-task-meta {
+      font-size: 0.7rem;
+      margin-top: 4px;
+    }
+
+    .sample-tags {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .sample-tag {
+      font-size: 0.62rem;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 3px;
+    }
+
+    .sample-actions {
+      display: flex;
+      gap: 3px;
+      opacity: 0.5;
+      margin-top: 1px;
+    }
+    .sample-action-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+    }
+
+    .sample-task-compact {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+    }
+    .sample-task-compact .sample-task-title { font-size: 0.78rem; }
+
+    .sample-bite-indicator {
+      font-size: 0.65rem;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* ================================================================
+       4. COMPONENT SAMPLES
+       ================================================================ */
+    .comp-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    /* Buttons */
+    .btn-demo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 150ms ease;
+      letter-spacing: -0.01em;
+    }
+    .btn-demo:active { transform: scale(0.97); }
+
+    /* Inline input */
+    .inline-input-demo {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px dashed;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      background: transparent;
+      outline: none;
+    }
+
+    /* Search bar */
+    .search-demo {
+      position: relative;
+      width: 260px;
+    }
+    .search-demo input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      outline: none;
+    }
+    .search-demo .search-icon-demo {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      opacity: 0.4;
+    }
+
+    /* Column header */
+    .col-header-demo {
+      padding: 14px 16px;
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 8px 8px 0 0;
+    }
+    .col-header-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .col-header-count {
+      font-size: 0.68rem;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+    .col-header-today-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* Workstream label */
+    .ws-label-demo {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 4px;
+      border-left: 3px solid;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Tag chips */
+    .tag-demo {
+      font-size: 0.68rem;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    /* Modal shell */
+    .modal-demo {
+      border-radius: 10px;
+      border-width: 1px;
+      border-style: solid;
+      max-width: 420px;
+      overflow: hidden;
+    }
+    .modal-demo-header {
+      padding: 18px 22px;
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-demo-title { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.02em; }
+    .modal-demo-close {
+      width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; border: none; background: none;
+    }
+    .modal-demo-body { padding: 22px; }
+    .modal-demo-field { margin-bottom: 14px; }
+    .modal-demo-label { font-size: 0.78rem; font-weight: 500; margin-bottom: 5px; display: block; }
+    .modal-demo-input {
+      width: 100%;
+      padding: 9px 12px;
+      border-width: 1px;
+      border-style: solid;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .modal-demo-footer {
+      padding: 14px 22px;
+      border-top-width: 1px;
+      border-top-style: solid;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Empty state */
+    .empty-state-demo {
+      text-align: center;
+      padding: 40px 24px;
+      border-radius: 8px;
+    }
+    .empty-state-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      opacity: 0.3;
+    }
+    .empty-state-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .empty-state-desc {
+      font-size: 0.8rem;
+    }
+
+    /* ================================================================
+       5. MINI WEEK GRID
+       ================================================================ */
+    .mini-grid {
+      display: flex;
+      gap: 8px;
+      padding: 20px;
+      border-radius: 10px;
+      overflow-x: auto;
+    }
+    .mini-col {
+      flex: 1;
+      min-width: 110px;
+      border-radius: 8px;
+      border-width: 1px;
+      border-style: solid;
+      overflow: hidden;
+    }
+    .mini-col.is-today-col {
+      flex: 1.35;
+    }
+    .mini-col-header {
+      padding: 8px 10px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .mini-col-body {
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 120px;
+    }
+    .mini-task {
+      padding: 4px 7px;
+      border-radius: 4px;
+      font-size: 0.6rem;
+      border-width: 1px;
+      border-style: solid;
+    }
+    .mini-ws-label {
+      font-size: 0.52rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      border-left: 2px solid;
+      margin-bottom: 2px;
+    }
+    .mini-today-badge {
+      font-size: 0.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    /* ================================================================
+       6. TODAY COLUMN TREATMENT
+       ================================================================ */
+    .today-comparison {
+      display: flex;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .today-col-demo {
+      flex: 1;
+      border-radius: 10px;
+      border-width: 1px;
+      border-style: solid;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .today-col-demo.is-today-demo {
+      flex: 1.3;
+      border-width: 2px;
+    }
+    .today-col-demo .col-body {
+      padding: 10px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Helper: pick-label banner */
+    .pick-label {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 3px 10px;
+      border-radius: 4px;
+      background: #1a1a1a;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    /* ================================================================
+       UTILITY
+       ================================================================ */
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mb-8 { margin-bottom: 8px; }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav class="ds-nav">
+  <span class="ds-nav-title">Task Manager Design System</span>
+  <a href="#typography">Typography</a>
+  <a href="#palettes">Color Palettes</a>
+  <a href="#today-treatment">Today Treatment</a>
+  <a href="#components">Components</a>
+  <a href="#week-grid">Week Grid</a>
+</nav>
+
+<div class="ds-container">
+
+<!-- ============================================================
+     TYPOGRAPHY
+     ============================================================ -->
+<section class="ds-section" id="typography">
+  <h2 class="ds-section-title">1. Typography Options</h2>
+  <p class="ds-section-desc">Three typeface options compared side-by-side. Each shows the full hierarchy: headings, body, labels, captions, and a button sample. Pick by letter (A/B/C) and mix with any color palette.</p>
+
+  <div class="ds-columns-3">
+
+    <!-- OPTION A: Inter -->
+    <div class="ds-card">
+      <span class="pick-label">Font A</span>
+      <div class="ds-option-label">Inter</div>
+      <div class="ds-option-meta">Clean, universally loved, Google-inspired. Neutral and highly legible at small sizes.</div>
+      <div class="typo-sample font-a">
+        <div class="t-h1">Week at a Glance</div>
+        <div class="t-h2">Today's Focus</div>
+        <div class="t-h3">Engineering Sprint</div>
+        <div class="t-h4">Deploy auth module</div>
+        <hr class="ds-divider">
+        <div class="t-body">Review the pull request for the new authentication flow. Make sure edge cases around token refresh are covered before merging.</div>
+        <hr class="ds-divider">
+        <div class="t-label">Workstream</div>
+        <div class="t-caption">3 bites remaining &middot; Due Friday</div>
+        <hr class="ds-divider">
+        <div class="t-button">Save Task</div>
+      </div>
+    </div>
+
+    <!-- OPTION B: Plus Jakarta Sans -->
+    <div class="ds-card">
+      <span class="pick-label">Font B</span>
+      <div class="ds-option-label">Plus Jakarta Sans</div>
+      <div class="ds-option-meta">More personality, modern geometric feel. Slightly warmer than Inter with distinctive character.</div>
+      <div class="typo-sample font-b">
+        <div class="t-h1">Week at a Glance</div>
+        <div class="t-h2">Today's Focus</div>
+        <div class="t-h3">Engineering Sprint</div>
+        <div class="t-h4">Deploy auth module</div>
+        <hr class="ds-divider">
+        <div class="t-body">Review the pull request for the new authentication flow. Make sure edge cases around token refresh are covered before merging.</div>
+        <hr class="ds-divider">
+        <div class="t-label">Workstream</div>
+        <div class="t-caption">3 bites remaining &middot; Due Friday</div>
+        <hr class="ds-divider">
+        <div class="t-button">Save Task</div>
+      </div>
+    </div>
+
+    <!-- OPTION C: IBM Plex Sans -->
+    <div class="ds-card">
+      <span class="pick-label">Font C</span>
+      <div class="ds-option-label">IBM Plex Sans</div>
+      <div class="ds-option-meta">Serious, professional, authoritative. Technical precision with humanist warmth. Excellent for data-dense UIs.</div>
+      <div class="typo-sample font-c">
+        <div class="t-h1">Week at a Glance</div>
+        <div class="t-h2">Today's Focus</div>
+        <div class="t-h3">Engineering Sprint</div>
+        <div class="t-h4">Deploy auth module</div>
+        <hr class="ds-divider">
+        <div class="t-body">Review the pull request for the new authentication flow. Make sure edge cases around token refresh are covered before merging.</div>
+        <hr class="ds-divider">
+        <div class="t-label">Workstream</div>
+        <div class="t-caption">3 bites remaining &middot; Due Friday</div>
+        <hr class="ds-divider">
+        <div class="t-button">Save Task</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ============================================================
+     COLOR PALETTES
+     ============================================================ -->
+<section class="ds-section" id="palettes">
+  <h2 class="ds-section-title">2. Color Palettes</h2>
+  <p class="ds-section-desc">Three palette options. Each shows its full swatch set plus sample task cards applied in context. Pick by letter (A/B/C) and combine with any font choice above.</p>
+
+  <div class="ds-columns-3">
+
+    <!-- PALETTE A: Warm neutrals + refined blue -->
+    <div class="ds-card pal-a">
+      <span class="pick-label">Palette A</span>
+      <div class="ds-option-label">Warm Neutrals + Refined Blue</div>
+      <div class="ds-option-meta">Asana-inspired warmth. Approachable and professional. Earthy tones keep things grounded.</div>
+
+      <div class="ds-label">Swatches</div>
+      <div class="swatch-row">
+        <div class="swatch-item"><div class="swatch" style="background: #faf9f7;"></div><div class="swatch-label">bg</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #ffffff;"></div><div class="swatch-label">surface</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #e8e4df;"></div><div class="swatch-label">border</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #1c1917;"></div><div class="swatch-label">text</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #78716c;"></div><div class="swatch-label">text-sec</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #a8a29e;"></div><div class="swatch-label">muted</div></div>
+      </div>
+      <div class="swatch-row">
+        <div class="swatch-item"><div class="swatch" style="background: #4f7cac;"></div><div class="swatch-label">primary</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #3d6a9a;"></div><div class="swatch-label">pri-hov</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #e8985a;"></div><div class="swatch-label">accent</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #5b9a5f;"></div><div class="swatch-label">success</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #c75450;"></div><div class="swatch-label">danger</div></div>
+      </div>
+
+      <div class="ds-label mt-24">Sample Cards (in context)</div>
+      <div class="sample-card-area" style="background: var(--p-bg);">
+        <!-- Full/Today card -->
+        <div class="sample-task font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-header">
+            <div class="sample-checkbox" style="border-color: var(--p-border-lt);"></div>
+            <div class="sample-task-content">
+              <div class="sample-task-title" style="color: var(--p-text);">Review auth PR and merge</div>
+              <div class="sample-tags">
+                <span class="sample-tag" style="background: rgba(79,124,172,0.12); color: var(--p-primary);">engineering</span>
+                <span class="sample-tag" style="background: rgba(232,152,90,0.12); color: var(--p-accent);">urgent</span>
+              </div>
+              <div class="sample-bite-indicator" style="color: var(--p-text-sec);">2 of 4 bites done</div>
+            </div>
+            <div class="sample-actions">
+              <div class="sample-action-icon" style="color: var(--p-text-mut);">&#9998;</div>
+              <div class="sample-action-icon" style="color: var(--p-text-mut);">&#8943;</div>
+            </div>
+          </div>
+        </div>
+        <!-- Compact card -->
+        <div class="sample-task sample-task-compact font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-title" style="color: var(--p-text);">Send weekly update email</div>
+        </div>
+        <div class="sample-task sample-task-compact font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-title" style="color: var(--p-text); text-decoration: line-through; opacity: 0.5;">Update changelog</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PALETTE B: Cool grays + deep indigo -->
+    <div class="ds-card pal-b">
+      <span class="pick-label">Palette B</span>
+      <div class="ds-option-label">Cool Grays + Deep Indigo</div>
+      <div class="ds-option-meta">Linear-inspired precision. Sleek and modern with a developer-friendly aesthetic. Strong focus hierarchy.</div>
+
+      <div class="ds-label">Swatches</div>
+      <div class="swatch-row">
+        <div class="swatch-item"><div class="swatch" style="background: #f4f5f7;"></div><div class="swatch-label">bg</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #ffffff;"></div><div class="swatch-label">surface</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #e1e4e8;"></div><div class="swatch-label">border</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #0d1117;"></div><div class="swatch-label">text</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #636c76;"></div><div class="swatch-label">text-sec</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #9198a1;"></div><div class="swatch-label">muted</div></div>
+      </div>
+      <div class="swatch-row">
+        <div class="swatch-item"><div class="swatch" style="background: #4338ca;"></div><div class="swatch-label">primary</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #3730a3;"></div><div class="swatch-label">pri-hov</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #7c3aed;"></div><div class="swatch-label">accent</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #059669;"></div><div class="swatch-label">success</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #dc2626;"></div><div class="swatch-label">danger</div></div>
+      </div>
+
+      <div class="ds-label mt-24">Sample Cards (in context)</div>
+      <div class="sample-card-area" style="background: var(--p-bg);">
+        <div class="sample-task font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-header">
+            <div class="sample-checkbox" style="border-color: var(--p-border-lt);"></div>
+            <div class="sample-task-content">
+              <div class="sample-task-title" style="color: var(--p-text);">Review auth PR and merge</div>
+              <div class="sample-tags">
+                <span class="sample-tag" style="background: rgba(67,56,202,0.1); color: var(--p-primary);">engineering</span>
+                <span class="sample-tag" style="background: rgba(124,58,237,0.1); color: var(--p-accent);">urgent</span>
+              </div>
+              <div class="sample-bite-indicator" style="color: var(--p-text-sec);">2 of 4 bites done</div>
+            </div>
+            <div class="sample-actions">
+              <div class="sample-action-icon" style="color: var(--p-text-mut);">&#9998;</div>
+              <div class="sample-action-icon" style="color: var(--p-text-mut);">&#8943;</div>
+            </div>
+          </div>
+        </div>
+        <div class="sample-task sample-task-compact font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-title" style="color: var(--p-text);">Send weekly update email</div>
+        </div>
+        <div class="sample-task sample-task-compact font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-title" style="color: var(--p-text); text-decoration: line-through; opacity: 0.5;">Update changelog</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PALETTE C: Soft neutrals + muted teal -->
+    <div class="ds-card pal-c">
+      <span class="pick-label">Palette C</span>
+      <div class="ds-option-label">Soft Neutrals + Muted Teal</div>
+      <div class="ds-option-meta">Calm, nature-inspired serenity. Low-contrast warmth reduces eye strain. Excellent for all-day use.</div>
+
+      <div class="ds-label">Swatches</div>
+      <div class="swatch-row">
+        <div class="swatch-item"><div class="swatch" style="background: #f7f8f6;"></div><div class="swatch-label">bg</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #ffffff;"></div><div class="swatch-label">surface</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #dfe3dc;"></div><div class="swatch-label">border</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #1a1f16;"></div><div class="swatch-label">text</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #6b7264;"></div><div class="swatch-label">text-sec</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #98a08f;"></div><div class="swatch-label">muted</div></div>
+      </div>
+      <div class="swatch-row">
+        <div class="swatch-item"><div class="swatch" style="background: #2a7d6e;"></div><div class="swatch-label">primary</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #1f6b5e;"></div><div class="swatch-label">pri-hov</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #b08d57;"></div><div class="swatch-label">accent</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #3d8b5a;"></div><div class="swatch-label">success</div></div>
+        <div class="swatch-item"><div class="swatch" style="background: #c44f4f;"></div><div class="swatch-label">danger</div></div>
+      </div>
+
+      <div class="ds-label mt-24">Sample Cards (in context)</div>
+      <div class="sample-card-area" style="background: var(--p-bg);">
+        <div class="sample-task font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-header">
+            <div class="sample-checkbox" style="border-color: var(--p-border-lt);"></div>
+            <div class="sample-task-content">
+              <div class="sample-task-title" style="color: var(--p-text);">Review auth PR and merge</div>
+              <div class="sample-tags">
+                <span class="sample-tag" style="background: rgba(42,125,110,0.1); color: var(--p-primary);">engineering</span>
+                <span class="sample-tag" style="background: rgba(176,141,87,0.12); color: var(--p-accent);">urgent</span>
+              </div>
+              <div class="sample-bite-indicator" style="color: var(--p-text-sec);">2 of 4 bites done</div>
+            </div>
+            <div class="sample-actions">
+              <div class="sample-action-icon" style="color: var(--p-text-mut);">&#9998;</div>
+              <div class="sample-action-icon" style="color: var(--p-text-mut);">&#8943;</div>
+            </div>
+          </div>
+        </div>
+        <div class="sample-task sample-task-compact font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-title" style="color: var(--p-text);">Send weekly update email</div>
+        </div>
+        <div class="sample-task sample-task-compact font-a" style="background: var(--p-surface); border-color: var(--p-border);">
+          <div class="sample-task-title" style="color: var(--p-text); text-decoration: line-through; opacity: 0.5;">Update changelog</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CSS VARIABLE MAPPING REFERENCE -->
+  <div class="ds-card mt-24" style="max-width: 700px;">
+    <div class="ds-label">CSS Variable Mapping (for implementation)</div>
+    <pre style="font-size: 0.72rem; line-height: 1.7; color: #555; background: #f8f8f8; padding: 16px; border-radius: 6px; overflow-x: auto;">:root {
+  --color-bg:               /* palette bg */
+  --color-surface:          /* palette surface */
+  --color-surface-elevated: /* palette surface (or slightly elevated) */
+  --color-border:           /* palette border */
+  --color-border-light:     /* palette border-lt */
+  --color-text:             /* palette text */
+  --color-text-secondary:   /* palette text-sec */
+  --color-text-muted:       /* palette muted */
+  --color-primary:          /* palette primary */
+  --color-primary-hover:    /* palette pri-hov */
+  --color-success:          /* palette success */
+  --color-danger:           /* palette danger */
+  --color-today:            /* palette today-bg */
+  --color-today-border:     /* palette today-border (= primary) */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;        /* evolved: 8 -> 10 for softer feel */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --transition: 150ms ease;
+}</pre>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     TODAY COLUMN TREATMENT
+     ============================================================ -->
+<section class="ds-section" id="today-treatment">
+  <h2 class="ds-section-title">3. Today Column Treatment</h2>
+  <p class="ds-section-desc">The #1 design goal: make today feel unmistakably central. Below shows three approaches to "today vs. other days" using Palette A values. The today column is wider, has richer cards, and uses visual weight to draw the eye.</p>
+
+  <!-- Approach 1: Border accent + wider + rich cards -->
+  <div class="ds-label mt-24">Approach: Wider column + border accent + full cards vs. compact</div>
+  <div class="pal-a" style="padding: 20px; background: var(--p-bg); border-radius: 10px;">
+    <div class="today-comparison font-a">
+
+      <!-- Monday (other day) -->
+      <div class="today-col-demo" style="background: var(--p-surface); border-color: var(--p-border);">
+        <div class="col-header-demo" style="border-bottom-color: var(--p-border);">
+          <span class="col-header-title" style="color: var(--p-text-sec); font-size: 0.82rem; font-weight: 500;">Mon 10</span>
+          <span class="col-header-count" style="background: var(--p-border); color: var(--p-text-sec);">2</span>
+        </div>
+        <div class="col-body">
+          <div class="sample-task sample-task-compact" style="background: var(--p-surface); border-color: var(--p-border);">
+            <div class="sample-task-title" style="color: var(--p-text); font-size: 0.76rem;">Prep sprint review slides</div>
+          </div>
+          <div class="sample-task sample-task-compact" style="background: var(--p-surface); border-color: var(--p-border);">
+            <div class="sample-task-title" style="color: var(--p-text); font-size: 0.76rem;">Update project roadmap</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TUESDAY = TODAY -->
+      <div class="today-col-demo is-today-demo" style="background: var(--p-today-bg); border-color: var(--p-today-border); box-shadow: 0 0 0 1px var(--p-today-border), 0 4px 20px rgba(79,124,172,0.12);">
+        <div class="col-header-demo" style="border-bottom-color: var(--p-today-border); background: rgba(79,124,172,0.04);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="col-header-title" style="color: var(--p-primary); font-size: 0.92rem;">Tue 11</span>
+            <span class="col-header-today-label" style="background: var(--p-primary); color: #fff;">Today</span>
+          </div>
+          <span class="col-header-count" style="background: rgba(79,124,172,0.12); color: var(--p-primary);">3</span>
+        </div>
+        <div class="col-body">
+          <!-- Workstream label -->
+          <div class="ws-label-demo" style="background: rgba(79,124,172,0.06); border-color: var(--p-primary); color: var(--p-primary); font-size: 0.62rem;">Engineering</div>
+          <!-- Full card -->
+          <div class="sample-task" style="background: var(--p-surface); border-color: var(--p-border);">
+            <div class="sample-task-header">
+              <div class="sample-checkbox" style="border-color: var(--p-primary);"></div>
+              <div class="sample-task-content">
+                <div class="sample-task-title" style="color: var(--p-text);">Review auth PR and merge</div>
+                <div class="sample-tags">
+                  <span class="sample-tag" style="background: rgba(79,124,172,0.1); color: var(--p-primary);">backend</span>
+                </div>
+                <div class="sample-bite-indicator" style="color: var(--p-primary);">Bite 2 of 4</div>
+              </div>
+            </div>
+          </div>
+          <!-- Full card 2 -->
+          <div class="sample-task" style="background: var(--p-surface); border-color: var(--p-border);">
+            <div class="sample-task-header">
+              <div class="sample-checkbox" style="border-color: var(--p-border-lt);"></div>
+              <div class="sample-task-content">
+                <div class="sample-task-title" style="color: var(--p-text);">Write API integration tests</div>
+                <div class="sample-tags">
+                  <span class="sample-tag" style="background: rgba(232,152,90,0.1); color: var(--p-accent);">testing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Workstream label 2 -->
+          <div class="ws-label-demo" style="background: rgba(232,152,90,0.06); border-color: var(--p-accent); color: var(--p-accent); font-size: 0.62rem;">Design</div>
+          <div class="sample-task" style="background: var(--p-surface); border-color: var(--p-border);">
+            <div class="sample-task-header">
+              <div class="sample-checkbox" style="border-color: var(--p-border-lt);"></div>
+              <div class="sample-task-content">
+                <div class="sample-task-title" style="color: var(--p-text);">Finalize onboarding mockups</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wednesday (other day) -->
+      <div class="today-col-demo" style="background: var(--p-surface); border-color: var(--p-border);">
+        <div class="col-header-demo" style="border-bottom-color: var(--p-border);">
+          <span class="col-header-title" style="color: var(--p-text-sec); font-size: 0.82rem; font-weight: 500;">Wed 12</span>
+          <span class="col-header-count" style="background: var(--p-border); color: var(--p-text-sec);">2</span>
+        </div>
+        <div class="col-body">
+          <div class="sample-task sample-task-compact" style="background: var(--p-surface); border-color: var(--p-border);">
+            <div class="sample-task-title" style="color: var(--p-text); font-size: 0.76rem;">Plan Q2 OKRs</div>
+          </div>
+          <div class="sample-task sample-task-compact" style="background: var(--p-surface); border-color: var(--p-border);">
+            <div class="sample-task-title" style="color: var(--p-text); font-size: 0.76rem;">Team sync prep</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thursday (other day) -->
+      <div class="today-col-demo" style="background: var(--p-surface); border-color: var(--p-border);">
+        <div class="col-header-demo" style="border-bottom-color: var(--p-border);">
+          <span class="col-header-title" style="color: var(--p-text-sec); font-size: 0.82rem; font-weight: 500;">Thu 13</span>
+          <span class="col-header-count" style="background: var(--p-border); color: var(--p-text-sec);">1</span>
+        </div>
+        <div class="col-body">
+          <div class="sample-task sample-task-compact" style="background: var(--p-surface); border-color: var(--p-border);">
+            <div class="sample-task-title" style="color: var(--p-text); font-size: 0.76rem;">Review design handoff</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="ds-card mt-24" style="max-width: 700px;">
+    <div class="ds-label">Today Column Design Principles</div>
+    <ul style="font-size: 0.82rem; color: #555; line-height: 1.7; padding-left: 20px;">
+      <li><strong>Wider:</strong> Today gets ~1.3x flex ratio vs. other days</li>
+      <li><strong>Border accent:</strong> 2px primary-color border + subtle box-shadow glow</li>
+      <li><strong>Header emphasis:</strong> Primary color title + "Today" badge</li>
+      <li><strong>Rich cards:</strong> Full task cards with checkbox, tags, bite indicator, hover actions</li>
+      <li><strong>Workstream labels:</strong> Visible inside today column to group tasks</li>
+      <li><strong>Other days:</strong> Compact cards (title only), muted header color, thinner borders</li>
+      <li><strong>Background:</strong> Slightly warm/tinted bg distinguishes today from the grid</li>
+    </ul>
+  </div>
+</section>
+
+
+<!-- ============================================================
+     COMPONENTS
+     ============================================================ -->
+<section class="ds-section" id="components">
+  <h2 class="ds-section-title">4. Component Library</h2>
+  <p class="ds-section-desc">All components shown with Palette A + Font A (Inter). These translate directly to any palette/font combination.</p>
+
+  <div class="pal-a font-a">
+
+    <!-- BUTTONS -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Buttons</div>
+      <div class="comp-row">
+        <button class="btn-demo" style="background: var(--p-primary); color: #fff;">Save Task</button>
+        <button class="btn-demo" style="background: var(--p-border); color: var(--p-text);">Cancel</button>
+        <button class="btn-demo" style="background: var(--p-danger); color: #fff;">Delete</button>
+        <button class="btn-demo" style="background: transparent; color: var(--p-primary); border: 1px solid var(--p-border);">Ghost Button</button>
+        <button class="btn-demo" style="background: transparent; color: var(--p-text-sec); text-decoration: underline; padding: 8px 8px; font-size: 0.8rem;">Link style</button>
+      </div>
+      <div class="ds-label mt-16">Small / Compact Buttons</div>
+      <div class="comp-row">
+        <button class="btn-demo" style="background: var(--p-primary); color: #fff; padding: 5px 12px; font-size: 0.78rem; border-radius: 5px;">Add</button>
+        <button class="btn-demo" style="background: var(--p-border); color: var(--p-text); padding: 5px 12px; font-size: 0.78rem; border-radius: 5px;">Edit</button>
+        <button class="btn-demo" style="background: transparent; color: var(--p-text-mut); padding: 5px 12px; font-size: 0.78rem; border-radius: 5px; border: 1px solid var(--p-border);">More</button>
+      </div>
+    </div>
+
+    <!-- TAG CHIPS -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Tag Chips</div>
+      <div class="comp-row">
+        <span class="tag-demo" style="background: rgba(79,124,172,0.1); color: var(--p-primary);">engineering</span>
+        <span class="tag-demo" style="background: rgba(232,152,90,0.1); color: var(--p-accent);">design</span>
+        <span class="tag-demo" style="background: rgba(91,154,95,0.1); color: var(--p-success);">done</span>
+        <span class="tag-demo" style="background: rgba(199,84,80,0.1); color: var(--p-danger);">blocked</span>
+        <span class="tag-demo" style="background: var(--p-border); color: var(--p-text-sec);">misc</span>
+      </div>
+    </div>
+
+    <!-- WORKSTREAM LABELS -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Workstream Row Labels</div>
+      <div class="comp-row">
+        <div class="ws-label-demo" style="background: rgba(79,124,172,0.06); border-color: #4f7cac; color: #4f7cac;">Engineering</div>
+        <div class="ws-label-demo" style="background: rgba(232,152,90,0.06); border-color: #e8985a; color: #a86a32;">Design</div>
+        <div class="ws-label-demo" style="background: rgba(124,58,237,0.06); border-color: #7c3aed; color: #7c3aed;">Marketing</div>
+        <div class="ws-label-demo" style="background: rgba(91,154,95,0.06); border-color: #5b9a5f; color: #4a834e;">Operations</div>
+      </div>
+    </div>
+
+    <!-- COLUMN HEADERS -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Column Headers</div>
+      <div class="ds-columns-2">
+        <div>
+          <div class="ds-option-meta mb-8">Regular day</div>
+          <div class="col-header-demo" style="background: var(--p-surface); border: 1px solid var(--p-border); border-bottom-color: var(--p-border); border-radius: 8px;">
+            <div style="display: flex; align-items: center;">
+              <span class="col-header-title" style="color: var(--p-text-sec); font-weight: 500; font-size: 0.85rem;">Wed 12</span>
+              <span class="col-header-count" style="background: var(--p-border); color: var(--p-text-sec);">2</span>
+            </div>
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--p-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1rem;">+</div>
+          </div>
+        </div>
+        <div>
+          <div class="ds-option-meta mb-8">TODAY (emphasized)</div>
+          <div class="col-header-demo" style="background: rgba(79,124,172,0.04); border: 2px solid var(--p-primary); border-bottom-color: var(--p-primary); border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="col-header-title" style="color: var(--p-primary); font-size: 0.92rem;">Tue 11</span>
+              <span class="col-header-today-label" style="background: var(--p-primary); color: #fff;">Today</span>
+              <span class="col-header-count" style="background: rgba(79,124,172,0.12); color: var(--p-primary);">3</span>
+            </div>
+            <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--p-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">+</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK CARDS -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Task Cards</div>
+
+      <div class="ds-columns-2">
+        <div>
+          <div class="ds-option-meta mb-8">Compact card (other days)</div>
+          <div style="background: var(--p-bg); padding: 12px; border-radius: 8px;">
+            <div class="sample-task sample-task-compact" style="background: var(--p-surface); border-color: var(--p-border);">
+              <div class="sample-task-title" style="color: var(--p-text);">Deploy auth module to staging</div>
+            </div>
+            <div class="sample-task sample-task-compact" style="background: var(--p-surface); border-color: var(--p-border);">
+              <div class="sample-task-title" style="color: var(--p-text);">Review design mockups</div>
+            </div>
+            <div class="sample-task sample-task-compact" style="background: var(--p-surface); border-color: var(--p-border);">
+              <div class="sample-task-title" style="color: var(--p-text); text-decoration: line-through; opacity: 0.5;">Update project docs</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="ds-option-meta mb-8">Full card (today) with tags + bite indicator</div>
+          <div style="background: var(--p-today-bg); padding: 12px; border-radius: 8px; border: 1px solid rgba(79,124,172,0.15);">
+            <div class="sample-task" style="background: var(--p-surface); border-color: var(--p-border);">
+              <div class="sample-task-header">
+                <div class="sample-checkbox" style="border-color: var(--p-primary);"></div>
+                <div class="sample-task-content">
+                  <div class="sample-task-title" style="color: var(--p-text);">Review auth PR and merge</div>
+                  <div class="sample-tags">
+                    <span class="sample-tag" style="background: rgba(79,124,172,0.1); color: var(--p-primary);">backend</span>
+                    <span class="sample-tag" style="background: rgba(232,152,90,0.1); color: var(--p-accent);">urgent</span>
+                  </div>
+                  <div class="sample-bite-indicator" style="color: var(--p-primary);">Bite 2 of 4</div>
+                </div>
+                <div class="sample-actions">
+                  <div class="sample-action-icon" style="color: var(--p-text-mut);">&#9998;</div>
+                  <div class="sample-action-icon" style="color: var(--p-text-mut);">&#8962;</div>
+                  <div class="sample-action-icon" style="color: var(--p-text-mut);">&#8943;</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ds-label mt-24">Task card with "has bites" parent indicator</div>
+      <div style="background: var(--p-bg); padding: 12px; border-radius: 8px; max-width: 320px;">
+        <div class="sample-task" style="background: var(--p-surface); border-color: var(--p-border); border-left: 3px solid var(--p-primary);">
+          <div class="sample-task-header">
+            <div class="sample-checkbox" style="border-color: var(--p-border-lt);"></div>
+            <div class="sample-task-content">
+              <div class="sample-task-title" style="color: var(--p-text);">Build auth system</div>
+              <div style="display: flex; align-items: center; gap: 4px; margin-top: 5px;">
+                <span style="font-size: 0.65rem; font-weight: 500; color: var(--p-primary);">3 bites</span>
+                <span style="font-size: 0.6rem; color: var(--p-text-mut);">&middot;</span>
+                <span style="font-size: 0.6rem; color: var(--p-text-mut);">1 done</span>
+              </div>
+              <div style="margin-top: 4px; height: 3px; background: var(--p-border); border-radius: 2px; overflow: hidden;">
+                <div style="width: 33%; height: 100%; background: var(--p-primary); border-radius: 2px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INLINE TASK INPUT -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Inline Task Creation</div>
+      <div style="background: var(--p-bg); padding: 12px; border-radius: 8px; max-width: 320px;">
+        <input class="inline-input-demo" type="text" placeholder="+ Add a task..." style="color: var(--p-text-mut); border-color: var(--p-border); font-family: inherit; font-size: 0.82rem;" readonly>
+      </div>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Search Bar</div>
+      <div class="comp-row">
+        <div class="search-demo">
+          <span class="search-icon-demo">&#128269;</span>
+          <input type="text" placeholder="Search tasks..." style="border-color: var(--p-border); background: var(--p-surface); color: var(--p-text); font-family: inherit;" readonly>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL SHELL -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Modal Shell (Task Form)</div>
+      <div style="background: rgba(0,0,0,0.04); padding: 32px; border-radius: 8px; display: flex; justify-content: center;">
+        <div class="modal-demo" style="background: var(--p-surface); border-color: var(--p-border); box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+          <div class="modal-demo-header" style="border-bottom-color: var(--p-border);">
+            <span class="modal-demo-title" style="color: var(--p-text);">New Task</span>
+            <button class="modal-demo-close" style="color: var(--p-text-sec);">&#10005;</button>
+          </div>
+          <div class="modal-demo-body">
+            <div class="modal-demo-field">
+              <label class="modal-demo-label" style="color: var(--p-text);">Title</label>
+              <input class="modal-demo-input" type="text" placeholder="What needs to get done?" style="border-color: var(--p-border); background: var(--p-bg); color: var(--p-text); font-family: inherit;" readonly>
+            </div>
+            <div class="modal-demo-field">
+              <label class="modal-demo-label" style="color: var(--p-text);">Day</label>
+              <input class="modal-demo-input" type="text" value="Tuesday (Today)" style="border-color: var(--p-border); background: var(--p-bg); color: var(--p-text); font-family: inherit;" readonly>
+            </div>
+            <div class="modal-demo-field">
+              <label class="modal-demo-label" style="color: var(--p-text);">Workstream</label>
+              <div class="comp-row" style="margin-top: 4px;">
+                <span class="tag-demo" style="background: rgba(79,124,172,0.1); color: var(--p-primary); border: 2px solid var(--p-primary); padding: 4px 10px;">Engineering</span>
+                <span class="tag-demo" style="background: var(--p-bg); color: var(--p-text-sec); border: 1px solid var(--p-border); padding: 4px 10px;">Design</span>
+                <span class="tag-demo" style="background: var(--p-bg); color: var(--p-text-sec); border: 1px solid var(--p-border); padding: 4px 10px;">Marketing</span>
+              </div>
+            </div>
+            <div class="modal-demo-field">
+              <label class="modal-demo-label" style="color: var(--p-text);">Tags</label>
+              <div class="comp-row" style="margin-top: 4px;">
+                <span class="tag-demo" style="background: rgba(79,124,172,0.1); color: var(--p-primary);">backend</span>
+                <span class="tag-demo" style="background: rgba(232,152,90,0.1); color: var(--p-accent);">urgent</span>
+                <span class="tag-demo" style="background: var(--p-border); color: var(--p-text-sec);">+ add</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-demo-footer" style="border-top-color: var(--p-border);">
+            <button class="btn-demo" style="background: var(--p-border); color: var(--p-text); padding: 7px 16px; font-size: 0.82rem;">Cancel</button>
+            <button class="btn-demo" style="background: var(--p-primary); color: #fff; padding: 7px 16px; font-size: 0.82rem;">Save Task</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div class="ds-card mb-24">
+      <div class="ds-label">Empty State</div>
+      <div style="background: var(--p-bg); border-radius: 8px; max-width: 320px;">
+        <div class="empty-state-demo" style="color: var(--p-text);">
+          <div class="empty-state-icon" style="color: var(--p-text-mut);">&#9744;</div>
+          <div class="empty-state-title" style="color: var(--p-text-sec);">No tasks yet</div>
+          <div class="empty-state-desc" style="color: var(--p-text-mut);">Add a task to start planning your day</div>
+          <button class="btn-demo mt-16" style="background: var(--p-primary); color: #fff; font-size: 0.8rem; padding: 7px 16px;">+ Add Task</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ============================================================
+     MINI WEEK GRID
+     ============================================================ -->
+<section class="ds-section" id="week-grid">
+  <h2 class="ds-section-title">5. Mini Week Grid Preview</h2>
+  <p class="ds-section-desc">A miniature version of the full week layout showing days as columns and workstreams as rows within each column. Demonstrates the overall layout feel with today visually dominant.</p>
+
+  <!-- Grid using Palette A -->
+  <div class="ds-label mt-16">Palette A + Font A (Inter)</div>
+  <div class="pal-a font-a mini-grid" style="background: var(--p-bg);">
+
+    <!-- Monday -->
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Mon 10</div>
+      <div class="mini-col-body">
+        <div class="mini-ws-label" style="background: rgba(79,124,172,0.06); border-color: #4f7cac; color: #4f7cac;">Eng</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Sprint planning</div>
+        <div class="mini-ws-label" style="background: rgba(232,152,90,0.06); border-color: #e8985a; color: #a86a32;">Design</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Review mockups</div>
+      </div>
+    </div>
+
+    <!-- TUESDAY = TODAY -->
+    <div class="mini-col is-today-col" style="background: var(--p-today-bg); border-color: var(--p-today-border); border-width: 2px; box-shadow: 0 2px 12px rgba(79,124,172,0.1);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-today-border); color: var(--p-primary); background: rgba(79,124,172,0.04);">
+        <span>Tue 11</span>
+        <span class="mini-today-badge" style="background: var(--p-primary); color: #fff;">Today</span>
+      </div>
+      <div class="mini-col-body">
+        <div class="mini-ws-label" style="background: rgba(79,124,172,0.06); border-color: #4f7cac; color: #4f7cac;">Eng</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-primary); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Review auth PR</span>
+          </div>
+          <div style="font-size: 0.5rem; color: var(--p-primary); margin-top: 2px; padding-left: 12px;">Bite 2/4</div>
+        </div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-border-lt); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Write API tests</span>
+          </div>
+        </div>
+        <div class="mini-ws-label" style="background: rgba(232,152,90,0.06); border-color: #e8985a; color: #a86a32;">Design</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-border-lt); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Onboarding mockups</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wednesday -->
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Wed 12</div>
+      <div class="mini-col-body">
+        <div class="mini-ws-label" style="background: rgba(79,124,172,0.06); border-color: #4f7cac; color: #4f7cac;">Eng</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Deploy staging</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Code review</div>
+      </div>
+    </div>
+
+    <!-- Thursday -->
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Thu 13</div>
+      <div class="mini-col-body">
+        <div class="mini-ws-label" style="background: rgba(124,58,237,0.06); border-color: #7c3aed; color: #7c3aed;">Mktg</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Blog post draft</div>
+      </div>
+    </div>
+
+    <!-- Friday -->
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Fri 14</div>
+      <div class="mini-col-body">
+        <div class="mini-ws-label" style="background: rgba(79,124,172,0.06); border-color: #4f7cac; color: #4f7cac;">Eng</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Release v2.1</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); text-decoration: line-through; opacity: 0.4;">Update docs</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Grid using Palette B -->
+  <div class="ds-label mt-24">Palette B + Font B (Plus Jakarta Sans)</div>
+  <div class="pal-b font-b mini-grid" style="background: var(--p-bg);">
+
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Mon 10</div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Sprint planning</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Review mockups</div>
+      </div>
+    </div>
+
+    <div class="mini-col is-today-col" style="background: var(--p-today-bg); border-color: var(--p-today-border); border-width: 2px; box-shadow: 0 2px 12px rgba(67,56,202,0.1);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-today-border); color: var(--p-primary); background: rgba(67,56,202,0.03);">
+        <span>Tue 11</span>
+        <span class="mini-today-badge" style="background: var(--p-primary); color: #fff;">Today</span>
+      </div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-primary); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Review auth PR</span>
+          </div>
+        </div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-border-lt); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Write API tests</span>
+          </div>
+        </div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-border-lt); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Onboarding mockups</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Wed 12</div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Deploy staging</div>
+      </div>
+    </div>
+
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Thu 13</div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Blog post draft</div>
+      </div>
+    </div>
+
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Fri 14</div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Release v2.1</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Grid using Palette C -->
+  <div class="ds-label mt-24">Palette C + Font C (IBM Plex Sans)</div>
+  <div class="pal-c font-c mini-grid" style="background: var(--p-bg);">
+
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Mon 10</div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Sprint planning</div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Review mockups</div>
+      </div>
+    </div>
+
+    <div class="mini-col is-today-col" style="background: var(--p-today-bg); border-color: var(--p-today-border); border-width: 2px; box-shadow: 0 2px 12px rgba(42,125,110,0.1);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-today-border); color: var(--p-primary); background: rgba(42,125,110,0.03);">
+        <span>Tue 11</span>
+        <span class="mini-today-badge" style="background: var(--p-primary); color: #fff;">Today</span>
+      </div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-primary); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Review auth PR</span>
+          </div>
+        </div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-border-lt); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Write API tests</span>
+          </div>
+        </div>
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text); padding: 5px 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 8px; height: 8px; border: 1.5px solid var(--p-border-lt); border-radius: 2px; flex-shrink: 0;"></div>
+            <span>Onboarding mockups</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Wed 12</div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Deploy staging</div>
+      </div>
+    </div>
+
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Thu 13</div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Blog post draft</div>
+      </div>
+    </div>
+
+    <div class="mini-col" style="background: var(--p-surface); border-color: var(--p-border);">
+      <div class="mini-col-header" style="border-bottom-color: var(--p-border); color: var(--p-text-sec);">Fri 14</div>
+      <div class="mini-col-body">
+        <div class="mini-task" style="background: var(--p-surface); border-color: var(--p-border); color: var(--p-text);">Release v2.1</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ============================================================
+     QUICK REFERENCE
+     ============================================================ -->
+<section class="ds-section">
+  <h2 class="ds-section-title">Quick Reference: How to Choose</h2>
+  <div class="ds-card" style="max-width: 700px;">
+    <table style="width: 100%; font-size: 0.82rem; border-collapse: collapse;">
+      <thead>
+        <tr style="border-bottom: 2px solid #1a1a1a; text-align: left;">
+          <th style="padding: 8px 12px; font-weight: 600;">Option</th>
+          <th style="padding: 8px 12px; font-weight: 600;">Character</th>
+          <th style="padding: 8px 12px; font-weight: 600;">Best For</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #e8e4df;">
+          <td style="padding: 8px 12px; font-weight: 600;">Font A — Inter</td>
+          <td style="padding: 8px 12px; color: #666;">Neutral, invisible, lets content lead</td>
+          <td style="padding: 8px 12px; color: #666;">Maximum clarity, Google-style restraint</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e8e4df;">
+          <td style="padding: 8px 12px; font-weight: 600;">Font B — Plus Jakarta Sans</td>
+          <td style="padding: 8px 12px; color: #666;">Warm, modern, a touch of personality</td>
+          <td style="padding: 8px 12px; color: #666;">Approachable professional, Airbnb-level polish</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e8e4df;">
+          <td style="padding: 8px 12px; font-weight: 600;">Font C — IBM Plex Sans</td>
+          <td style="padding: 8px 12px; color: #666;">Authoritative, technical, precise</td>
+          <td style="padding: 8px 12px; color: #666;">Data-dense views, developer tools aesthetic</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e8e4df;">
+          <td style="padding: 8px 12px; font-weight: 600;">Palette A — Warm Blue</td>
+          <td style="padding: 8px 12px; color: #666;">Approachable, grounded, Asana warmth</td>
+          <td style="padding: 8px 12px; color: #666;">All-day comfort, balanced professionalism</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e8e4df;">
+          <td style="padding: 8px 12px; font-weight: 600;">Palette B — Cool Indigo</td>
+          <td style="padding: 8px 12px; color: #666;">Sharp, focused, Linear precision</td>
+          <td style="padding: 8px 12px; color: #666;">Developer-first, strong visual hierarchy</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 12px; font-weight: 600;">Palette C — Muted Teal</td>
+          <td style="padding: 8px 12px; color: #666;">Calm, organic, easy on the eyes</td>
+          <td style="padding: 8px 12px; color: #666;">Reduced eye strain, zen productivity</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top: 20px; padding: 14px 16px; background: #f8f8f8; border-radius: 6px; font-size: 0.82rem; color: #555;">
+      <strong>To decide:</strong> Say something like "I want <strong>Font B</strong> with <strong>Palette A</strong>" and we will apply that combination across the entire app.
+    </div>
+  </div>
+</section>
+
+</div>
+
+</body>
+</html>

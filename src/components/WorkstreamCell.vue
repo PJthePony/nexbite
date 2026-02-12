@@ -31,6 +31,10 @@ const props = defineProps({
   isToday: {
     type: Boolean,
     default: false
+  },
+  showEmptyState: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -44,6 +48,14 @@ const getParentTask = (task) => {
 const getBiteCount = (task) => {
   if (!task.biteTaskIds || task.biteTaskIds.length === 0) return 0
   return task.biteTaskIds.length
+}
+
+const getCompletedBiteCount = (task) => {
+  if (!task.biteTaskIds || task.biteTaskIds.length === 0) return 0
+  return task.biteTaskIds.filter(id => {
+    const bite = props.allTasks.find(t => t.id === id)
+    return bite && bite.completed
+  }).length
 }
 
 const localTasks = computed({
@@ -88,6 +100,13 @@ const handleDragChange = (evt) => {
 
 const cellStyle = computed(() => {
   if (props.workstreamColor) {
+    if (props.isToday) {
+      // Blend workstream tint with today background for a subtler effect
+      return {
+        backgroundColor: props.workstreamColor.bg,
+        backgroundImage: 'linear-gradient(rgba(249,250,248,0.4), rgba(249,250,248,0.4))'
+      }
+    }
     return {
       backgroundColor: props.workstreamColor.bg
     }
@@ -95,13 +114,22 @@ const cellStyle = computed(() => {
   return {}
 })
 
+const isEmpty = computed(() => localTasks.value.length === 0)
+
 const handleAdd = () => {
   emit('add', props.location, props.workstream)
+}
+
+const handleCellClick = (e) => {
+  // Only trigger if the cell itself or the empty drag area was clicked (not a task card or button)
+  if (isEmpty.value && (e.target.closest('.workstream-cell') === e.currentTarget)) {
+    handleAdd()
+  }
 }
 </script>
 
 <template>
-  <div class="workstream-cell" :style="cellStyle">
+  <div class="workstream-cell" :class="{ 'is-empty': isEmpty }" :style="cellStyle" @click="handleCellClick">
     <draggable
       v-model="localTasks"
       :group="{ name: 'tasks', pull: true, put: true }"
@@ -122,12 +150,21 @@ const handleAdd = () => {
           :workstream-color="workstreamColor"
           :parent-task="getParentTask(element)"
           :bite-count="getBiteCount(element)"
+          :completed-bite-count="getCompletedBiteCount(element)"
           :compact="!isToday"
           @toggle="emit('toggle', $event)"
           @edit="emit('edit', $event)"
           @delete="emit('delete', $event)"
           @bite="emit('bite', $event)"
         />
+      </template>
+      <template #footer v-if="localTasks.length === 0 && showEmptyState">
+        <div class="column-empty">
+          <span class="column-empty-icon">+</span>
+          <span class="column-empty-title">No tasks yet</span>
+          <span class="column-empty-desc">Add a task to get started</span>
+          <button class="column-empty-cta" @click.stop="handleAdd">+ Add Task</button>
+        </div>
       </template>
     </draggable>
     <button
@@ -136,7 +173,7 @@ const handleAdd = () => {
       title="Add task"
       :style="workstreamColor ? { borderColor: workstreamColor.text, color: workstreamColor.text } : {}"
     >
-      +
+      + Add a task...
     </button>
   </div>
 </template>
@@ -144,9 +181,17 @@ const handleAdd = () => {
 <style scoped>
 .workstream-cell {
   padding: 8px;
-  min-height: 80px;
+  min-height: 48px;
   display: flex;
   flex-direction: column;
+}
+
+.workstream-cell.is-empty {
+  cursor: pointer;
+}
+
+.workstream-cell.is-empty:hover {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.015), rgba(0, 0, 0, 0.015));
 }
 
 .cell-tasks {
@@ -154,20 +199,28 @@ const handleAdd = () => {
   flex-direction: column;
   gap: 6px;
   flex: 1;
-  min-height: 40px;
+  min-height: 24px;
 }
 
 .cell-add-btn {
   width: 100%;
-  padding: 6px;
+  padding: 8px 12px;
   margin-top: 8px;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-sm);
+  border: 1px dashed transparent;
+  border-radius: var(--radius-md);
   background: transparent;
-  color: var(--color-text-secondary);
-  font-size: 1rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-family: inherit;
+  text-align: left;
   cursor: pointer;
   transition: all var(--transition);
+  opacity: 0;
+}
+
+.workstream-cell:hover .cell-add-btn {
+  opacity: 1;
+  border-color: var(--color-border);
 }
 
 .cell-add-btn:hover {

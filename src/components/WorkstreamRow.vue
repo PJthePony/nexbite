@@ -46,6 +46,14 @@ const getBiteCount = (task) => {
   return task.biteTaskIds.length
 }
 
+const getCompletedBiteCount = (task) => {
+  if (!task.biteTaskIds || task.biteTaskIds.length === 0) return 0
+  return task.biteTaskIds.filter(id => {
+    const bite = props.allTasks.find(t => t.id === id)
+    return bite && bite.completed
+  }).length
+}
+
 const localTasks = computed({
   get: () => props.tasks,
   set: (value) => {
@@ -135,6 +143,7 @@ const handleAdd = () => {
           :workstream-color="workstreamColor"
           :parent-task="getParentTask(element)"
           :bite-count="getBiteCount(element)"
+          :completed-bite-count="getCompletedBiteCount(element)"
           :compact="!isToday"
           @toggle="emit('toggle', $event)"
           @edit="emit('edit', $event)"
@@ -169,10 +178,10 @@ const handleAdd = () => {
 }
 
 .workstream-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
 }
 
 .workstream-tasks {
