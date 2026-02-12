@@ -1,10 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useAuth } from '../composables/useAuth'
-import { useRouter } from 'vue-router'
 
-const { signIn, isAuthenticated } = useAuth()
-const router = useRouter()
+const { signIn } = useAuth()
 
 const email = ref('')
 const error = ref('')

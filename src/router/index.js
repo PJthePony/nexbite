@@ -21,18 +21,11 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const { isAuthenticated, loading } = useAuth()
 
   // If still loading auth state, wait for it
   if (loading.value) {
-    const unwatch = () => {}
-    const checkAuth = () => {
-      if (!loading.value) {
-        doNavigationGuard(to, isAuthenticated, next)
-      }
-    }
-
     // Use a short interval to check when loading completes
     const interval = setInterval(() => {
       if (!loading.value) {
