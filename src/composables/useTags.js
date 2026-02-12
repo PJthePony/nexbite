@@ -3,18 +3,18 @@ import { useTasks } from './useTasks'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
-// 10 curated tag colors - Concrete & Signal palette
+// 10 curated tag colors - Electric Brights palette
 const TAG_COLORS = [
-  { bg: '#b8c4ce', text: '#1b2838' },  // Concrete
-  { bg: '#e8a87c', text: '#5c2c0e' },  // Signal Orange
-  { bg: '#7eb8b0', text: '#0e3830' },  // Patina
-  { bg: '#d48888', text: '#521818' },  // Brick
-  { bg: '#a0a8b4', text: '#1e2630' },  // Aluminum
-  { bg: '#c8b870', text: '#3a3410' },  // Caution
-  { bg: '#8898b0', text: '#1a2440' },  // Gunmetal
-  { bg: '#88b498', text: '#163024' },  // Oxidized
-  { bg: '#c4a498', text: '#3e201a' },  // Rust
-  { bg: '#989898', text: '#1e1e1e' },  // Charcoal
+  { bg: '#dbeafe', text: '#2563eb' },  // Electric Blue
+  { bg: '#ffe4e6', text: '#f43f5e' },  // Neon Rose
+  { bg: '#ccfbf1', text: '#14b8a6' },  // Turquoise
+  { bg: '#ffedd5', text: '#f97316' },  // Tangerine
+  { bg: '#e9d5ff', text: '#a855f7' },  // Violet
+  { bg: '#d1fae5', text: '#10b981' },  // Neon Green
+  { bg: '#fef08a', text: '#ca8a04' },  // Lemon
+  { bg: '#fce7f3', text: '#ec4899' },  // Flamingo
+  { bg: '#cffafe', text: '#06b6d4' },  // Aqua
+  { bg: '#fecdd3', text: '#e11d48' },  // Watermelon
 ]
 
 // Hash a string to a number for consistent color assignment

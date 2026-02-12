@@ -2,18 +2,18 @@ import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
-// 10 predefined colors for workstreams - Concrete & Signal palette
+// 10 predefined colors for workstreams - Electric Brights palette
 export const WORKSTREAM_COLORS = [
-  { name: 'Concrete', bg: '#b8c4ce', text: '#1b2838' },
-  { name: 'Signal Orange', bg: '#e8a87c', text: '#5c2c0e' },
-  { name: 'Patina', bg: '#7eb8b0', text: '#0e3830' },
-  { name: 'Brick', bg: '#d48888', text: '#521818' },
-  { name: 'Aluminum', bg: '#a0a8b4', text: '#1e2630' },
-  { name: 'Caution', bg: '#c8b870', text: '#3a3410' },
-  { name: 'Gunmetal', bg: '#8898b0', text: '#1a2440' },
-  { name: 'Oxidized', bg: '#88b498', text: '#163024' },
-  { name: 'Rust', bg: '#c4a498', text: '#3e201a' },
-  { name: 'Charcoal', bg: '#989898', text: '#1e1e1e' },
+  { name: 'Electric Blue', bg: '#dbeafe', text: '#2563eb' },
+  { name: 'Neon Rose', bg: '#ffe4e6', text: '#f43f5e' },
+  { name: 'Turquoise', bg: '#ccfbf1', text: '#14b8a6' },
+  { name: 'Tangerine', bg: '#ffedd5', text: '#f97316' },
+  { name: 'Violet', bg: '#e9d5ff', text: '#a855f7' },
+  { name: 'Neon Green', bg: '#d1fae5', text: '#10b981' },
+  { name: 'Lemon', bg: '#fef08a', text: '#ca8a04' },
+  { name: 'Flamingo', bg: '#fce7f3', text: '#ec4899' },
+  { name: 'Aqua', bg: '#cffafe', text: '#06b6d4' },
+  { name: 'Watermelon', bg: '#fecdd3', text: '#e11d48' },
 ]
 
 // Shared state across all usages (singleton)
