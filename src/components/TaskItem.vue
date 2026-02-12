@@ -154,7 +154,7 @@ const closeSwipe = () => {
 <template>
   <!-- Mobile: swipe-to-delete wrapper -->
   <div v-if="isMobile && !compact" class="task-swipe-container">
-    <div class="task-swipe-actions">
+    <div v-if="swipeOffset !== 0 || swipeRevealed" class="task-swipe-actions">
       <button class="swipe-action-btn delete-action" @click.stop="handleSwipeDelete">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <polyline points="3 6 5 6 21 6"/>
