@@ -937,6 +937,13 @@ input, textarea {
     padding: 0;
   }
 
+  /* Prevent iOS auto-zoom on input focus (requires >= 16px) */
+  .form-input,
+  .form-input.form-textarea,
+  select.form-input {
+    font-size: 16px;
+  }
+
   /* Swipe-to-delete on mobile */
   .task-swipe-container {
     position: relative;
