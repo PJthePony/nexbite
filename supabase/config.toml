@@ -20,3 +20,9 @@ entrypoint = "./functions/test-seed/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/test-seed/*.html" ]
+
+[functions.tasks-api]
+enabled = true
+verify_jwt = false
+import_map = "./functions/tasks-api/deno.json"
+entrypoint = "./functions/tasks-api/index.ts"

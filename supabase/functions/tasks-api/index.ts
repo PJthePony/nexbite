@@ -1,0 +1,266 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
+
+const VALID_LOCATIONS = [
+  "this-week",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "next-week",
+  "later",
+];
+
+function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+function getTodayLocation(): string {
+  const day = new Date().getDay();
+  const dayMap: Record<number, string> = {
+    1: "monday",
+    2: "tuesday",
+    3: "wednesday",
+    4: "thursday",
+    5: "friday",
+  };
+  return dayMap[day] || "monday";
+}
+
+function resolveLocation(input: string): string | null {
+  const lower = input.toLowerCase().trim();
+
+  if (lower === "today") {
+    return getTodayLocation();
+  }
+
+  if (VALID_LOCATIONS.includes(lower)) {
+    return lower;
+  }
+
+  return null;
+}
+
+async function hashKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function jsonResponse(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function authenticate(
+  req: Request,
+  supabase: ReturnType<typeof createClient>
+): Promise<{ userId: string } | Response> {
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return jsonResponse(
+      { error: "Missing or invalid Authorization header. Use: Bearer nb_your_key" },
+      401
+    );
+  }
+
+  const apiKey = authHeader.slice(7).trim();
+  if (!apiKey.startsWith("nb_")) {
+    return jsonResponse({ error: "Invalid API key format" }, 401);
+  }
+
+  const keyHash = await hashKey(apiKey);
+  const { data: keyRow, error: keyError } = await supabase
+    .from("api_keys")
+    .select("user_id")
+    .eq("key_hash", keyHash)
+    .single();
+
+  if (keyError || !keyRow) {
+    return jsonResponse({ error: "Invalid API key" }, 401);
+  }
+
+  // Update last_used_at (fire and forget)
+  supabase
+    .from("api_keys")
+    .update({ last_used_at: new Date().toISOString() })
+    .eq("key_hash", keyHash)
+    .then(() => {});
+
+  return { userId: keyRow.user_id };
+}
+
+// GET — list tasks with optional filters
+async function handleGetTasks(
+  req: Request,
+  userId: string,
+  supabase: ReturnType<typeof createClient>
+) {
+  const url = new URL(req.url);
+  const location = url.searchParams.get("location");
+  const completed = url.searchParams.get("completed");
+
+  let query = supabase
+    .from("tasks")
+    .select("id, title, notes, completed, location, workstream, tags, created_at, completed_at, sort_order")
+    .eq("user_id", userId)
+    .order("sort_order", { ascending: true });
+
+  if (location) {
+    const resolved = resolveLocation(location);
+    if (!resolved) {
+      return jsonResponse(
+        {
+          error: `Invalid location "${location}". Valid values: today, this-week, monday, tuesday, wednesday, thursday, friday, next-week, later`,
+        },
+        400
+      );
+    }
+    query = query.eq("location", resolved);
+  }
+
+  if (completed === "true") {
+    query = query.eq("completed", true);
+  } else if (completed === "false") {
+    query = query.eq("completed", false);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Failed to fetch tasks:", error);
+    return jsonResponse({ error: "Failed to fetch tasks" }, 500);
+  }
+
+  return jsonResponse({ tasks: data || [] }, 200);
+}
+
+// POST — create a task
+async function handleCreateTask(
+  req: Request,
+  userId: string,
+  supabase: ReturnType<typeof createClient>
+) {
+  let body: { title?: string; notes?: string; location?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return jsonResponse({ error: "Invalid JSON body" }, 400);
+  }
+
+  const title = body.title?.trim();
+  if (!title) {
+    return jsonResponse(
+      { error: '"title" is required and must be a non-empty string' },
+      400
+    );
+  }
+
+  const locationInput = body.location || "later";
+  const location = resolveLocation(locationInput);
+  if (!location) {
+    return jsonResponse(
+      {
+        error: `Invalid location "${locationInput}". Valid values: today, this-week, monday, tuesday, wednesday, thursday, friday, next-week, later`,
+      },
+      400
+    );
+  }
+
+  const notes = body.notes?.trim() || "";
+
+  // Get next sort order for this location
+  const { data: existingTasks } = await supabase
+    .from("tasks")
+    .select("sort_order")
+    .eq("user_id", userId)
+    .eq("location", location)
+    .order("sort_order", { ascending: false })
+    .limit(1);
+
+  const nextSortOrder =
+    existingTasks && existingTasks.length > 0
+      ? (existingTasks[0].sort_order ?? 0) + 1
+      : 0;
+
+  const task = {
+    id: generateId(),
+    user_id: userId,
+    title,
+    notes,
+    completed: false,
+    location,
+    workstream: null,
+    tags: [],
+    created_at: Date.now(),
+    completed_at: null,
+    activate_at: null,
+    sort_order: nextSortOrder,
+    parent_task_id: null,
+  };
+
+  const { error: insertError } = await supabase.from("tasks").insert(task);
+
+  if (insertError) {
+    console.error("Failed to insert task:", insertError);
+    return jsonResponse({ error: "Failed to create task" }, 500);
+  }
+
+  return jsonResponse(
+    {
+      id: task.id,
+      title: task.title,
+      notes: task.notes,
+      location: task.location,
+      created_at: task.created_at,
+    },
+    201
+  );
+}
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (req.method !== "GET" && req.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed. Use GET or POST." }, 405);
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      global: {
+        headers: { Authorization: `Bearer ${supabaseServiceKey}` },
+      },
+    });
+
+    const authResult = await authenticate(req, supabase);
+    if (authResult instanceof Response) {
+      return authResult;
+    }
+
+    const { userId } = authResult;
+
+    if (req.method === "GET") {
+      return await handleGetTasks(req, userId, supabase);
+    } else {
+      return await handleCreateTask(req, userId, supabase);
+    }
+  } catch (error) {
+    console.error("Function error:", error);
+    return jsonResponse({ error: "Internal server error" }, 500);
+  }
+});
