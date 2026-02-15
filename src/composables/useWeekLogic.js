@@ -78,7 +78,10 @@ export function useWeekLogic() {
 
   const isNewWeek = (lastWeekStart) => {
     if (!lastWeekStart) return true
-    return getCurrentWeekStart() !== lastWeekStart
+    // New week only if the current calendar week is AFTER the stored week start.
+    // This prevents re-triggering after advancing the week early on weekends
+    // (where lastWeekStart is already set to next Monday).
+    return getCurrentWeekStart() > lastWeekStart
   }
 
   const isNewDay = (lastDayCheck) => {

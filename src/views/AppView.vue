@@ -232,6 +232,12 @@ onMounted(async () => {
   const forceWeeklyReview = params.has('plan')
 
   if (forceWeeklyReview || needsWeeklyReview.value) {
+    // Strip ?plan from URL so a refresh doesn't re-trigger
+    if (forceWeeklyReview) {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('plan')
+      window.history.replaceState({}, '', url)
+    }
     rolledOverTasks.value = getRolledOverTasks()
     laterTasksForReview.value = getLaterTasks()
     await performWeeklyRollover()
