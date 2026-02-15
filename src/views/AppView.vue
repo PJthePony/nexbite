@@ -34,7 +34,10 @@ const {
   reorderTasks,
   loadTasks,
   isLoaded: tasksLoaded,
-  promoteScheduledTasks
+  promoteScheduledTasks,
+  relocateHiddenDayTasks,
+  subscribeToChanges,
+  unsubscribeFromChanges
 } = useTasks()
 
 const { recentTags, allTags, getTagCounts } = useTags()
@@ -223,6 +226,12 @@ onMounted(async () => {
   // Promote any "Later" tasks whose scheduled date has arrived
   await promoteScheduledTasks()
 
+  // Move incomplete tasks off hidden days to the next visible day
+  await relocateHiddenDayTasks(hiddenDays.value)
+
+  // Subscribe to realtime changes for cross-client sync
+  subscribeToChanges()
+
   const params = new URLSearchParams(window.location.search)
 
   if (params.has('seed')) {
@@ -252,6 +261,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   teardownListeners()
+  unsubscribeFromChanges()
 })
 
 // Event handlers

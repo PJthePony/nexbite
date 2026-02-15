@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
+import { DAY_LOCATIONS, LOCATIONS } from './useWeekLogic'
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
@@ -472,6 +473,106 @@ export function useTasks() {
     }
   }
 
+  // Move incomplete tasks from hidden days to the next visible day, or next-week
+  const relocateHiddenDayTasks = async (hiddenDays) => {
+    if (!hiddenDays || hiddenDays.length === 0) return
+
+    const toRelocate = tasks.value.filter(t =>
+      DAY_LOCATIONS.includes(t.location) &&
+      hiddenDays.includes(t.location) &&
+      !t.completed
+    )
+    if (toRelocate.length === 0) return
+
+    // Group by location so we can find the right destination per task
+    for (const task of toRelocate) {
+      const currentIndex = DAY_LOCATIONS.indexOf(task.location)
+
+      // Find the next visible day after this one
+      let destination = LOCATIONS.NEXT_WEEK
+      for (let i = currentIndex + 1; i < DAY_LOCATIONS.length; i++) {
+        if (!hiddenDays.includes(DAY_LOCATIONS[i])) {
+          destination = DAY_LOCATIONS[i]
+          break
+        }
+      }
+
+      task.location = destination
+    }
+
+    // Batch update in DB grouped by destination
+    const byDestination = {}
+    toRelocate.forEach(t => {
+      if (!byDestination[t.location]) byDestination[t.location] = []
+      byDestination[t.location].push(t.id)
+    })
+
+    for (const [location, ids] of Object.entries(byDestination)) {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ location })
+        .in('id', ids)
+
+      if (error) {
+        console.error('Failed to relocate hidden day tasks:', error)
+      }
+    }
+  }
+
+  // Supabase realtime subscription for cross-client sync
+  let realtimeChannel = null
+
+  const subscribeToChanges = () => {
+    const userId = getUserId()
+    if (!userId) return
+
+    realtimeChannel = supabase
+      .channel('tasks-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${userId}`
+        },
+        (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload
+
+          if (eventType === 'INSERT') {
+            // Only add if we don't already have it (avoid duplicating our own optimistic inserts)
+            if (!tasks.value.find(t => t.id === newRecord.id)) {
+              tasks.value.push(mapDbToLocal(newRecord))
+              refreshBiteTaskIds(tasks.value)
+            }
+          } else if (eventType === 'UPDATE') {
+            const index = tasks.value.findIndex(t => t.id === newRecord.id)
+            if (index !== -1) {
+              // Merge the DB state in (remote wins for cross-client sync)
+              tasks.value[index] = { ...tasks.value[index], ...mapDbToLocal(newRecord) }
+              refreshBiteTaskIds(tasks.value)
+            } else {
+              // Task exists in DB but not locally — add it
+              tasks.value.push(mapDbToLocal(newRecord))
+              refreshBiteTaskIds(tasks.value)
+            }
+          } else if (eventType === 'DELETE') {
+            const id = oldRecord.id
+            tasks.value = tasks.value.filter(t => t.id !== id)
+            refreshBiteTaskIds(tasks.value)
+          }
+        }
+      )
+      .subscribe()
+  }
+
+  const unsubscribeFromChanges = () => {
+    if (realtimeChannel) {
+      supabase.removeChannel(realtimeChannel)
+      realtimeChannel = null
+    }
+  }
+
   return {
     tasks,
     isLoaded,
@@ -491,6 +592,9 @@ export function useTasks() {
     bulkMoveToLocation,
     bulkDelete,
     reorderTasks,
-    promoteScheduledTasks
+    promoteScheduledTasks,
+    relocateHiddenDayTasks,
+    subscribeToChanges,
+    unsubscribeFromChanges
   }
 }
