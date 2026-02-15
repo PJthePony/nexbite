@@ -8,7 +8,6 @@ const user = ref(null)
 const session = ref(null)
 const loading = ref(true)
 let initialized = false
-let sessionSynced = false
 
 /**
  * Sync the Supabase session to a shared .tanzillo.ai cookie
@@ -63,9 +62,9 @@ export function useAuth() {
         user.value = newSession?.user ?? null
         loading.value = false
 
-        if (event === 'SIGNED_IN' && newSession && !sessionSynced) {
+        if (event === 'SIGNED_IN' && newSession && !sessionStorage.getItem('luca_synced')) {
           // First sign-in: redirect through Luca to set the shared cookie
-          sessionSynced = true
+          sessionStorage.setItem('luca_synced', '1')
           syncSessionCookie(newSession, true)
         } else if (event === 'TOKEN_REFRESHED' && newSession) {
           // Silently update the cookie
@@ -86,6 +85,7 @@ export function useAuth() {
   }
 
   const signOut = async () => {
+    sessionStorage.removeItem('luca_synced')
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     // Clear the shared auth cookie via Luca
