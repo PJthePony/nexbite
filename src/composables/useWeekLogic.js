@@ -7,6 +7,8 @@ export const LOCATIONS = {
   WEDNESDAY: 'wednesday',
   THURSDAY: 'thursday',
   FRIDAY: 'friday',
+  SATURDAY: 'saturday',
+  SUNDAY: 'sunday',
   NEXT_WEEK: 'next-week',
   LATER: 'later'
 }
@@ -16,7 +18,9 @@ export const DAY_LOCATIONS = [
   LOCATIONS.TUESDAY,
   LOCATIONS.WEDNESDAY,
   LOCATIONS.THURSDAY,
-  LOCATIONS.FRIDAY
+  LOCATIONS.FRIDAY,
+  LOCATIONS.SATURDAY,
+  LOCATIONS.SUNDAY
 ]
 
 export const ALL_COLUMNS = [
@@ -26,6 +30,8 @@ export const ALL_COLUMNS = [
   { id: LOCATIONS.WEDNESDAY, label: 'Wednesday', shortLabel: 'Wed', isDay: true },
   { id: LOCATIONS.THURSDAY, label: 'Thursday', shortLabel: 'Thu', isDay: true },
   { id: LOCATIONS.FRIDAY, label: 'Friday', shortLabel: 'Fri', isDay: true },
+  { id: LOCATIONS.SATURDAY, label: 'Saturday', shortLabel: 'Sat', isDay: true },
+  { id: LOCATIONS.SUNDAY, label: 'Sunday', shortLabel: 'Sun', isDay: true },
   { id: LOCATIONS.NEXT_WEEK, label: 'Next Week', shortLabel: 'Next' },
   { id: LOCATIONS.LATER, label: 'Later', shortLabel: 'Later' }
 ]
@@ -35,17 +41,23 @@ export function useWeekLogic() {
     const day = new Date().getDay()
     // Sunday = 0, Monday = 1, etc.
     const dayMap = {
+      0: LOCATIONS.SUNDAY,
       1: LOCATIONS.MONDAY,
       2: LOCATIONS.TUESDAY,
       3: LOCATIONS.WEDNESDAY,
       4: LOCATIONS.THURSDAY,
-      5: LOCATIONS.FRIDAY
+      5: LOCATIONS.FRIDAY,
+      6: LOCATIONS.SATURDAY
     }
-    // If weekend, default to Next Week
-    return dayMap[day] || LOCATIONS.NEXT_WEEK
+    return dayMap[day]
   }
 
   const currentDayLocation = ref(getCurrentDayLocation())
+
+  const isWeekend = () => {
+    const day = new Date().getDay()
+    return day === 0 || day === 6
+  }
 
   const isToday = (location) => {
     return location === currentDayLocation.value
@@ -91,6 +103,7 @@ export function useWeekLogic() {
     ALL_COLUMNS,
     currentDayLocation,
     getCurrentDayLocation,
+    isWeekend,
     isToday,
     getWeekStartDate,
     getCurrentWeekStart,

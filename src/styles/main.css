@@ -1,60 +1,43 @@
+/* NexBite Design System */
+@import '../../../nexbite-ds/index.css';
+
+/* ──────────────────────────────────────────────
+   App token aliases
+   Map nxb- prefixed tokens to the shorter names
+   used throughout this app's components.
+   ────────────────────────────────────────────── */
 :root {
-  /* Palette E: Slate & Coral */
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-surface-elevated: #ffffff;
-  --color-border: #e2e8f0;
-  --color-border-light: #cbd5e1;
-  --color-text: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-text-muted: #94a3b8;
-  --color-primary: #475569;
-  --color-primary-hover: #334155;
-  --color-accent: #f97316;
-  --color-success: #059669;
-  --color-danger: #ef4444;
+  --color-bg: var(--nxb-color-bg);
+  --color-surface: var(--nxb-color-surface);
+  --color-surface-elevated: var(--nxb-color-surface-elevated);
+  --color-border: var(--nxb-color-border);
+  --color-border-light: var(--nxb-color-border-light);
+  --color-text: var(--nxb-color-text);
+  --color-text-secondary: var(--nxb-color-text-secondary);
+  --color-text-muted: var(--nxb-color-text-muted);
+  --color-primary: var(--nxb-color-primary);
+  --color-primary-hover: var(--nxb-color-primary-hover);
+  --color-accent: var(--nxb-color-accent);
+  --color-success: var(--nxb-color-success);
+  --color-danger: var(--nxb-color-danger);
   --color-today: #f1f5f9;
-  --color-today-border: #475569;
+  --color-today-border: var(--nxb-color-primary);
 
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 10px;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --transition: 150ms ease;
+  --radius-sm: var(--nxb-radius-sm);
+  --radius-md: var(--nxb-radius-md);
+  --radius-lg: var(--nxb-radius-lg);
+  --shadow-sm: var(--nxb-shadow-sm);
+  --shadow-md: var(--nxb-shadow-md);
+  --transition: var(--nxb-transition-fast);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  line-height: 1.55;
-  min-height: 100vh;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* ──────────────────────────────────────────────
+   App-specific styles
+   Everything below is unique to the task manager.
+   ────────────────────────────────────────────── */
 
 #app {
   min-height: 100vh;
-}
-
-button {
-  cursor: pointer;
-  font-family: inherit;
-  font-size: inherit;
-  border: none;
-  background: none;
-}
-
-input, textarea {
-  font-family: inherit;
-  font-size: inherit;
 }
 
 /* Utility classes */
@@ -100,6 +83,42 @@ input, textarea {
   flex: 1;
   padding: 24px;
   overflow-x: auto;
+}
+
+/* Weekend advance-week banner */
+.advance-week-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 24px;
+  background: var(--color-primary);
+  color: white;
+}
+
+.advance-week-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.advance-week-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.advance-week-btn:hover {
+  background: var(--color-bg);
 }
 
 /* Week view grid */
@@ -504,7 +523,7 @@ input, textarea {
   box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-text);
 }
 
-/* Modal */
+/* Modal (app uses un-prefixed class names) */
 .modal-overlay {
   position: fixed;
   inset: 0;

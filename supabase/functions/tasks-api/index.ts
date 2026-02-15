@@ -13,6 +13,8 @@ const VALID_LOCATIONS = [
   "wednesday",
   "thursday",
   "friday",
+  "saturday",
+  "sunday",
   "next-week",
   "later",
 ];
@@ -24,11 +26,13 @@ function generateId(): string {
 function getTodayLocation(): string {
   const day = new Date().getDay();
   const dayMap: Record<number, string> = {
+    0: "sunday",
     1: "monday",
     2: "tuesday",
     3: "wednesday",
     4: "thursday",
     5: "friday",
+    6: "saturday",
   };
   return dayMap[day] || "monday";
 }
@@ -121,7 +125,7 @@ async function handleGetTasks(
     if (!resolved) {
       return jsonResponse(
         {
-          error: `Invalid location "${location}". Valid values: today, this-week, monday, tuesday, wednesday, thursday, friday, next-week, later`,
+          error: `Invalid location "${location}". Valid values: today, this-week, monday, tuesday, wednesday, thursday, friday, saturday, sunday, next-week, later`,
         },
         400
       );
@@ -151,7 +155,7 @@ async function handleCreateTask(
   userId: string,
   supabase: ReturnType<typeof createClient>
 ) {
-  let body: { title?: string; notes?: string; location?: string };
+  let body: { title?: string; notes?: string; location?: string; tags?: string[]; activate_at?: string };
   try {
     body = await req.json();
   } catch {
@@ -171,7 +175,7 @@ async function handleCreateTask(
   if (!location) {
     return jsonResponse(
       {
-        error: `Invalid location "${locationInput}". Valid values: today, this-week, monday, tuesday, wednesday, thursday, friday, next-week, later`,
+        error: `Invalid location "${locationInput}". Valid values: today, this-week, monday, tuesday, wednesday, thursday, friday, saturday, sunday, next-week, later`,
       },
       400
     );
@@ -201,10 +205,10 @@ async function handleCreateTask(
     completed: false,
     location,
     workstream: null,
-    tags: [],
+    tags: [...new Set(["API", ...(Array.isArray(body.tags) ? body.tags.filter((t): t is string => typeof t === "string").map(t => t.trim()).filter(Boolean) : [])])],
     created_at: Date.now(),
     completed_at: null,
-    activate_at: null,
+    activate_at: body.activate_at?.trim() || null,
     sort_order: nextSortOrder,
     parent_task_id: null,
   };

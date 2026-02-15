@@ -18,6 +18,10 @@ const props = defineProps({
   allTasks: {
     type: Array,
     default: () => []
+  },
+  hiddenDays: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -52,9 +56,11 @@ const edgeScrollTimer = ref(null)
 const EDGE_ZONE_WIDTH = 40
 const EDGE_SCROLL_DELAY = 500
 
-// Get visible columns (filter out hidden ones)
+// Get visible columns (filter out hidden ones and user-hidden days)
 const visibleColumns = computed(() => {
   return ALL_COLUMNS.filter(col => {
+    // Hide columns the user has toggled off in settings
+    if (props.hiddenDays.includes(col.id)) return false
     if (col.hideWhenEmpty) {
       const tasks = props.tasksByLocation[col.id] || []
       return tasks.length > 0

@@ -17,6 +17,7 @@ import { useWeekLogic, ALL_COLUMNS } from '../composables/useWeekLogic'
 import { useReviews } from '../composables/useReviews'
 import { useMultiSelect } from '../composables/useMultiSelect'
 import { useAuth } from '../composables/useAuth'
+import { usePreferences } from '../composables/usePreferences'
 
 const router = useRouter()
 const { signOut, user } = useAuth()
@@ -36,12 +37,14 @@ const {
   promoteScheduledTasks
 } = useTasks()
 
-const { recentTags, allTags } = useTags()
+const { recentTags, allTags, getTagCounts } = useTags()
 const { allWorkstreams, addWorkstream, updateWorkstream, reorderWorkstreams, deleteWorkstream, loadWorkstreams, isLoaded: workstreamsLoaded } = useWorkstreams()
 const { isToday, currentDayLocation, getWeekStartDate } = useWeekLogic()
 const {
   needsWeeklyReview,
   needsDailyReview,
+  canAdvanceWeek,
+  getNextWeekStart,
   getRolledOverTasks,
   getLaterTasks,
   getDailyRolloverTasks,
@@ -59,6 +62,8 @@ const {
   setupListeners,
   teardownListeners
 } = useMultiSelect()
+
+const { hiddenDays, loadPreferences, toggleDay } = usePreferences()
 
 // Loading state
 const isLoading = computed(() => !tasksLoaded.value || !workstreamsLoaded.value)
@@ -80,6 +85,9 @@ const showDailyReview = ref(false)
 const rolledOverTasks = ref([])
 const laterTasksForReview = ref([])
 const dailyRolloverTasks = ref([])
+
+// Advance week (weekend early planning)
+const isAdvancingWeek = ref(false)
 
 // Bite modal
 const showBiteModal = ref(false)
@@ -202,7 +210,8 @@ onMounted(async () => {
   await Promise.all([
     loadTasks(),
     loadWorkstreams(),
-    loadReviewState()
+    loadReviewState(),
+    loadPreferences()
   ])
 
   // Promote any "Later" tasks whose scheduled date has arrived
@@ -355,8 +364,21 @@ const editingTaskBites = computed(() => {
     .filter(Boolean)
 })
 
+const handleAdvanceWeek = async () => {
+  isAdvancingWeek.value = true
+  rolledOverTasks.value = getRolledOverTasks()
+  laterTasksForReview.value = getLaterTasks()
+  await performWeeklyRollover()
+  showWeeklyReview.value = true
+}
+
 const handleWeeklyReviewComplete = async (decisions) => {
-  await completeWeeklyReview(decisions)
+  if (isAdvancingWeek.value) {
+    await completeWeeklyReview(decisions, { weekStart: getNextWeekStart() })
+    isAdvancingWeek.value = false
+  } else {
+    await completeWeeklyReview(decisions)
+  }
   showWeeklyReview.value = false
 
   // Now check for daily review
@@ -373,21 +395,38 @@ const handleDailyReviewComplete = async (decisions) => {
   showDailyReview.value = false
 }
 
-// Auto-remove workstreams that have no tasks
-watch(tasks, () => {
-  const usedWorkstreams = new Set(
-    tasks.value
-      .filter(t => t.workstream)
-      .map(t => t.workstream)
-  )
+// Settings event handlers
+const handleSettingsAddWorkstream = (wsData) => {
+  addWorkstream(wsData.name, wsData.color)
+}
 
-  // Find workstreams with no tasks
-  allWorkstreams.value.forEach(ws => {
-    if (!usedWorkstreams.has(ws.name)) {
-      deleteWorkstream(ws.name)
+const handleSettingsDeleteWorkstream = (wsName) => {
+  deleteWorkstream(wsName)
+}
+
+const handleRenameTag = ({ oldName, newName }) => {
+  tasks.value.forEach(task => {
+    if (task.tags && task.tags.includes(oldName)) {
+      const newTags = task.tags.map(t => t === oldName ? newName : t)
+      // Deduplicate in case newName already exists on this task
+      const uniqueTags = [...new Set(newTags)]
+      updateTask(task.id, { tags: uniqueTags })
     }
   })
-}, { deep: true })
+}
+
+const handleDeleteTag = (tagName) => {
+  tasks.value.forEach(task => {
+    if (task.tags && task.tags.includes(tagName)) {
+      const newTags = task.tags.filter(t => t !== tagName)
+      updateTask(task.id, { tags: newTags })
+    }
+  })
+}
+
+const handleToggleDay = (dayId) => {
+  toggleDay(dayId)
+}
 </script>
 
 <template>
@@ -424,11 +463,21 @@ watch(tasks, () => {
       </button>
     </header>
 
+    <!-- Weekend advance-week CTA -->
+    <div v-if="canAdvanceWeek" class="advance-week-banner">
+      <span class="advance-week-text">Week's over — ready to plan next week?</span>
+      <button class="advance-week-btn" @click="handleAdvanceWeek">
+        Plan Next Week
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+
     <main class="app-main">
       <WeekView
         :tasks-by-location="tasksByLocation"
         :workstreams="allWorkstreams"
         :all-tasks="tasks"
+        :hidden-days="hiddenDays"
         @add="handleAddTask"
         @toggle="handleToggleTask"
         @edit="handleEditTask"
@@ -487,7 +536,16 @@ watch(tasks, () => {
     <!-- Settings Modal -->
     <SettingsModal
       :show="showSettings"
+      :workstreams="allWorkstreams"
+      :all-tags="allTags"
+      :tag-counts="getTagCounts"
+      :hidden-days="hiddenDays"
       @close="showSettings = false"
+      @add-workstream="handleSettingsAddWorkstream"
+      @delete-workstream="handleSettingsDeleteWorkstream"
+      @rename-tag="handleRenameTag"
+      @delete-tag="handleDeleteTag"
+      @toggle-day="handleToggleDay"
     />
   </div>
 </template>

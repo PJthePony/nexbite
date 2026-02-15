@@ -4,6 +4,17 @@ import { useAuth } from './useAuth'
 import { useTasks } from './useTasks'
 import { useWeekLogic, LOCATIONS, DAY_LOCATIONS } from './useWeekLogic'
 
+// Get next Monday's week start date (for advancing week early on weekends)
+function getNextWeekStart() {
+  const d = new Date()
+  const day = d.getDay()
+  // Days until next Monday: Sun(0)=1, Sat(6)=2
+  const daysUntilMonday = day === 0 ? 1 : (8 - day)
+  d.setDate(d.getDate() + daysUntilMonday)
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString().split('T')[0]
+}
+
 const reviewState = ref({
   lastWeeklyReview: null,
   lastDailyReview: null,
@@ -14,7 +25,7 @@ const reviewLoaded = ref(false)
 export function useReviews() {
   const { user } = useAuth()
   const { tasks, bulkMoveToLocation, bulkDelete } = useTasks()
-  const { getCurrentWeekStart, isNewWeek, isNewDay, currentDayLocation, getPriorDayLocations } = useWeekLogic()
+  const { getCurrentWeekStart, isNewWeek, isNewDay, isWeekend, currentDayLocation, getPriorDayLocations } = useWeekLogic()
 
   const getUserId = () => user.value?.id
 
@@ -69,6 +80,14 @@ export function useReviews() {
     )
   })
 
+  // Can advance to next week early (weekend only, and haven't already advanced)
+  const canAdvanceWeek = computed(() => {
+    if (!isWeekend()) return false
+    // If lastWeekStart already matches next Monday, we've already advanced
+    const nextMonday = getNextWeekStart()
+    return reviewState.value.lastWeekStart !== nextMonday
+  })
+
   const getRolledOverTasks = () => {
     // Tasks from "Next Week" that should move to "This Week"
     const nextWeekTasks = tasks.value.filter(t =>
@@ -108,7 +127,7 @@ export function useReviews() {
     await bulkMoveToLocation(incompleteDayTasks.map(t => t.id), LOCATIONS.THIS_WEEK)
   }
 
-  const completeWeeklyReview = async (laterDecisions) => {
+  const completeWeeklyReview = async (laterDecisions, { weekStart } = {}) => {
     // laterDecisions is an object: { taskId: 'keep' | 'this-week' | 'delete' }
     const toThisWeek = []
     const toDelete = []
@@ -131,8 +150,9 @@ export function useReviews() {
     }
 
     // Update review state
+    // weekStart override allows advancing to next week early (from weekend)
     reviewState.value.lastWeeklyReview = new Date().toISOString()
-    reviewState.value.lastWeekStart = getCurrentWeekStart()
+    reviewState.value.lastWeekStart = weekStart || getCurrentWeekStart()
     reviewState.value.lastDailyReview = new Date().toISOString().split('T')[0]
     await saveReviewState()
   }
@@ -186,6 +206,8 @@ export function useReviews() {
     reviewState,
     needsWeeklyReview,
     needsDailyReview,
+    canAdvanceWeek,
+    getNextWeekStart: () => getNextWeekStart(),
     getRolledOverTasks,
     getLaterTasks,
     getDailyRolloverTasks,

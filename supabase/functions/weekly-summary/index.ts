@@ -560,7 +560,7 @@ function buildEmailHtml(data: {
 
     <!-- CTA -->
     <div style="text-align:center;padding:24px;">
-      <a href="https://nexbite-two.vercel.app" style="display:inline-block;background:#1a5f4a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Open NexBite</a>
+      <a href="https://tasks.tanzillo.ai" style="display:inline-block;background:#1a5f4a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Open NexBite</a>
     </div>
 
     <!-- Footer -->
