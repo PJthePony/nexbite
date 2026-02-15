@@ -1,11 +1,43 @@
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 
+const LUCA_API = 'https://luca.tanzillo.ai'
+
 // Module-scope state (singleton)
 const user = ref(null)
 const session = ref(null)
 const loading = ref(true)
 let initialized = false
+let sessionSynced = false
+
+/**
+ * Sync the Supabase session to a shared .tanzillo.ai cookie
+ * so Luca (luca.tanzillo.ai) can read it too.
+ */
+function syncSessionCookie(newSession, redirect = false) {
+  if (!newSession) return
+
+  const params = new URLSearchParams({
+    token: newSession.access_token,
+    refresh: newSession.refresh_token,
+    returnTo: window.location.origin + window.location.pathname,
+  })
+
+  if (redirect) {
+    window.location.href = `${LUCA_API}/auth/session?${params}`
+  } else {
+    // Silently update the cookie via fetch (for token refreshes)
+    fetch(`${LUCA_API}/auth/session/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: newSession.access_token,
+        refresh: newSession.refresh_token,
+      }),
+    }).catch(() => {})
+  }
+}
 
 export function useAuth() {
   const isAuthenticated = computed(() => !!user.value)
@@ -26,10 +58,19 @@ export function useAuth() {
       })
 
       // Listen for auth state changes (login, logout, token refresh)
-      supabase.auth.onAuthStateChange((_event, newSession) => {
+      supabase.auth.onAuthStateChange((event, newSession) => {
         session.value = newSession
         user.value = newSession?.user ?? null
         loading.value = false
+
+        if (event === 'SIGNED_IN' && newSession && !sessionSynced) {
+          // First sign-in: redirect through Luca to set the shared cookie
+          sessionSynced = true
+          syncSessionCookie(newSession, true)
+        } else if (event === 'TOKEN_REFRESHED' && newSession) {
+          // Silently update the cookie
+          syncSessionCookie(newSession, false)
+        }
       })
     })
   }
@@ -38,7 +79,7 @@ export function useAuth() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin
+        emailRedirectTo: 'https://tasks.tanzillo.ai'
       }
     })
     if (error) throw error
@@ -47,6 +88,8 @@ export function useAuth() {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+    // Clear the shared auth cookie via Luca
+    window.location.href = `${LUCA_API}/auth/logout?returnTo=${encodeURIComponent(window.location.origin + '/login')}`
   }
 
   return {
