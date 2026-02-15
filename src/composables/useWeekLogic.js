@@ -41,8 +41,8 @@ export function useWeekLogic() {
       4: LOCATIONS.THURSDAY,
       5: LOCATIONS.FRIDAY
     }
-    // If weekend, default to Monday
-    return dayMap[day] || LOCATIONS.MONDAY
+    // If weekend, default to Next Week
+    return dayMap[day] || LOCATIONS.NEXT_WEEK
   }
 
   const currentDayLocation = ref(getCurrentDayLocation())
