@@ -202,11 +202,17 @@ export function useReviews() {
     await saveReviewState()
   }
 
+  // The "logical" week start — reflects advanced week on weekends
+  const logicalWeekStart = computed(() => {
+    return reviewState.value.lastWeekStart || getCurrentWeekStart()
+  })
+
   return {
     reviewState,
     needsWeeklyReview,
     needsDailyReview,
     canAdvanceWeek,
+    logicalWeekStart,
     getNextWeekStart: () => getNextWeekStart(),
     getRolledOverTasks,
     getLaterTasks,

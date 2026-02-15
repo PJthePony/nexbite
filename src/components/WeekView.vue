@@ -22,12 +22,24 @@ const props = defineProps({
   hiddenDays: {
     type: Array,
     default: () => []
+  },
+  weekAdvanced: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'move', 'reorder', 'createWorkstream', 'reorderWorkstreams', 'multi-drop', 'update-workstream-color'])
 
-const { isToday, currentDayLocation } = useWeekLogic()
+const { isToday, LOCATIONS } = useWeekLogic()
+
+// When the week is advanced on a weekend, treat "This Week" as the active column
+const isActiveColumn = (columnId) => {
+  if (props.weekAdvanced) {
+    return columnId === LOCATIONS.THIS_WEEK
+  }
+  return isToday(columnId)
+}
 
 // Refs
 const gridWrapper = ref(null)
@@ -62,6 +74,8 @@ const visibleColumns = computed(() => {
     // Hide columns the user has toggled off in settings
     if (props.hiddenDays.includes(col.id)) return false
     if (col.hideWhenEmpty) {
+      // Always show "This Week" when the week is advanced (planning mode)
+      if (props.weekAdvanced && col.id === LOCATIONS.THIS_WEEK) return true
       const tasks = props.tasksByLocation[col.id] || []
       return tasks.length > 0
     }
@@ -110,14 +124,12 @@ const checkMobile = () => {
   const wasMobile = isMobile.value
   isMobile.value = window.innerWidth <= 768
 
-  // Only snap to today on the first time we enter mobile mode
+  // Only snap to active column on the first time we enter mobile mode
   if (isMobile.value && !mobileInitialized.value) {
     mobileInitialized.value = true
-    const todayIndex = visibleColumns.value.findIndex(col =>
-      col.id === currentDayLocation.value
-    )
-    if (todayIndex !== -1) {
-      currentColumnIndex.value = todayIndex
+    const activeIndex = visibleColumns.value.findIndex(col => isActiveColumn(col.id))
+    if (activeIndex !== -1) {
+      currentColumnIndex.value = activeIndex
     }
   }
 
@@ -345,27 +357,27 @@ const closeColorPicker = () => {
   editingColorWorkstream.value = null
 }
 
-// Whether today's column has zero tasks across all workstreams
+// Whether the active column has zero tasks across all workstreams
 const todayHasNoTasks = computed(() => {
-  const todayCol = visibleColumns.value.find(col => isToday(col.id))
-  if (!todayCol) return false
-  const todayTasks = props.tasksByLocation[todayCol.id] || []
-  return todayTasks.length === 0
+  const activeCol = visibleColumns.value.find(col => isActiveColumn(col.id))
+  if (!activeCol) return false
+  const activeTasks = props.tasksByLocation[activeCol.id] || []
+  return activeTasks.length === 0
 })
 
 const gridTemplateColumns = computed(() => {
-  // workstream label column + one column per day (today is wider, all capped)
+  // workstream label column + one column per day (active is wider, all capped)
   const colSizes = visibleColumns.value.map(col =>
-    isToday(col.id) ? 'minmax(220px, 320px)' : 'minmax(180px, 260px)'
+    isActiveColumn(col.id) ? 'minmax(220px, 320px)' : 'minmax(180px, 260px)'
   )
   return `120px ${colSizes.join(' ')}`
 })
 
-// Scroll to today's column on desktop
+// Scroll to active column on desktop
 const scrollToToday = () => {
   if (isMobile.value || !gridWrapper.value) return
 
-  const todayIndex = visibleColumns.value.findIndex(col => isToday(col.id))
+  const todayIndex = visibleColumns.value.findIndex(col => isActiveColumn(col.id))
   if (todayIndex > 0) {
     // Wait for layout to complete, then scroll
     setTimeout(() => {
@@ -412,10 +424,10 @@ onUnmounted(() => {
       v-for="column in visibleColumns"
       :key="'header-' + column.id"
       class="grid-header"
-      :class="{ 'is-today': isToday(column.id) }"
+      :class="{ 'is-today': isActiveColumn(column.id) }"
     >
       <span class="column-title">{{ column.label }}</span>
-      <span v-if="isToday(column.id)" class="today-badge">Today</span>
+      <span v-if="isActiveColumn(column.id)" class="today-badge">{{ weekAdvanced && column.id === LOCATIONS.THIS_WEEK ? 'Planning' : 'Today' }}</span>
       <span class="column-count" v-if="(tasksByLocation[column.id] || []).filter(t => !t.completed).length > 0">
         {{ (tasksByLocation[column.id] || []).filter(t => !t.completed).length }}
       </span>
@@ -439,9 +451,9 @@ onUnmounted(() => {
       :tasks="getTasksForCell(column.id, null)"
       :location="column.id"
       :all-tasks="allTasks"
-      :is-today="isToday(column.id)"
-      :show-empty-state="isToday(column.id) && todayHasNoTasks"
-      :class="{ 'is-today': isToday(column.id), 'is-last-row': visibleWorkstreamNames.length === 0 }"
+      :is-today="isActiveColumn(column.id)"
+      :show-empty-state="isActiveColumn(column.id) && todayHasNoTasks"
+      :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': visibleWorkstreamNames.length === 0 }"
       @add="(location, workstream) => emit('add', location, workstream)"
       @toggle="emit('toggle', $event)"
       @edit="emit('edit', $event)"
@@ -484,8 +496,8 @@ onUnmounted(() => {
         :tasks="getTasksForCell(column.id, wsName)"
         :location="column.id"
         :all-tasks="allTasks"
-        :is-today="isToday(column.id)"
-        :class="{ 'is-today': isToday(column.id), 'is-last-row': isLastRow(wsName) }"
+        :is-today="isActiveColumn(column.id)"
+        :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': isLastRow(wsName) }"
         @add="(location, workstream) => emit('add', location, workstream)"
         @toggle="emit('toggle', $event)"
         @edit="emit('edit', $event)"
@@ -540,7 +552,7 @@ onUnmounted(() => {
         :key="column.id"
         :column="column"
         :tasks="tasksByLocation[column.id] || []"
-        :is-today="isToday(column.id)"
+        :is-today="isActiveColumn(column.id)"
         :is-currently-viewed="index === currentColumnIndex"
         :is-mobile="true"
         :workstreams="workstreams"
@@ -570,7 +582,7 @@ onUnmounted(() => {
         class="nav-pill"
         :class="{
           'is-active': index === currentColumnIndex,
-          'is-today': isToday(column.id)
+          'is-today': isActiveColumn(column.id)
         }"
         @click="goToColumn(index)"
       >

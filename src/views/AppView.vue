@@ -39,11 +39,12 @@ const {
 
 const { recentTags, allTags, getTagCounts } = useTags()
 const { allWorkstreams, addWorkstream, updateWorkstream, reorderWorkstreams, deleteWorkstream, loadWorkstreams, isLoaded: workstreamsLoaded } = useWorkstreams()
-const { isToday, currentDayLocation, getWeekStartDate } = useWeekLogic()
+const { isToday, currentDayLocation, isWeekend } = useWeekLogic()
 const {
   needsWeeklyReview,
   needsDailyReview,
   canAdvanceWeek,
+  logicalWeekStart,
   getNextWeekStart,
   getRolledOverTasks,
   getLaterTasks,
@@ -89,12 +90,17 @@ const dailyRolloverTasks = ref([])
 // Advance week (weekend early planning)
 const isAdvancingWeek = ref(false)
 
+// After advancing week on a weekend, the week hasn't started yet — focus "This Week"
+const weekAdvanced = computed(() => isWeekend() && !canAdvanceWeek.value)
+
 // Bite modal
 const showBiteModal = ref(false)
 const biteParentTask = ref(null)
 
-// Hide completed tasks from prior weeks in day/week columns
-const weekStartMs = getWeekStartDate().getTime()
+// Hide completed tasks from prior weeks (reactive — updates when week is advanced)
+const weekStartMs = computed(() => {
+  return new Date(logicalWeekStart.value).getTime()
+})
 
 // Compute tasks by location with filtering
 const tasksByLocation = computed(() => {
@@ -105,7 +111,7 @@ const tasksByLocation = computed(() => {
 
     // Hide tasks completed before this week started (they belong to a prior week)
     columnTasks = columnTasks.filter(t =>
-      !t.completed || !t.completedAt || t.completedAt >= weekStartMs
+      !t.completed || !t.completedAt || t.completedAt >= weekStartMs.value
     )
 
     // Apply search filter
@@ -478,6 +484,7 @@ const handleToggleDay = (dayId) => {
         :workstreams="allWorkstreams"
         :all-tasks="tasks"
         :hidden-days="hiddenDays"
+        :week-advanced="weekAdvanced"
         @add="handleAddTask"
         @toggle="handleToggleTask"
         @edit="handleEditTask"
