@@ -1,0 +1,46 @@
+.nxb-form-group {
+  margin-bottom: var(--nxb-space-6);
+}
+
+.nxb-form-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: var(--nxb-font-weight-medium);
+  margin-bottom: var(--nxb-space-2);
+}
+
+.nxb-input {
+  width: 100%;
+  padding: 9px var(--nxb-space-5);
+  border: 1px solid var(--nxb-color-border);
+  border-radius: var(--nxb-radius-md);
+  font-size: var(--nxb-font-base);
+  background: var(--nxb-color-bg);
+  color: var(--nxb-color-text);
+  transition: border-color var(--nxb-transition-fast);
+}
+
+.nxb-input:focus {
+  outline: none;
+  border-color: var(--nxb-color-primary);
+  background: var(--nxb-color-surface);
+  box-shadow: 0 0 0 3px var(--nxb-color-primary-ring);
+}
+
+.nxb-input::placeholder {
+  color: var(--nxb-color-text-muted);
+}
+
+.nxb-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Prevent iOS auto-zoom on input focus */
+@media (max-width: 768px) {
+  .nxb-input,
+  .nxb-textarea,
+  select.nxb-input {
+    font-size: 16px;
+  }
+}

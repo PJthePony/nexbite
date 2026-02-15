@@ -1,0 +1,16 @@
+.nxb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nxb-space-2);
+  padding: 2px 7px;
+  background: var(--nxb-color-border);
+  color: var(--nxb-color-text-secondary);
+  font-size: 0.68rem;
+  font-weight: var(--nxb-font-weight-medium);
+  border-radius: var(--nxb-radius-sm);
+}
+
+.nxb-badge-primary {
+  background: var(--nxb-color-primary);
+  color: white;
+}

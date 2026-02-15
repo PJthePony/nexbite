@@ -1,0 +1,50 @@
+.nxb-btn {
+  padding: 8px 18px;
+  border-radius: var(--nxb-radius-md);
+  font-weight: var(--nxb-font-weight-medium);
+  font-size: var(--nxb-font-md);
+  letter-spacing: var(--nxb-letter-normal);
+  transition: background var(--nxb-transition-fast), color var(--nxb-transition-fast), transform var(--nxb-transition-fast);
+}
+
+.nxb-btn:active {
+  transform: scale(0.97);
+}
+
+.nxb-btn-primary {
+  background: var(--nxb-color-primary);
+  color: white;
+}
+
+.nxb-btn-primary:hover {
+  background: var(--nxb-color-primary-hover);
+}
+
+.nxb-btn-secondary {
+  background: var(--nxb-color-border);
+  color: var(--nxb-color-text);
+}
+
+.nxb-btn-secondary:hover {
+  background: var(--nxb-color-border-light);
+}
+
+.nxb-btn-danger {
+  background: var(--nxb-color-danger);
+  color: white;
+}
+
+.nxb-btn-danger:hover {
+  opacity: 0.9;
+}
+
+.nxb-btn-ghost {
+  background: transparent;
+  color: var(--nxb-color-primary);
+  border: 1px solid var(--nxb-color-border);
+}
+
+.nxb-btn-ghost:hover {
+  background: var(--nxb-color-primary-ghost);
+  border-color: var(--nxb-color-primary);
+}

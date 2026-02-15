@@ -1,0 +1,5 @@
+:root {
+  --nxb-transition-fast: 150ms ease;
+  --nxb-transition-normal: 200ms ease;
+  --nxb-transition-slow: 300ms ease;
+}

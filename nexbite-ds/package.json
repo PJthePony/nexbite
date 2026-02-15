@@ -1,0 +1,13 @@
+{
+  "name": "nexbite-ds",
+  "version": "0.1.0",
+  "description": "NexBite Design System — shared CSS tokens and components",
+  "main": "index.css",
+  "style": "index.css",
+  "files": [
+    "index.css",
+    "tokens/",
+    "base/",
+    "components/"
+  ]
+}

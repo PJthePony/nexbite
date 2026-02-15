@@ -1,0 +1,13 @@
+.nxb-tag {
+  font-size: var(--nxb-font-xs);
+  font-weight: var(--nxb-font-weight-medium);
+  padding: 2px 7px;
+  border-radius: 3px;
+  text-transform: lowercase;
+}
+
+.nxb-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nxb-space-1);
+}

@@ -1,0 +1,17 @@
+.nxb-card {
+  background: var(--nxb-color-surface-elevated);
+  border: 1px solid var(--nxb-color-border);
+  border-radius: var(--nxb-radius-md);
+  padding: var(--nxb-space-4) var(--nxb-space-5);
+  transition: border-color var(--nxb-transition-fast), background var(--nxb-transition-fast);
+}
+
+.nxb-card:hover {
+  border-color: var(--nxb-color-border-light);
+}
+
+.nxb-card-surface {
+  background: var(--nxb-color-surface);
+  border: 1px solid var(--nxb-color-border);
+  border-radius: var(--nxb-radius-lg);
+}

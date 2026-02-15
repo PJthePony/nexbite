@@ -1,0 +1,9 @@
+:root {
+  --nxb-radius-sm: 4px;
+  --nxb-radius-md: 6px;
+  --nxb-radius-lg: 10px;
+
+  --nxb-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --nxb-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --nxb-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+}

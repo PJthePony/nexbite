@@ -1,0 +1,33 @@
+:root {
+  /* Palette: Slate & Coral */
+  --nxb-color-bg: #f8fafc;
+  --nxb-color-surface: #ffffff;
+  --nxb-color-surface-elevated: #ffffff;
+  --nxb-color-border: #e2e8f0;
+  --nxb-color-border-light: #cbd5e1;
+
+  --nxb-color-text: #0f172a;
+  --nxb-color-text-secondary: #64748b;
+  --nxb-color-text-muted: #94a3b8;
+
+  --nxb-color-primary: #475569;
+  --nxb-color-primary-hover: #334155;
+  --nxb-color-primary-ring: rgba(71, 85, 105, 0.1);
+  --nxb-color-primary-ghost: rgba(71, 85, 105, 0.06);
+
+  --nxb-color-accent: #f97316;
+  --nxb-color-success: #059669;
+  --nxb-color-danger: #ef4444;
+
+  /* Tag palette — Electric Brights */
+  --nxb-tag-1: #ef4444;
+  --nxb-tag-2: #f97316;
+  --nxb-tag-3: #eab308;
+  --nxb-tag-4: #22c55e;
+  --nxb-tag-5: #06b6d4;
+  --nxb-tag-6: #3b82f6;
+  --nxb-tag-7: #8b5cf6;
+  --nxb-tag-8: #ec4899;
+  --nxb-tag-9: #14b8a6;
+  --nxb-tag-10: #f43f5e;
+}
