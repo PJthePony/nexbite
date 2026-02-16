@@ -155,9 +155,6 @@ const checkMobile = () => {
 }
 
 const handleTouchStart = (e) => {
-  // Don't start day-swiping if touch is on a task swipe container
-  if (e.target.closest('.task-swipe-container')) return
-
   touchStartX.value = e.touches[0].clientX
   touchStartY.value = e.touches[0].clientY
   touchStartTime.value = Date.now()
