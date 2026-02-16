@@ -320,7 +320,7 @@ Note: "bites" are smaller sub-tasks broken off from larger tasks. When bites of 
         const formData = new FormData();
         formData.append(
           "from",
-          `NexBite <weekly-summary@${mailgunDomain}>`
+          `Tessio <weekly-summary@${mailgunDomain}>`
         );
         formData.append("to", email);
         formData.append(
@@ -377,9 +377,9 @@ Note: "bites" are smaller sub-tasks broken off from larger tasks. When bites of 
       });
 
       const adminFormData = new FormData();
-      adminFormData.append("from", `NexBite Admin <admin@${mailgunDomain}>`);
+      adminFormData.append("from", `Tessio Admin <admin@${mailgunDomain}>`);
       adminFormData.append("to", ADMIN_EMAIL);
-      adminFormData.append("subject", `NexBite Weekly Job Report — ${emailsSent} emails sent`);
+      adminFormData.append("subject", `Tessio Weekly Job Report — ${emailsSent} emails sent`);
       adminFormData.append("html", adminHtml);
 
       const adminMgRes = await fetch(
@@ -506,7 +506,7 @@ function buildEmailHtml(data: {
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#1a5f4a,#2d8a6e);border-radius:12px 12px 0 0;padding:30px;text-align:center;">
       <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;">Weekly Status Report</h1>
-      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">NexBite — Week in Review</p>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Tessio — Week in Review</p>
     </div>
 
     <!-- Stats Bar -->
@@ -560,12 +560,12 @@ function buildEmailHtml(data: {
 
     <!-- CTA -->
     <div style="text-align:center;padding:24px;">
-      <a href="https://tasks.tanzillo.ai" style="display:inline-block;background:#1a5f4a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Open NexBite</a>
+      <a href="https://tessio.tanzillo.ai" style="display:inline-block;background:#1a5f4a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Open Tessio</a>
     </div>
 
     <!-- Footer -->
     <div style="text-align:center;padding:12px;color:#aaa;font-size:12px;">
-      Sent by NexBite
+      Sent by Tessio
     </div>
   </div>
 </body>
@@ -635,7 +635,7 @@ function buildAdminReportHtml(data: {
   <div style="max-width:700px;margin:0 auto;padding:20px;">
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#2c3e50,#3498db);border-radius:12px 12px 0 0;padding:24px;text-align:center;">
-      <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">NexBite Admin Report</h1>
+      <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">Tessio Admin Report</h1>
       <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;">Weekly Summary Job — ${escapeHtml(runTime)}</p>
     </div>
 
@@ -700,7 +700,7 @@ function buildAdminReportHtml(data: {
 
     <!-- Footer -->
     <div style="text-align:center;padding:16px;color:#aaa;font-size:12px;">
-      NexBite Admin Report — Auto-generated
+      Tessio Admin Report — Auto-generated
     </div>
   </div>
 </body>

@@ -1,7 +1,7 @@
 {
-  "name": "nexbite-ds",
+  "name": "tessio-ds",
   "version": "0.1.0",
-  "description": "NexBite Design System — shared CSS tokens and components",
+  "description": "Tessio Design System — shared CSS tokens and components",
   "main": "index.css",
   "style": "index.css",
   "files": [

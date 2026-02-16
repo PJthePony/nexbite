@@ -78,7 +78,7 @@ export function useAuth() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: 'https://tasks.tanzillo.ai'
+        emailRedirectTo: 'https://tessio.tanzillo.ai'
       }
     })
     if (error) throw error
