@@ -326,6 +326,8 @@ const hiddenCount = (day) => {
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .calendar-task {
@@ -336,6 +338,8 @@ const hiddenCount = (day) => {
   border-radius: 3px;
   cursor: pointer;
   transition: background 0.1s ease;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .calendar-task:hover {
