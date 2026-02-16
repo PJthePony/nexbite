@@ -12,7 +12,7 @@ const props = defineProps({
 const emit = defineEmits(['edit', 'add'])
 
 // Number of weeks to show
-const WEEKS_TO_SHOW = 12
+const WEEKS_TO_SHOW = 52
 const MAX_VISIBLE_TASKS = 3
 
 const expandedDays = ref(new Set())
