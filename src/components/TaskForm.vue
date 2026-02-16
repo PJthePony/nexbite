@@ -236,7 +236,7 @@ const handleCreateWorkstream = (wsData) => {
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="task-location">Location</label>
+            <label class="form-label" for="task-location">When</label>
             <select
               id="task-location"
               v-model="location"
