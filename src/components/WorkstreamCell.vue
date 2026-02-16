@@ -122,10 +122,9 @@ const handleAdd = () => {
 }
 
 const handleCellClick = (e) => {
-  // Only trigger if the cell itself or the empty drag area was clicked (not a task card or button)
-  if (isEmpty.value && (e.target.closest('.workstream-cell') === e.currentTarget)) {
-    handleAdd()
-  }
+  // Trigger add if clicked on the cell background (not on a task card or button)
+  if (e.target.closest('.task-item') || e.target.closest('button') || e.target.closest('.later-count')) return
+  handleAdd()
 }
 </script>
 
@@ -215,6 +214,7 @@ const handleCellClick = (e) => {
   min-height: 48px;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .workstream-cell.is-empty {
