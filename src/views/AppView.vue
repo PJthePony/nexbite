@@ -43,7 +43,7 @@ const {
 } = useTasks()
 
 const { recentTags, allTags, getTagCounts } = useTags()
-const { allWorkstreams, addWorkstream, updateWorkstream, reorderWorkstreams, deleteWorkstream, loadWorkstreams, isLoaded: workstreamsLoaded } = useWorkstreams()
+const { allWorkstreams, addWorkstream, updateWorkstream, renameWorkstream, reorderWorkstreams, deleteWorkstream, loadWorkstreams, isLoaded: workstreamsLoaded } = useWorkstreams()
 const { isToday, currentDayLocation, isWeekend } = useWeekLogic()
 const {
   needsWeeklyReview,
@@ -512,6 +512,17 @@ const handleRenameTag = ({ oldName, newName }) => {
   renameTagColor(oldName, newName)
 }
 
+const handleRenameWorkstream = async ({ oldName, newName }) => {
+  // Update the workstream name in the workstreams table
+  await renameWorkstream(oldName, newName)
+  // Cascade to all tasks referencing the old workstream name
+  tasks.value.forEach(task => {
+    if (task.workstream === oldName) {
+      updateTask(task.id, { workstream: newName })
+    }
+  })
+}
+
 const handleDeleteTag = (tagName) => {
   tasks.value.forEach(task => {
     if (task.tags && task.tags.includes(tagName)) {
@@ -665,6 +676,7 @@ const handleToggleDay = (dayId) => {
       @close="showSettings = false"
       @add-workstream="handleSettingsAddWorkstream"
       @delete-workstream="handleSettingsDeleteWorkstream"
+      @rename-workstream="handleRenameWorkstream"
       @rename-tag="handleRenameTag"
       @delete-tag="handleDeleteTag"
       @recolor-tag="handleRecolorTag"

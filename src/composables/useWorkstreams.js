@@ -132,6 +132,31 @@ export function useWorkstreams() {
     }
   }
 
+  const renameWorkstream = async (oldName, newName) => {
+    const index = workstreams.value.findIndex(w => w.name === oldName)
+    if (index === -1) return
+
+    // Check for duplicate
+    if (workstreams.value.find(w => w.name.toLowerCase() === newName.toLowerCase() && w.name !== oldName)) {
+      console.error('Workstream name already exists:', newName)
+      return
+    }
+
+    const oldWorkstream = { ...workstreams.value[index] }
+    workstreams.value[index] = { ...workstreams.value[index], name: newName }
+
+    const { error } = await supabase
+      .from('workstreams')
+      .update({ name: newName })
+      .eq('user_id', getUserId())
+      .eq('name', oldName)
+
+    if (error) {
+      console.error('Failed to rename workstream:', error)
+      workstreams.value[index] = oldWorkstream
+    }
+  }
+
   const getWorkstreamColor = (name) => {
     if (!name) return null
     const workstream = workstreams.value.find(w => w.name === name)
@@ -184,6 +209,7 @@ export function useWorkstreams() {
     loadWorkstreams,
     addWorkstream,
     updateWorkstream,
+    renameWorkstream,
     deleteWorkstream,
     getWorkstreamColor,
     allWorkstreams,

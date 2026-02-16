@@ -1,6 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { getTagColor } from '../composables/useTags'
+import { useWorkstreams } from '../composables/useWorkstreams'
+
+const { getWorkstreamColor } = useWorkstreams()
 
 const props = defineProps({
   tasks: {
@@ -13,9 +16,11 @@ const emit = defineEmits(['edit', 'add'])
 
 // Number of weeks to show
 const WEEKS_TO_SHOW = 52
-const MAX_VISIBLE_TASKS = 3
+const DAY_MAX_HEIGHT = 140 // max height in px before "See all" appears
 
 const expandedDays = ref(new Set())
+const overflowingDays = ref(new Set())
+const calendarGridRef = ref(null)
 
 // Get all Later tasks with activateAt dates
 const laterTasks = computed(() => {
@@ -104,18 +109,31 @@ const toggleExpand = (dateStr) => {
 }
 
 const isExpanded = (dateStr) => expandedDays.value.has(dateStr)
+const isOverflowing = (dateStr) => overflowingDays.value.has(dateStr)
 
-const visibleTasks = (day) => {
-  if (isExpanded(day.date) || day.tasks.length <= MAX_VISIBLE_TASKS) {
-    return day.tasks
-  }
-  return day.tasks.slice(0, MAX_VISIBLE_TASKS)
+// Check which day cells overflow their max height
+const checkOverflows = () => {
+  if (!calendarGridRef.value) return
+  const days = calendarGridRef.value.querySelectorAll('.calendar-day')
+  const newOverflowing = new Set()
+  days.forEach(el => {
+    const dateStr = el.dataset.date
+    if (!dateStr || expandedDays.value.has(dateStr)) return
+    if (el.scrollHeight > el.clientHeight + 2) {
+      newOverflowing.add(dateStr)
+    }
+  })
+  overflowingDays.value = newOverflowing
 }
 
-const hiddenCount = (day) => {
-  if (isExpanded(day.date)) return 0
-  return Math.max(0, day.tasks.length - MAX_VISIBLE_TASKS)
-}
+// Re-check overflows when tasks change
+watch(() => props.tasks, () => {
+  nextTick(checkOverflows)
+}, { deep: true })
+
+onMounted(() => {
+  nextTick(checkOverflows)
+})
 </script>
 
 <template>
@@ -130,7 +148,7 @@ const hiddenCount = (day) => {
     </div>
 
     <!-- Calendar grid -->
-    <div class="calendar-grid">
+    <div class="calendar-grid" ref="calendarGridRef">
       <template
         v-for="(week, wi) in calendarWeeks"
         :key="wi"
@@ -143,6 +161,7 @@ const hiddenCount = (day) => {
         <div
           v-for="day in week"
           :key="day.date"
+          :data-date="day.date"
           class="calendar-day"
           :class="{
             'is-today': day.isToday,
@@ -165,11 +184,16 @@ const hiddenCount = (day) => {
 
           <div class="day-tasks" v-if="day.tasks.length > 0">
             <div
-              v-for="task in visibleTasks(day)"
+              v-for="task in day.tasks"
               :key="task.id"
               class="calendar-task"
               @click.stop="emit('edit', task)"
             >
+              <span
+                v-if="task.workstream && getWorkstreamColor(task.workstream)"
+                class="cal-tag-dot"
+                :style="{ backgroundColor: getWorkstreamColor(task.workstream).text }"
+              ></span>
               <template v-if="task.tags && task.tags.length > 0">
                 <span
                   v-for="tag in task.tags"
@@ -180,23 +204,24 @@ const hiddenCount = (day) => {
               </template>
               <span class="calendar-task-title">{{ task.title }}</span>
             </div>
-
-            <button
-              v-if="hiddenCount(day) > 0"
-              class="day-expand-btn"
-              @click.stop="toggleExpand(day.date)"
-            >
-              +{{ hiddenCount(day) }} more
-            </button>
-
-            <button
-              v-if="isExpanded(day.date) && day.tasks.length > MAX_VISIBLE_TASKS"
-              class="day-expand-btn"
-              @click.stop="toggleExpand(day.date)"
-            >
-              Show less
-            </button>
           </div>
+
+          <!-- See all / Show less buttons -->
+          <button
+            v-if="!isExpanded(day.date) && isOverflowing(day.date)"
+            class="day-expand-btn day-see-all"
+            @click.stop="toggleExpand(day.date)"
+          >
+            See all ({{ day.tasks.length }})
+          </button>
+
+          <button
+            v-if="isExpanded(day.date) && day.tasks.length > 0"
+            class="day-expand-btn"
+            @click.stop="toggleExpand(day.date)"
+          >
+            Show less
+          </button>
         </div>
       </div>
       </template>
@@ -240,7 +265,8 @@ const hiddenCount = (day) => {
 }
 
 .calendar-day {
-  min-height: 110px;
+  min-height: 130px;
+  max-height: 140px;
   padding: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -249,6 +275,9 @@ const hiddenCount = (day) => {
   flex-direction: column;
   transition: background 0.15s ease;
   cursor: pointer;
+  overflow: hidden;
+  min-width: 0;
+  position: relative;
 }
 
 .calendar-day:hover {
@@ -268,12 +297,8 @@ const hiddenCount = (day) => {
   background: rgba(249, 115, 22, 0.04);
 }
 
-.calendar-day.has-tasks {
-  min-height: 120px;
-}
-
 .calendar-day.is-expanded {
-  min-height: auto;
+  max-height: none;
 }
 
 .day-header {
@@ -373,6 +398,25 @@ const hiddenCount = (day) => {
   font-weight: 500;
 }
 
+.day-see-all {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 8px 6px;
+  text-align: center;
+  background: linear-gradient(to bottom, transparent, var(--color-surface) 40%);
+  z-index: 1;
+}
+
+.calendar-day.is-weekend .day-see-all {
+  background: linear-gradient(to bottom, transparent, var(--color-bg) 40%);
+}
+
+.calendar-day.is-today .day-see-all {
+  background: linear-gradient(to bottom, transparent, rgba(255, 253, 250, 1) 40%);
+}
+
 .day-expand-btn:hover {
   text-decoration: underline;
 }
@@ -401,6 +445,7 @@ const hiddenCount = (day) => {
 @media (max-width: 768px) {
   .calendar-day {
     min-height: 70px;
+    max-height: 100px;
     padding: 5px;
   }
 

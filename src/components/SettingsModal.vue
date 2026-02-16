@@ -32,6 +32,7 @@ const emit = defineEmits([
   'close',
   'add-workstream',
   'delete-workstream',
+  'rename-workstream',
   'rename-tag',
   'delete-tag',
   'recolor-tag',
@@ -50,6 +51,10 @@ const showRevokeConfirm = ref(false)
 // Workstream form state
 const newWorkstreamName = ref('')
 const newWorkstreamColor = ref(WORKSTREAM_COLORS[0])
+
+// Workstream rename state
+const renamingWorkstream = ref(null)
+const renameWsValue = ref('')
 
 // Tag rename state
 const renamingTag = ref(null)
@@ -74,6 +79,8 @@ watch(() => props.show, (newVal) => {
   if (newVal) {
     newWorkstreamName.value = ''
     newWorkstreamColor.value = WORKSTREAM_COLORS[0]
+    renamingWorkstream.value = null
+    renameWsValue.value = ''
     renamingTag.value = null
     renameValue.value = ''
     coloringTag.value = null
@@ -127,6 +134,27 @@ const handleAddWorkstream = () => {
 
 const handleDeleteWorkstream = (wsName) => {
   emit('delete-workstream', wsName)
+}
+
+const startRenameWorkstream = (ws) => {
+  renamingWorkstream.value = ws.name
+  renameWsValue.value = ws.name
+}
+
+const confirmRenameWorkstream = () => {
+  const newName = renameWsValue.value.trim()
+  if (!newName || newName === renamingWorkstream.value) {
+    renamingWorkstream.value = null
+    return
+  }
+  emit('rename-workstream', { oldName: renamingWorkstream.value, newName })
+  renamingWorkstream.value = null
+  renameWsValue.value = ''
+}
+
+const cancelRenameWorkstream = () => {
+  renamingWorkstream.value = null
+  renameWsValue.value = ''
 }
 
 // Tag handlers
@@ -308,16 +336,45 @@ const activeTab = ref('claude')
               :key="ws.name"
               class="ws-list-item"
             >
-              <div
-                class="ws-list-swatch"
-                :style="{ backgroundColor: ws.color.bg, borderColor: ws.color.text }"
-              ></div>
-              <span class="ws-list-name">{{ ws.name }}</span>
-              <button
-                class="ws-list-delete"
-                @click="handleDeleteWorkstream(ws.name)"
-                title="Delete workstream"
-              >&times;</button>
+              <!-- Normal display -->
+              <template v-if="renamingWorkstream !== ws.name">
+                <div
+                  class="ws-list-swatch"
+                  :style="{ backgroundColor: ws.color.bg, borderColor: ws.color.text }"
+                ></div>
+                <span class="ws-list-name">{{ ws.name }}</span>
+                <button
+                  class="tag-manage-action"
+                  @click="startRenameWorkstream(ws)"
+                  title="Rename workstream"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button
+                  class="ws-list-delete"
+                  @click="handleDeleteWorkstream(ws.name)"
+                  title="Delete workstream"
+                >&times;</button>
+              </template>
+
+              <!-- Rename mode -->
+              <template v-else>
+                <div
+                  class="ws-list-swatch"
+                  :style="{ backgroundColor: ws.color.bg, borderColor: ws.color.text }"
+                ></div>
+                <input
+                  v-model="renameWsValue"
+                  class="form-input tag-rename-input"
+                  @keydown.enter="confirmRenameWorkstream"
+                  @keydown.escape="cancelRenameWorkstream"
+                  autofocus
+                />
+                <button class="tag-manage-action save" @click="confirmRenameWorkstream" title="Save">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+                <button class="tag-manage-action" @click="cancelRenameWorkstream" title="Cancel">&times;</button>
+              </template>
             </div>
           </div>
           <p v-else class="ws-empty">No workstreams yet.</p>
