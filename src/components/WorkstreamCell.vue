@@ -152,6 +152,7 @@ const handleCellClick = (e) => {
           :bite-count="getBiteCount(element)"
           :completed-bite-count="getCompletedBiteCount(element)"
           :compact="!isToday"
+          :collapsed="location === 'later'"
           @toggle="emit('toggle', $event)"
           @edit="emit('edit', $event)"
           @delete="emit('delete', $event)"

@@ -30,6 +30,10 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  collapsed: {
+    type: Boolean,
+    default: false
+  },
   isMobile: {
     type: Boolean,
     default: false
@@ -223,7 +227,7 @@ const closeSwipe = () => {
   <div
     v-else
     class="task-item"
-    :class="{ 'is-completed': task.completed, 'is-compact': compact, 'is-selected': isTaskSelected, 'is-faded-for-drag': isFadedDuringDrag, 'has-bites': hasBites }"
+    :class="{ 'is-completed': task.completed, 'is-compact': compact, 'is-collapsed': collapsed, 'is-selected': isTaskSelected, 'is-faded-for-drag': isFadedDuringDrag, 'has-bites': hasBites }"
     :style="cardStyle"
     @mousedown="handleMouseDown"
     @click="handleClick"
@@ -239,8 +243,17 @@ const closeSwipe = () => {
       />
       <div class="task-content">
         <div class="task-title">
+          <template v-if="compact && task.tags && task.tags.length > 0">
+            <span
+              v-for="tag in task.tags"
+              :key="tag"
+              class="tag-dot"
+              :style="{ backgroundColor: getTagColor(tag).text }"
+              :title="tag"
+            ></span>
+          </template>
           <span
-            v-if="compact && workstreamColor"
+            v-else-if="compact && workstreamColor"
             class="ws-dot"
             :style="{ backgroundColor: workstreamColor.text }"
           ></span>

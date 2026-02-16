@@ -73,10 +73,18 @@
 .app-title {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .app-logo {
   display: block;
+}
+
+.app-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
 }
 
 .app-main {
@@ -288,6 +296,27 @@
   font-size: 0.65rem;
 }
 
+.task-item.is-collapsed {
+  padding: 3px 8px;
+  border: none;
+  background: none;
+  box-shadow: none;
+  border-radius: 4px;
+}
+
+.task-item.is-collapsed:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.task-item.is-collapsed .task-title {
+  font-size: 0.74rem;
+  color: var(--color-text-secondary);
+}
+
+.task-item.is-collapsed .task-notes-indicator {
+  display: none;
+}
+
 .task-header {
   display: flex;
   align-items: flex-start;
@@ -318,6 +347,13 @@
 }
 
 .ws-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tag-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;

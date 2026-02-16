@@ -10,6 +10,10 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
+    "@tiptap/extension-placeholder": "^3.19.0",
+    "@tiptap/pm": "^3.19.0",
+    "@tiptap/starter-kit": "^3.19.0",
+    "@tiptap/vue-3": "^3.19.0",
     "vue": "^3.4.0",
     "vue-router": "^4.6.4",
     "vuedraggable": "^4.1.0"

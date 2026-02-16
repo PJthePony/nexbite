@@ -100,6 +100,25 @@ export function useWeekLogic() {
     return ALL_COLUMNS.findIndex(col => col.id === location)
   }
 
+  // Get the calendar date for each day column (Mon=0 offset, Tue=1, etc.)
+  const getColumnDate = (location) => {
+    const weekStart = getWeekStartDate() // Monday
+    const dayOffsets = {
+      [LOCATIONS.MONDAY]: 0,
+      [LOCATIONS.TUESDAY]: 1,
+      [LOCATIONS.WEDNESDAY]: 2,
+      [LOCATIONS.THURSDAY]: 3,
+      [LOCATIONS.FRIDAY]: 4,
+      [LOCATIONS.SATURDAY]: 5,
+      [LOCATIONS.SUNDAY]: 6,
+    }
+    const offset = dayOffsets[location]
+    if (offset === undefined) return null
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + offset)
+    return d
+  }
+
   return {
     LOCATIONS,
     DAY_LOCATIONS,
@@ -113,6 +132,7 @@ export function useWeekLogic() {
     isNewWeek,
     isNewDay,
     getPriorDayLocations,
-    getDayIndex
+    getDayIndex,
+    getColumnDate
   }
 }

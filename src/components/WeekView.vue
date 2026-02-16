@@ -31,7 +31,13 @@ const props = defineProps({
 
 const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'move', 'reorder', 'createWorkstream', 'reorderWorkstreams', 'multi-drop', 'update-workstream-color'])
 
-const { isToday, LOCATIONS } = useWeekLogic()
+const { isToday, LOCATIONS, getColumnDate } = useWeekLogic()
+
+const formatColumnDate = (columnId) => {
+  const date = getColumnDate(columnId)
+  if (!date) return null
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
 
 // When the week is advanced on a weekend, treat "This Week" as the active column
 const isActiveColumn = (columnId) => {
@@ -426,7 +432,10 @@ onUnmounted(() => {
       class="grid-header"
       :class="{ 'is-today': isActiveColumn(column.id) }"
     >
-      <span class="column-title">{{ column.label }}</span>
+      <span class="column-title">
+        {{ column.label }}
+        <span v-if="formatColumnDate(column.id)" class="column-date">{{ formatColumnDate(column.id) }}</span>
+      </span>
       <span v-if="isActiveColumn(column.id)" class="today-badge">{{ weekAdvanced && column.id === LOCATIONS.THIS_WEEK ? 'Planning' : 'Today' }}</span>
       <span class="column-count" v-if="(tasksByLocation[column.id] || []).filter(t => !t.completed).length > 0">
         {{ (tasksByLocation[column.id] || []).filter(t => !t.completed).length }}
@@ -640,6 +649,20 @@ onUnmounted(() => {
 }
 
 .column-title {
+  font-weight: 500;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.column-date {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.grid-header.is-today .column-date {
+  color: var(--color-primary);
   font-weight: 500;
 }
 

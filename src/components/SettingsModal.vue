@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useApiKey } from '../composables/useApiKey'
-import { getTagColor } from '../composables/useTags'
+import { getTagColor, TAG_COLORS } from '../composables/useTags'
 import { WORKSTREAM_COLORS } from '../composables/useWorkstreams'
 import { ALL_COLUMNS } from '../composables/useWeekLogic'
 
@@ -34,6 +34,7 @@ const emit = defineEmits([
   'delete-workstream',
   'rename-tag',
   'delete-tag',
+  'recolor-tag',
   'toggle-day'
 ])
 
@@ -53,6 +54,7 @@ const newWorkstreamColor = ref(WORKSTREAM_COLORS[0])
 // Tag rename state
 const renamingTag = ref(null)
 const renameValue = ref('')
+const coloringTag = ref(null)
 
 const apiEndpoint = computed(() => {
   const base = import.meta.env.VITE_SUPABASE_URL
@@ -74,6 +76,7 @@ watch(() => props.show, (newVal) => {
     newWorkstreamColor.value = WORKSTREAM_COLORS[0]
     renamingTag.value = null
     renameValue.value = ''
+    coloringTag.value = null
   }
 })
 
@@ -150,6 +153,15 @@ const cancelRenameTag = () => {
 
 const handleDeleteTag = (tag) => {
   emit('delete-tag', tag)
+}
+
+const toggleTagColorPicker = (tag) => {
+  coloringTag.value = coloringTag.value === tag ? null : tag
+}
+
+const handleRecolorTag = (tag, color) => {
+  emit('recolor-tag', { tagName: tag, color })
+  coloringTag.value = null
 }
 
 // Day visibility
@@ -350,46 +362,67 @@ const activeTab = ref('claude')
             <div
               v-for="tag in allTags"
               :key="tag"
-              class="tag-manage-item"
+              class="tag-manage-item-wrapper"
             >
-              <!-- Normal display -->
-              <template v-if="renamingTag !== tag">
-                <span
-                  class="tag-manage-pill"
-                  :style="{
-                    backgroundColor: getTagColor(tag).bg,
-                    color: getTagColor(tag).text
-                  }"
-                >{{ tag }}</span>
-                <span class="tag-manage-count">{{ tagCounts[tag] || 0 }} task{{ (tagCounts[tag] || 0) !== 1 ? 's' : '' }}</span>
-                <button
-                  class="tag-manage-action"
-                  @click="startRenameTag(tag)"
-                  title="Rename tag"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button
-                  class="tag-manage-action delete"
-                  @click="handleDeleteTag(tag)"
-                  title="Delete tag from all tasks"
-                >&times;</button>
-              </template>
+              <div class="tag-manage-item">
+                <!-- Normal display -->
+                <template v-if="renamingTag !== tag">
+                  <button
+                    class="tag-color-swatch"
+                    :style="{ backgroundColor: getTagColor(tag).bg, borderColor: getTagColor(tag).text }"
+                    :title="'Change color for ' + tag"
+                    @click="toggleTagColorPicker(tag)"
+                  />
+                  <span
+                    class="tag-manage-pill"
+                    :style="{
+                      backgroundColor: getTagColor(tag).bg,
+                      color: getTagColor(tag).text
+                    }"
+                  >{{ tag }}</span>
+                  <span class="tag-manage-count">{{ tagCounts[tag] || 0 }} task{{ (tagCounts[tag] || 0) !== 1 ? 's' : '' }}</span>
+                  <button
+                    class="tag-manage-action"
+                    @click="startRenameTag(tag)"
+                    title="Rename tag"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button
+                    class="tag-manage-action delete"
+                    @click="handleDeleteTag(tag)"
+                    title="Delete tag from all tasks"
+                  >&times;</button>
+                </template>
 
-              <!-- Rename mode -->
-              <template v-else>
-                <input
-                  v-model="renameValue"
-                  class="form-input tag-rename-input"
-                  @keydown.enter="confirmRenameTag"
-                  @keydown.escape="cancelRenameTag"
-                  autofocus
+                <!-- Rename mode -->
+                <template v-else>
+                  <input
+                    v-model="renameValue"
+                    class="form-input tag-rename-input"
+                    @keydown.enter="confirmRenameTag"
+                    @keydown.escape="cancelRenameTag"
+                    autofocus
+                  />
+                  <button class="tag-manage-action save" @click="confirmRenameTag" title="Save">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                  <button class="tag-manage-action" @click="cancelRenameTag" title="Cancel">&times;</button>
+                </template>
+              </div>
+
+              <!-- Expandable color picker -->
+              <div v-if="coloringTag === tag" class="tag-color-picker">
+                <button
+                  v-for="(color, index) in TAG_COLORS"
+                  :key="index"
+                  class="ws-color-dot"
+                  :class="{ 'is-selected': getTagColor(tag).bg === color.bg }"
+                  :style="{ backgroundColor: color.bg, borderColor: color.text }"
+                  :title="color.name"
+                  @click="handleRecolorTag(tag, color)"
                 />
-                <button class="tag-manage-action save" @click="confirmRenameTag" title="Save">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                </button>
-                <button class="tag-manage-action" @click="cancelRenameTag" title="Cancel">&times;</button>
-              </template>
+              </div>
             </div>
           </div>
           <p v-else class="ws-empty">No tags in use.</p>
@@ -744,13 +777,40 @@ const activeTab = ref('claude')
   gap: 4px;
 }
 
+.tag-manage-item-wrapper {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+}
+
 .tag-manage-item {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  background: var(--color-bg);
-  border-radius: var(--radius-md);
+}
+
+.tag-color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  background: none;
+}
+
+.tag-color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.tag-color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--color-border);
 }
 
 .tag-manage-pill {

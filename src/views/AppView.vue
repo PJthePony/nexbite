@@ -9,6 +9,8 @@ import TagFilter from '../components/TagFilter.vue'
 import WeeklyReview from '../components/WeeklyReview.vue'
 import DailyReview from '../components/DailyReview.vue'
 import SettingsModal from '../components/SettingsModal.vue'
+import LaterDatePrompt from '../components/LaterDatePrompt.vue'
+import CalendarView from '../components/CalendarView.vue'
 
 import { useTasks } from '../composables/useTasks'
 import { useTags } from '../composables/useTags'
@@ -67,7 +69,7 @@ const {
   teardownListeners
 } = useMultiSelect()
 
-const { hiddenDays, loadPreferences, toggleDay } = usePreferences()
+const { hiddenDays, loadPreferences, toggleDay, setTagColor, removeTagColor, renameTagColor } = usePreferences()
 
 // Loading state
 const isLoading = computed(() => !tasksLoaded.value || !workstreamsLoaded.value)
@@ -82,6 +84,19 @@ const selectedTagFilters = ref([])
 
 // Settings modal
 const showSettings = ref(false)
+const activeView = ref('week') // 'week' or 'calendar'
+
+// Later date prompt
+const showLaterPrompt = ref(false)
+const laterPromptTaskId = ref(null)
+const laterPromptTaskTitle = ref('')
+const laterPromptDefaultDate = ref('')
+
+const getTwoWeeksFromNow = () => {
+  const d = new Date()
+  d.setDate(d.getDate() + 14)
+  return d.toISOString().split('T')[0]
+}
 
 // Review modals
 const showWeeklyReview = ref(false)
@@ -306,10 +321,39 @@ const handleToggleTask = (taskId) => {
 
 const handleMoveTask = (taskId, newLocation) => {
   moveTask(taskId, newLocation)
+  // Auto-set activateAt when moving to Later
+  if (newLocation === 'later') {
+    const task = getTaskById(taskId)
+    if (task && !task.activateAt) {
+      updateTask(taskId, { activateAt: getTwoWeeksFromNow() })
+    }
+  }
 }
 
 const handleReorder = (location, orderedTaskIds, workstream) => {
   reorderTasks(location, orderedTaskIds, workstream)
+
+  // When tasks are dropped into Later, auto-set activateAt and show date prompt
+  if (location === 'later') {
+    // Find tasks that just arrived in Later (didn't have location 'later' before)
+    const newLaterTasks = orderedTaskIds
+      .map(id => getTaskById(id))
+      .filter(t => t && !t.activateAt)
+
+    if (newLaterTasks.length > 0) {
+      const defaultDate = getTwoWeeksFromNow()
+      // Set default date for all dropped tasks
+      newLaterTasks.forEach(t => {
+        updateTask(t.id, { activateAt: defaultDate })
+      })
+      // Show prompt for the first one so user can adjust
+      const firstTask = newLaterTasks[0]
+      laterPromptTaskId.value = firstTask.id
+      laterPromptTaskTitle.value = firstTask.title
+      laterPromptDefaultDate.value = defaultDate
+      showLaterPrompt.value = true
+    }
+  }
 }
 
 // Multi-select drag handler
@@ -347,6 +391,18 @@ const handleMultiDrop = (location, workstream, draggedTaskId) => {
   cellTasks.forEach((t, i) => {
     t.sortOrder = i
   })
+
+  // Auto-set activateAt for multi-dropped tasks going to Later
+  if (location === 'later') {
+    const defaultDate = getTwoWeeksFromNow()
+    const allDropped = [draggedTaskId, ...otherSelectedIds]
+    allDropped.forEach(id => {
+      const t = getTaskById(id)
+      if (t && !t.activateAt) {
+        updateTask(id, { activateAt: defaultDate })
+      }
+    })
+  }
 
   clearSelection()
 }
@@ -426,6 +482,14 @@ const handleSettingsDeleteWorkstream = (wsName) => {
   deleteWorkstream(wsName)
 }
 
+const handleLaterDateSave = (date) => {
+  if (laterPromptTaskId.value) {
+    updateTask(laterPromptTaskId.value, { activateAt: date || getTwoWeeksFromNow() })
+  }
+  showLaterPrompt.value = false
+  laterPromptTaskId.value = null
+}
+
 const handleRenameTag = ({ oldName, newName }) => {
   tasks.value.forEach(task => {
     if (task.tags && task.tags.includes(oldName)) {
@@ -435,6 +499,7 @@ const handleRenameTag = ({ oldName, newName }) => {
       updateTask(task.id, { tags: uniqueTags })
     }
   })
+  renameTagColor(oldName, newName)
 }
 
 const handleDeleteTag = (tagName) => {
@@ -444,6 +509,11 @@ const handleDeleteTag = (tagName) => {
       updateTask(task.id, { tags: newTags })
     }
   })
+  removeTagColor(tagName)
+}
+
+const handleRecolorTag = ({ tagName, color }) => {
+  setTagColor(tagName, { bg: color.bg, text: color.text })
 }
 
 const handleToggleDay = (dayId) => {
@@ -463,6 +533,7 @@ const handleToggleDay = (dayId) => {
     <header class="app-header">
       <div class="app-title">
         <img src="/logo.svg" alt="pjt" width="44" height="42" class="app-logo" />
+        <span class="app-name">Tessio</span>
       </div>
 
       <TagFilter
@@ -475,6 +546,16 @@ const handleToggleDay = (dayId) => {
       <div v-if="isSelectMode || selectedTaskIds.size > 0" class="select-mode-badge">
         {{ selectedTaskIds.size > 0 ? `${selectedTaskIds.size} selected` : 'Select Mode' }}
       </div>
+
+      <button
+        class="view-toggle-btn"
+        :class="{ 'is-calendar': activeView === 'calendar' }"
+        @click="activeView = activeView === 'week' ? 'calendar' : 'week'"
+        :title="activeView === 'week' ? 'Calendar view' : 'Week view'"
+      >
+        <svg v-if="activeView === 'week'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </button>
 
       <button class="settings-btn" @click="showSettings = true" title="Settings">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -496,6 +577,7 @@ const handleToggleDay = (dayId) => {
 
     <main class="app-main">
       <WeekView
+        v-if="activeView === 'week'"
         :tasks-by-location="tasksByLocation"
         :workstreams="allWorkstreams"
         :all-tasks="tasks"
@@ -511,6 +593,11 @@ const handleToggleDay = (dayId) => {
         @reorder-workstreams="handleReorderWorkstreams"
         @update-workstream-color="handleUpdateWorkstreamColor"
         @multi-drop="handleMultiDrop"
+      />
+      <CalendarView
+        v-else
+        :tasks="tasks"
+        @edit="handleEditTask"
       />
     </main>
 
@@ -568,7 +655,17 @@ const handleToggleDay = (dayId) => {
       @delete-workstream="handleSettingsDeleteWorkstream"
       @rename-tag="handleRenameTag"
       @delete-tag="handleDeleteTag"
+      @recolor-tag="handleRecolorTag"
       @toggle-day="handleToggleDay"
+    />
+
+    <!-- Later Date Prompt -->
+    <LaterDatePrompt
+      :show="showLaterPrompt"
+      :task-title="laterPromptTaskTitle"
+      :default-date="laterPromptDefaultDate"
+      @save="handleLaterDateSave"
+      @close="handleLaterDateSave(null)"
     />
   </div>
 </template>
@@ -602,8 +699,33 @@ const handleToggleDay = (dayId) => {
   font-size: 14px;
 }
 
-.settings-btn {
+.view-toggle-btn {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.view-toggle-btn:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.view-toggle-btn.is-calendar {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.settings-btn {
+  margin-left: 0;
   display: flex;
   align-items: center;
   justify-content: center;

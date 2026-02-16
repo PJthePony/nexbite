@@ -1,5 +1,8 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onBeforeUnmount } from 'vue'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
 import TagPicker from './TagPicker.vue'
 import WorkstreamPicker from './WorkstreamPicker.vue'
 import { ALL_COLUMNS } from '../composables/useWeekLogic'
@@ -45,11 +48,36 @@ const isBite = computed(() => props.task && !!props.task.parentTaskId)
 const hasBites = computed(() => props.biteTasks.length > 0)
 
 const title = ref('')
-const notes = ref('')
 const location = ref('')
 const workstream = ref(null)
 const tags = ref([])
 const activateAt = ref(null)
+
+const editor = useEditor({
+  extensions: [
+    StarterKit.configure({
+      heading: false,
+      codeBlock: false,
+      blockquote: false,
+      horizontalRule: false,
+      code: false,
+      strike: false,
+    }),
+    Placeholder.configure({
+      placeholder: 'Add any additional details...',
+    }),
+  ],
+  content: '',
+  editorProps: {
+    attributes: {
+      class: 'notes-editor-content',
+    },
+  },
+})
+
+onBeforeUnmount(() => {
+  editor.value?.destroy()
+})
 
 const isLater = computed(() => location.value === 'later')
 
@@ -60,6 +88,15 @@ const minActivateDate = computed(() => {
   return d.toISOString().split('T')[0]
 })
 
+// Auto-fill date when switching to Later
+watch(isLater, (newVal) => {
+  if (newVal && !activateAt.value) {
+    const d = new Date()
+    d.setDate(d.getDate() + 14)
+    activateAt.value = d.toISOString().split('T')[0]
+  }
+})
+
 const isEditing = ref(false)
 
 watch(() => props.show, (newVal) => {
@@ -68,7 +105,7 @@ watch(() => props.show, (newVal) => {
       // Editing existing task
       isEditing.value = true
       title.value = props.task.title
-      notes.value = props.task.notes || ''
+      editor.value?.commands.setContent(props.task.notes || '')
       location.value = props.task.location
       workstream.value = props.task.workstream || null
       tags.value = [...(props.task.tags || [])]
@@ -77,7 +114,7 @@ watch(() => props.show, (newVal) => {
       // Adding new task
       isEditing.value = false
       title.value = ''
-      notes.value = ''
+      editor.value?.commands.setContent('')
       location.value = props.defaultLocation || ''
       workstream.value = props.defaultWorkstream || null
       tags.value = []
@@ -89,9 +126,13 @@ watch(() => props.show, (newVal) => {
 const handleSubmit = () => {
   if (!title.value.trim()) return
 
+  // Get HTML from editor, treat empty editor as no notes
+  const editorHtml = editor.value?.getHTML() || ''
+  const notesContent = editorHtml === '<p></p>' ? '' : editorHtml
+
   const taskData = {
     title: title.value.trim(),
-    notes: notes.value.trim(),
+    notes: notesContent,
     location: location.value,
     workstream: workstream.value,
     tags: tags.value,
@@ -149,13 +190,45 @@ const handleCreateWorkstream = (wsData) => {
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="task-notes">Notes (optional)</label>
-            <textarea
-              id="task-notes"
-              v-model="notes"
-              class="form-input form-textarea"
-              placeholder="Add any additional details..."
-            />
+            <label class="form-label">Notes (optional)</label>
+            <div class="notes-editor" v-if="editor">
+              <div class="notes-toolbar">
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  :class="{ 'is-active': editor.isActive('bold') }"
+                  @click="editor.chain().focus().toggleBold().run()"
+                  title="Bold"
+                ><strong>B</strong></button>
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  :class="{ 'is-active': editor.isActive('italic') }"
+                  @click="editor.chain().focus().toggleItalic().run()"
+                  title="Italic"
+                ><em>I</em></button>
+                <span class="toolbar-divider"></span>
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  :class="{ 'is-active': editor.isActive('bulletList') }"
+                  @click="editor.chain().focus().toggleBulletList().run()"
+                  title="Bullet list"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+                </button>
+                <button
+                  type="button"
+                  class="toolbar-btn"
+                  :class="{ 'is-active': editor.isActive('orderedList') }"
+                  @click="editor.chain().focus().toggleOrderedList().run()"
+                  title="Numbered list"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="10" y1="6" x2="20" y2="6"/><line x1="10" y1="12" x2="20" y2="12"/><line x1="10" y1="18" x2="20" y2="18"/><text x="2" y="8" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">1</text><text x="2" y="14" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">2</text><text x="2" y="20" font-size="7" fill="currentColor" stroke="none" font-family="sans-serif">3</text></svg>
+                </button>
+              </div>
+              <EditorContent :editor="editor" />
+            </div>
           </div>
 
           <div class="form-group">
@@ -180,7 +253,6 @@ const handleCreateWorkstream = (wsData) => {
           <div v-if="isLater" class="form-group">
             <label class="form-label" for="task-activate-at">
               Revisit on
-              <span class="form-label-hint">(optional)</span>
             </label>
             <div class="activate-at-row">
               <input
@@ -421,5 +493,86 @@ select.form-input {
 .activate-at-clear:hover {
   background: var(--color-border);
   color: var(--color-text);
+}
+
+/* ── Rich text notes editor ── */
+.notes-editor {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.notes-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.toolbar-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.toolbar-btn:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.toolbar-btn.is-active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--color-border);
+  margin: 0 4px;
+}
+
+.notes-editor :deep(.notes-editor-content) {
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  min-height: 80px;
+  max-height: 200px;
+  overflow-y: auto;
+  outline: none;
+}
+
+.notes-editor :deep(.notes-editor-content p) {
+  margin: 0;
+}
+
+.notes-editor :deep(.notes-editor-content ul),
+.notes-editor :deep(.notes-editor-content ol) {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.notes-editor :deep(.notes-editor-content li) {
+  margin: 2px 0;
+}
+
+.notes-editor :deep(.tiptap p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  color: var(--color-text-muted);
+  float: left;
+  pointer-events: none;
+  height: 0;
 }
 </style>

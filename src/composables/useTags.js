@@ -1,20 +1,23 @@
 import { computed } from 'vue'
 import { useTasks } from './useTasks'
+import { usePreferences } from './usePreferences'
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
-// 10 curated tag colors - Electric Brights palette
-const TAG_COLORS = [
-  { bg: '#dbeafe', text: '#2563eb' },  // Electric Blue
-  { bg: '#ffe4e6', text: '#f43f5e' },  // Neon Rose
-  { bg: '#ccfbf1', text: '#14b8a6' },  // Turquoise
-  { bg: '#ffedd5', text: '#f97316' },  // Tangerine
-  { bg: '#e9d5ff', text: '#a855f7' },  // Violet
-  { bg: '#d1fae5', text: '#10b981' },  // Neon Green
-  { bg: '#fef08a', text: '#ca8a04' },  // Lemon
-  { bg: '#fce7f3', text: '#ec4899' },  // Flamingo
-  { bg: '#cffafe', text: '#06b6d4' },  // Aqua
-  { bg: '#fecdd3', text: '#e11d48' },  // Watermelon
+// 12 curated tag colors - Electric Brights palette + neutrals
+export const TAG_COLORS = [
+  { name: 'Stone', bg: '#f5f5f4', text: '#78716c' },
+  { name: 'Slate', bg: '#f1f5f9', text: '#64748b' },
+  { name: 'Electric Blue', bg: '#dbeafe', text: '#2563eb' },
+  { name: 'Neon Rose', bg: '#ffe4e6', text: '#f43f5e' },
+  { name: 'Turquoise', bg: '#ccfbf1', text: '#14b8a6' },
+  { name: 'Tangerine', bg: '#ffedd5', text: '#f97316' },
+  { name: 'Violet', bg: '#e9d5ff', text: '#a855f7' },
+  { name: 'Neon Green', bg: '#d1fae5', text: '#10b981' },
+  { name: 'Lemon', bg: '#fef08a', text: '#ca8a04' },
+  { name: 'Flamingo', bg: '#fce7f3', text: '#ec4899' },
+  { name: 'Aqua', bg: '#cffafe', text: '#06b6d4' },
+  { name: 'Watermelon', bg: '#fecdd3', text: '#e11d48' },
 ]
 
 // Hash a string to a number for consistent color assignment
@@ -29,6 +32,11 @@ function hashString(str) {
 }
 
 export function getTagColor(tagName) {
+  // Check for user-defined color override
+  const { tagColors } = usePreferences()
+  const override = tagColors.value[tagName]
+  if (override) return override
+
   const index = hashString(tagName.toLowerCase()) % TAG_COLORS.length
   return TAG_COLORS[index]
 }

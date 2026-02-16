@@ -2,8 +2,10 @@ import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
-// 10 predefined colors for workstreams - Electric Brights palette
+// 12 predefined colors for workstreams - Electric Brights palette + neutrals
 export const WORKSTREAM_COLORS = [
+  { name: 'Stone', bg: '#f5f5f4', text: '#78716c' },
+  { name: 'Slate', bg: '#f1f5f9', text: '#64748b' },
   { name: 'Electric Blue', bg: '#dbeafe', text: '#2563eb' },
   { name: 'Neon Rose', bg: '#ffe4e6', text: '#f43f5e' },
   { name: 'Turquoise', bg: '#ccfbf1', text: '#14b8a6' },
