@@ -152,7 +152,7 @@ const handleCellClick = (e) => {
           <div class="later-hidden-item"></div>
         </template>
       </draggable>
-      <div v-if="localTasks.length > 0" class="later-count" @click.stop="emit('edit', localTasks[0])">
+      <div v-if="localTasks.length > 0" class="later-count">
         <span class="later-count-number">{{ localTasks.length }}</span>
         <span class="later-count-label">{{ localTasks.length === 1 ? 'task' : 'tasks' }}</span>
       </div>
@@ -282,16 +282,9 @@ const handleCellClick = (e) => {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  cursor: pointer;
   padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  transition: background 0.15s ease;
   position: relative;
   z-index: 1;
-}
-
-.later-count:hover {
-  background: rgba(0, 0, 0, 0.05);
 }
 
 .later-count-number {

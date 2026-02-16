@@ -79,6 +79,7 @@ const showTaskForm = ref(false)
 const editingTask = ref(null)
 const defaultLocation = ref(null)
 const defaultWorkstream = ref(null)
+const defaultActivateAt = ref(null)
 const searchQuery = ref('')
 const selectedTagFilters = ref([])
 
@@ -284,6 +285,15 @@ const handleAddTask = (location, workstream = null) => {
   editingTask.value = null
   defaultLocation.value = location
   defaultWorkstream.value = workstream
+  defaultActivateAt.value = null
+  showTaskForm.value = true
+}
+
+const handleCalendarAdd = (dateStr) => {
+  editingTask.value = null
+  defaultLocation.value = 'later'
+  defaultWorkstream.value = null
+  defaultActivateAt.value = dateStr
   showTaskForm.value = true
 }
 
@@ -598,6 +608,7 @@ const handleToggleDay = (dayId) => {
         v-else
         :tasks="tasks"
         @edit="handleEditTask"
+        @add="handleCalendarAdd"
       />
     </main>
 
@@ -607,6 +618,7 @@ const handleToggleDay = (dayId) => {
       :task="editingTask"
       :default-location="defaultLocation"
       :default-workstream="defaultWorkstream"
+      :default-activate-at="defaultActivateAt"
       :available-tags="recentTags"
       :workstreams="allWorkstreams"
       :parent-task="editingTaskParent"

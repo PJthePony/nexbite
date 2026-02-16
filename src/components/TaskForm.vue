@@ -24,6 +24,10 @@ const props = defineProps({
     type: String,
     default: null
   },
+  defaultActivateAt: {
+    type: String,
+    default: null
+  },
   availableTags: {
     type: Array,
     default: () => []
@@ -118,7 +122,7 @@ watch(() => props.show, (newVal) => {
       location.value = props.defaultLocation || ''
       workstream.value = props.defaultWorkstream || null
       tags.value = []
-      activateAt.value = null
+      activateAt.value = props.defaultActivateAt || null
     }
   }
 })

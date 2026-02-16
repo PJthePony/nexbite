@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { getTagColor } from '../composables/useTags'
 
 const props = defineProps({
   selectedTags: {
@@ -57,6 +58,7 @@ const handleKeydown = (e) => {
         :key="tag"
         class="tag-option"
         :class="{ 'is-selected': isSelected(tag) }"
+        :style="{ backgroundColor: getTagColor(tag).bg, color: getTagColor(tag).text, borderColor: isSelected(tag) ? getTagColor(tag).text : getTagColor(tag).bg }"
         @click="toggleTag(tag)"
         type="button"
       >
@@ -87,12 +89,14 @@ const handleKeydown = (e) => {
         v-for="tag in selectedTags"
         :key="tag"
         class="task-tag"
+        :style="{ backgroundColor: getTagColor(tag).bg, color: getTagColor(tag).text, borderColor: getTagColor(tag).text }"
       >
         {{ tag }}
         <button
           class="tag-remove"
           @click="toggleTag(tag)"
           type="button"
+          :style="{ color: getTagColor(tag).text }"
         >
           &times;
         </button>
@@ -117,22 +121,17 @@ const handleKeydown = (e) => {
   border-radius: var(--radius-sm);
   font-size: 0.8rem;
   font-weight: 500;
-  background: var(--color-bg);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  border: 2px solid;
   cursor: pointer;
   transition: all var(--transition);
 }
 
 .tag-option:hover {
-  border-color: var(--color-border-light);
-  color: var(--color-text);
+  opacity: 0.85;
 }
 
 .tag-option.is-selected {
-  background: var(--color-text);
-  color: var(--color-surface);
-  border-color: var(--color-text);
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 
 .selected-tags {

@@ -9,7 +9,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['edit'])
+const emit = defineEmits(['edit', 'add'])
 
 // Number of weeks to show
 const WEEKS_TO_SHOW = 12
@@ -66,6 +66,26 @@ const calendarWeeks = computed(() => {
 
 const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+// Determine the primary month for each week (the month that has the most days in that week)
+const weekMonthLabels = computed(() => {
+  return calendarWeeks.value.map((week, wi) => {
+    // Check if this week contains the 1st of a month (new month starts)
+    const firstOfMonth = week.find(d => d.isFirstOfMonth)
+    if (firstOfMonth && wi > 0) {
+      // New month starts in this week — show a label
+      const date = new Date(firstOfMonth.date)
+      return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+    }
+    if (wi === 0) {
+      // First week — show current month
+      const midWeek = week[3] // Use the middle of the week
+      const date = new Date(midWeek.date)
+      return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+    }
+    return null
+  })
+})
+
 const toggleExpand = (dateStr) => {
   if (expandedDays.value.has(dateStr)) {
     expandedDays.value.delete(dateStr)
@@ -104,11 +124,15 @@ const hiddenCount = (day) => {
 
     <!-- Calendar grid -->
     <div class="calendar-grid">
-      <div
+      <template
         v-for="(week, wi) in calendarWeeks"
         :key="wi"
-        class="calendar-week"
       >
+      <!-- Month divider label -->
+      <div v-if="weekMonthLabels[wi]" class="calendar-month-divider" :class="{ 'is-first': wi === 0 }">
+        <span class="month-label">{{ weekMonthLabels[wi] }}</span>
+      </div>
+      <div class="calendar-week">
         <div
           v-for="day in week"
           :key="day.date"
@@ -120,6 +144,7 @@ const hiddenCount = (day) => {
             'has-tasks': day.tasks.length > 0,
             'is-expanded': isExpanded(day.date)
           }"
+          @click="emit('add', day.date)"
         >
           <div class="day-header">
             <span class="day-number" :class="{ 'is-first-of-month': day.isFirstOfMonth }">
@@ -136,7 +161,7 @@ const hiddenCount = (day) => {
               v-for="task in visibleTasks(day)"
               :key="task.id"
               class="calendar-task"
-              @click="emit('edit', task)"
+              @click.stop="emit('edit', task)"
             >
               <template v-if="task.tags && task.tags.length > 0">
                 <span
@@ -152,7 +177,7 @@ const hiddenCount = (day) => {
             <button
               v-if="hiddenCount(day) > 0"
               class="day-expand-btn"
-              @click="toggleExpand(day.date)"
+              @click.stop="toggleExpand(day.date)"
             >
               +{{ hiddenCount(day) }} more
             </button>
@@ -160,13 +185,14 @@ const hiddenCount = (day) => {
             <button
               v-if="isExpanded(day.date) && day.tasks.length > MAX_VISIBLE_TASKS"
               class="day-expand-btn"
-              @click="toggleExpand(day.date)"
+              @click.stop="toggleExpand(day.date)"
             >
               Show less
             </button>
           </div>
         </div>
       </div>
+      </template>
     </div>
   </div>
 </template>
@@ -215,6 +241,11 @@ const hiddenCount = (day) => {
   display: flex;
   flex-direction: column;
   transition: background 0.15s ease;
+  cursor: pointer;
+}
+
+.calendar-day:hover {
+  border-color: var(--color-text-muted);
 }
 
 .calendar-day.is-past {
@@ -333,6 +364,26 @@ const hiddenCount = (day) => {
 
 .day-expand-btn:hover {
   text-decoration: underline;
+}
+
+/* Month divider */
+.calendar-month-divider {
+  padding: 16px 4px 6px;
+  margin-top: 8px;
+  border-top: 1px solid var(--color-border);
+}
+
+.calendar-month-divider.is-first {
+  padding-top: 4px;
+  margin-top: 0;
+  border-top: none;
+}
+
+.month-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: -0.01em;
 }
 
 /* Mobile */
