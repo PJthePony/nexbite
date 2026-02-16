@@ -277,11 +277,13 @@ const handleCellClick = (e) => {
 .later-count {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
   transition: background 0.15s ease;
+  flex: 1;
 }
 
 .later-count:hover {
