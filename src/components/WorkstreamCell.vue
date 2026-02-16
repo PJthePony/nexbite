@@ -264,10 +264,13 @@ const handleCellClick = (e) => {
   min-height: 36px;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 
 .later-drop-zone {
-  min-height: 8px;
+  position: absolute;
+  inset: 0;
+  min-height: 0;
 }
 
 .later-hidden-item {
@@ -283,7 +286,8 @@ const handleCellClick = (e) => {
   padding: 4px 8px;
   border-radius: var(--radius-sm);
   transition: background 0.15s ease;
-  flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .later-count:hover {

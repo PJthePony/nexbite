@@ -105,6 +105,15 @@ const getWorkstreamColor = (workstreamName) => {
 
 const getTasksForCell = (columnId, workstream) => {
   const columnTasks = props.tasksByLocation[columnId] || []
+  if (workstream === null) {
+    // Include tasks with no workstream AND tasks with orphaned workstreams
+    // (workstream name exists on the task but isn't in the workstream list)
+    return columnTasks.filter(t => {
+      const ws = t.workstream || null
+      if (ws === null) return true
+      return !orderedWorkstreamNames.value.includes(ws)
+    })
+  }
   return columnTasks.filter(t => (t.workstream || null) === workstream)
 }
 
