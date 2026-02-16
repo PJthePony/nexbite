@@ -33,15 +33,14 @@ const tasksByDate = computed(() => {
   return map
 })
 
-// Generate calendar grid starting from today
+// Generate calendar grid starting from today (weeks start on Sunday)
 const calendarWeeks = computed(() => {
   const weeks = []
   const today = new Date()
-  // Start from Monday of current week
+  // Start from Sunday of current week
   const startOfWeek = new Date(today)
   const day = startOfWeek.getDay()
-  const diff = day === 0 ? -6 : 1 - day
-  startOfWeek.setDate(startOfWeek.getDate() + diff)
+  startOfWeek.setDate(startOfWeek.getDate() - day)
 
   for (let w = 0; w < WEEKS_TO_SHOW; w++) {
     const week = []
@@ -65,7 +64,7 @@ const calendarWeeks = computed(() => {
   return weeks
 })
 
-const dayHeaders = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 const toggleExpand = (dateStr) => {
   if (expandedDays.value.has(dateStr)) {
@@ -181,35 +180,35 @@ const hiddenCount = (day) => {
 .calendar-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  margin-bottom: 1px;
+  gap: 2px;
+  margin-bottom: 2px;
 }
 
 .calendar-header-cell {
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 8px 0;
+  padding: 10px 0;
 }
 
 .calendar-grid {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .calendar-week {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
+  gap: 2px;
 }
 
 .calendar-day {
-  min-height: 80px;
-  padding: 6px;
+  min-height: 110px;
+  padding: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 4px;
@@ -232,7 +231,7 @@ const hiddenCount = (day) => {
 }
 
 .calendar-day.has-tasks {
-  min-height: 90px;
+  min-height: 120px;
 }
 
 .calendar-day.is-expanded {
@@ -247,7 +246,7 @@ const hiddenCount = (day) => {
 }
 
 .day-number {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--color-text-secondary);
   display: flex;
@@ -339,8 +338,8 @@ const hiddenCount = (day) => {
 /* Mobile */
 @media (max-width: 768px) {
   .calendar-day {
-    min-height: 60px;
-    padding: 4px;
+    min-height: 70px;
+    padding: 5px;
   }
 
   .calendar-task-title {
@@ -348,7 +347,7 @@ const hiddenCount = (day) => {
   }
 
   .day-number {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
   }
 }
 </style>

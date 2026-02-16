@@ -263,7 +263,7 @@ const closeSwipe = () => {
           Has notes
         </div>
       </div>
-      <div v-if="!compact" class="task-actions">
+      <div class="task-actions">
         <button
           class="task-action-btn bite"
           @click.stop="emit('bite', task)"

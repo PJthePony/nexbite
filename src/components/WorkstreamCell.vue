@@ -114,6 +114,7 @@ const cellStyle = computed(() => {
   return {}
 })
 
+const isLater = computed(() => props.location === 'later')
 const isEmpty = computed(() => localTasks.value.length === 0)
 
 const handleAdd = () => {
@@ -129,53 +130,82 @@ const handleCellClick = (e) => {
 </script>
 
 <template>
-  <div class="workstream-cell" :class="{ 'is-empty': isEmpty }" :style="cellStyle" @click="handleCellClick">
-    <draggable
-      v-model="localTasks"
-      :group="{ name: 'tasks', pull: true, put: true }"
-      item-key="id"
-      class="cell-tasks"
-      ghost-class="sortable-ghost"
-      chosen-class="sortable-chosen"
-      drag-class="sortable-drag"
-      :force-fallback="true"
-      :animation="150"
-      @start="handleDragStart"
-      @end="handleDragEnd"
-      @change="handleDragChange"
-    >
-      <template #item="{ element }">
-        <TaskItem
-          :task="element"
-          :workstream-color="workstreamColor"
-          :parent-task="getParentTask(element)"
-          :bite-count="getBiteCount(element)"
-          :completed-bite-count="getCompletedBiteCount(element)"
-          :compact="!isToday"
-          :collapsed="location === 'later'"
-          @toggle="emit('toggle', $event)"
-          @edit="emit('edit', $event)"
-          @delete="emit('delete', $event)"
-          @bite="emit('bite', $event)"
-        />
-      </template>
-      <template #footer v-if="localTasks.length === 0 && showEmptyState">
-        <div class="column-empty">
-          <span class="column-empty-icon">+</span>
-          <span class="column-empty-title">No tasks yet</span>
-          <span class="column-empty-desc">Add a task to get started</span>
-          <button class="column-empty-cta" @click.stop="handleAdd">+ Add Task</button>
-        </div>
-      </template>
-    </draggable>
-    <button
-      class="cell-add-btn"
-      @click="handleAdd"
-      title="Add task"
-      :style="workstreamColor ? { borderColor: workstreamColor.text, color: workstreamColor.text } : {}"
-    >
-      + Add a task...
-    </button>
+  <div class="workstream-cell" :class="{ 'is-empty': isEmpty, 'is-later': isLater }" :style="cellStyle" @click="handleCellClick">
+    <!-- Later column: show count only, but still accept drops -->
+    <template v-if="isLater">
+      <draggable
+        v-model="localTasks"
+        :group="{ name: 'tasks', pull: true, put: true }"
+        item-key="id"
+        class="cell-tasks later-drop-zone"
+        ghost-class="sortable-ghost"
+        chosen-class="sortable-chosen"
+        drag-class="sortable-drag"
+        :force-fallback="true"
+        :animation="150"
+        @start="handleDragStart"
+        @end="handleDragEnd"
+        @change="handleDragChange"
+      >
+        <template #item="{ element }">
+          <!-- Hidden: items exist for drag-and-drop but are not rendered -->
+          <div class="later-hidden-item"></div>
+        </template>
+      </draggable>
+      <div v-if="localTasks.length > 0" class="later-count" @click.stop="emit('edit', localTasks[0])">
+        <span class="later-count-number">{{ localTasks.length }}</span>
+        <span class="later-count-label">{{ localTasks.length === 1 ? 'task' : 'tasks' }}</span>
+      </div>
+    </template>
+
+    <!-- Normal columns: full task rendering -->
+    <template v-else>
+      <draggable
+        v-model="localTasks"
+        :group="{ name: 'tasks', pull: true, put: true }"
+        item-key="id"
+        class="cell-tasks"
+        ghost-class="sortable-ghost"
+        chosen-class="sortable-chosen"
+        drag-class="sortable-drag"
+        :force-fallback="true"
+        :animation="150"
+        @start="handleDragStart"
+        @end="handleDragEnd"
+        @change="handleDragChange"
+      >
+        <template #item="{ element }">
+          <TaskItem
+            :task="element"
+            :workstream-color="workstreamColor"
+            :parent-task="getParentTask(element)"
+            :bite-count="getBiteCount(element)"
+            :completed-bite-count="getCompletedBiteCount(element)"
+            :compact="!isToday"
+            @toggle="emit('toggle', $event)"
+            @edit="emit('edit', $event)"
+            @delete="emit('delete', $event)"
+            @bite="emit('bite', $event)"
+          />
+        </template>
+        <template #footer v-if="localTasks.length === 0 && showEmptyState">
+          <div class="column-empty">
+            <span class="column-empty-icon">+</span>
+            <span class="column-empty-title">No tasks yet</span>
+            <span class="column-empty-desc">Add a task to get started</span>
+            <button class="column-empty-cta" @click.stop="handleAdd">+ Add Task</button>
+          </div>
+        </template>
+      </draggable>
+      <button
+        class="cell-add-btn"
+        @click="handleAdd"
+        title="Add task"
+        :style="workstreamColor ? { borderColor: workstreamColor.text, color: workstreamColor.text } : {}"
+      >
+        + Add a task...
+      </button>
+    </template>
   </div>
 </template>
 
@@ -227,5 +257,45 @@ const handleCellClick = (e) => {
 .cell-add-btn:hover {
   background: rgba(0, 0, 0, 0.03);
   border-color: var(--color-text-secondary);
+}
+
+/* Later column: count-only display */
+.workstream-cell.is-later {
+  min-height: 36px;
+  justify-content: center;
+  align-items: center;
+}
+
+.later-drop-zone {
+  min-height: 8px;
+}
+
+.later-hidden-item {
+  display: none;
+}
+
+.later-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+
+.later-count:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.later-count-number {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.later-count-label {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
 }
 </style>
