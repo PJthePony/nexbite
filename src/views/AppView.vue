@@ -297,6 +297,10 @@ const handleCalendarAdd = (dateStr) => {
   showTaskForm.value = true
 }
 
+const handleCalendarMoveTask = ({ taskId, newDate }) => {
+  updateTask(taskId, { activateAt: newDate })
+}
+
 const handleEditTask = (task) => {
   editingTask.value = task
   defaultLocation.value = null
@@ -620,6 +624,7 @@ const handleToggleDay = (dayId) => {
         :tasks="tasks"
         @edit="handleEditTask"
         @add="handleCalendarAdd"
+        @move-task="handleCalendarMoveTask"
       />
     </main>
 

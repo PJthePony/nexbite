@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import draggable from 'vuedraggable'
 import { getTagColor } from '../composables/useTags'
 import { useWorkstreams } from '../composables/useWorkstreams'
+import { useMultiSelect } from '../composables/useMultiSelect'
 
 const { getWorkstreamColor } = useWorkstreams()
+const { selectedTaskIds, isSelectMode, toggleSelection, isSelected, startDrag, endDrag, clearSelection } = useMultiSelect()
 
 const props = defineProps({
   tasks: {
@@ -12,7 +15,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['edit', 'add'])
+const emit = defineEmits(['edit', 'add', 'move-task'])
 
 // Number of weeks to show
 const WEEKS_TO_SHOW = 52
@@ -126,6 +129,42 @@ const checkOverflows = () => {
   overflowingDays.value = newOverflowing
 }
 
+// Handle task click: edit or toggle selection
+const handleTaskClick = (task) => {
+  if (isSelectMode.value) {
+    toggleSelection(task.id)
+  } else {
+    emit('edit', task)
+  }
+}
+
+// Handle drag-and-drop: when a task is added to a day, update its activateAt
+// If multiple tasks are selected and one of them is dragged, move all selected
+const handleDragChange = (dateStr, evt) => {
+  if (evt.added) {
+    const addedId = evt.added.element.id
+    if (selectedTaskIds.value.has(addedId) && selectedTaskIds.value.size > 1) {
+      // Move all selected tasks to this date
+      selectedTaskIds.value.forEach(taskId => {
+        emit('move-task', { taskId, newDate: dateStr })
+      })
+      clearSelection()
+    } else {
+      emit('move-task', { taskId: addedId, newDate: dateStr })
+    }
+  }
+}
+
+const handleDragStart = (evt) => {
+  const tasks = evt.item?.__vue__?.$attrs?.element
+  // startDrag is from useMultiSelect — tracks if we're dragging a selected item
+  if (tasks) startDrag(tasks.id)
+}
+
+const handleDragEnd = () => {
+  endDrag()
+}
+
 // Re-check overflows when tasks change
 watch(() => props.tasks, () => {
   nextTick(checkOverflows)
@@ -182,29 +221,37 @@ onMounted(() => {
             <span v-if="day.tasks.length > 0" class="day-task-count">{{ day.tasks.length }}</span>
           </div>
 
-          <div class="day-tasks" v-if="day.tasks.length > 0">
-            <div
-              v-for="task in day.tasks"
-              :key="task.id"
-              class="calendar-task"
-              @click.stop="emit('edit', task)"
-            >
-              <span
-                v-if="task.workstream && getWorkstreamColor(task.workstream)"
-                class="cal-tag-dot"
-                :style="{ backgroundColor: getWorkstreamColor(task.workstream).text }"
-              ></span>
-              <template v-if="task.tags && task.tags.length > 0">
-                <span
-                  v-for="tag in task.tags"
-                  :key="tag"
-                  class="cal-tag-dot"
-                  :style="{ backgroundColor: getTagColor(tag).text }"
-                ></span>
-              </template>
-              <span class="calendar-task-title">{{ task.title }}</span>
-            </div>
-          </div>
+          <draggable
+            :model-value="day.tasks"
+            :group="{ name: 'calendar-tasks', pull: true, put: true }"
+            item-key="id"
+            class="day-tasks"
+            ghost-class="sortable-ghost"
+            chosen-class="sortable-chosen"
+            drag-class="sortable-drag"
+            :force-fallback="true"
+            :animation="150"
+            @change="handleDragChange(day.date, $event)"
+          >
+            <template #item="{ element: task }">
+              <div
+                class="calendar-task"
+                :class="{ 'is-selected': isSelected(task.id) }"
+                :style="task.workstream && getWorkstreamColor(task.workstream) ? { borderColor: getWorkstreamColor(task.workstream).text } : {}"
+                @click.stop="handleTaskClick(task)"
+              >
+                <template v-if="task.tags && task.tags.length > 0">
+                  <span
+                    v-for="tag in task.tags"
+                    :key="tag"
+                    class="cal-tag-dot"
+                    :style="{ backgroundColor: getTagColor(tag).text }"
+                  ></span>
+                </template>
+                <span class="calendar-task-title">{{ task.title }}</span>
+              </div>
+            </template>
+          </draggable>
 
           <!-- See all / Show less buttons -->
           <button
@@ -353,6 +400,7 @@ onMounted(() => {
   flex: 1;
   overflow: hidden;
   min-width: 0;
+  min-height: 20px;
 }
 
 .calendar-task {
@@ -365,10 +413,25 @@ onMounted(() => {
   transition: background 0.1s ease;
   overflow: hidden;
   min-width: 0;
+  border-left: 2px solid transparent;
 }
 
 .calendar-task:hover {
   background: rgba(0, 0, 0, 0.05);
+}
+
+.calendar-task.is-selected {
+  background: rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+/* Drag ghost styles */
+.sortable-ghost {
+  opacity: 0.4;
+}
+
+.sortable-chosen {
+  opacity: 0.8;
 }
 
 .cal-tag-dot {
