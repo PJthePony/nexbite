@@ -66,22 +66,29 @@ const calendarWeeks = computed(() => {
 
 const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-// Determine the primary month for each week (the month that has the most days in that week)
+// Show a month label when the month changes between weeks
 const weekMonthLabels = computed(() => {
+  let prevMonth = null
   return calendarWeeks.value.map((week, wi) => {
-    // Check if this week contains the 1st of a month (new month starts)
-    const firstOfMonth = week.find(d => d.isFirstOfMonth)
-    if (firstOfMonth && wi > 0) {
-      // New month starts in this week — show a label
-      const date = new Date(firstOfMonth.date)
-      return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
-    }
+    // Use the last day of the week (Saturday) to determine the month label
+    // This ensures the label is always for the upcoming/new month even if
+    // Sunday is still in the prior month
+    const lastDay = week[6]
+    const date = new Date(lastDay.date)
+    const monthKey = `${date.getFullYear()}-${date.getMonth()}`
+    const label = date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+
     if (wi === 0) {
-      // First week — show current month
-      const midWeek = week[3] // Use the middle of the week
-      const date = new Date(midWeek.date)
-      return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+      prevMonth = monthKey
+      return label
     }
+
+    if (monthKey !== prevMonth) {
+      prevMonth = monthKey
+      return label
+    }
+
+    prevMonth = monthKey
     return null
   })
 })
