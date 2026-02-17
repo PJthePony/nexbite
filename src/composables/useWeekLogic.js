@@ -36,6 +36,64 @@ export const ALL_COLUMNS = [
   { id: LOCATIONS.LATER, label: 'Later', shortLabel: 'Later' }
 ]
 
+// Convert an ISO date string to a location bucket
+function getWeekStartDateStatic(date = new Date()) {
+  const d = new Date(date)
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  d.setDate(diff)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+export function dateToLocation(dateString) {
+  if (!dateString) return ''
+  const date = new Date(dateString + 'T00:00:00')
+  const weekStart = getWeekStartDateStatic()
+  const nextWeekStart = new Date(weekStart)
+  nextWeekStart.setDate(nextWeekStart.getDate() + 7)
+  const weekAfterNext = new Date(weekStart)
+  weekAfterNext.setDate(weekAfterNext.getDate() + 14)
+
+  if (date >= weekStart && date < nextWeekStart) {
+    const dayOfWeek = date.getDay()
+    const dayMap = { 0: 'sunday', 1: 'monday', 2: 'tuesday', 3: 'wednesday', 4: 'thursday', 5: 'friday', 6: 'saturday' }
+    return dayMap[dayOfWeek]
+  } else if (date >= nextWeekStart && date < weekAfterNext) {
+    return 'next-week'
+  } else {
+    return 'later'
+  }
+}
+
+// Convert a location back to an ISO date string (for pre-filling the date picker)
+export function locationToDate(location) {
+  const weekStart = getWeekStartDateStatic()
+  const dayOffsets = {
+    'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3,
+    'friday': 4, 'saturday': 5, 'sunday': 6,
+  }
+
+  if (location in dayOffsets) {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + dayOffsets[location])
+    return d.toISOString().split('T')[0]
+  }
+
+  if (location === 'next-week') {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + 7)
+    return d.toISOString().split('T')[0]
+  }
+
+  if (location === 'this-week') {
+    return new Date().toISOString().split('T')[0]
+  }
+
+  // 'later' — caller should use task.activateAt instead
+  return null
+}
+
 export function useWeekLogic() {
   const getCurrentDayLocation = () => {
     const day = new Date().getDay()

@@ -5,7 +5,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import TagPicker from './TagPicker.vue'
 import WorkstreamPicker from './WorkstreamPicker.vue'
-import { ALL_COLUMNS } from '../composables/useWeekLogic'
+import { ALL_COLUMNS, dateToLocation, locationToDate } from '../composables/useWeekLogic'
 
 const props = defineProps({
   show: {
@@ -52,10 +52,9 @@ const isBite = computed(() => props.task && !!props.task.parentTaskId)
 const hasBites = computed(() => props.biteTasks.length > 0)
 
 const title = ref('')
-const location = ref('')
+const selectedDate = ref('')
 const workstream = ref(null)
 const tags = ref([])
-const activateAt = ref(null)
 
 const editor = useEditor({
   extensions: [
@@ -83,22 +82,14 @@ onBeforeUnmount(() => {
   editor.value?.destroy()
 })
 
-const isLater = computed(() => location.value === 'later')
+const location = computed(() => dateToLocation(selectedDate.value))
 
-// Minimum date for the date picker: tomorrow
-const minActivateDate = computed(() => {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
-})
+const minDate = computed(() => new Date().toISOString().split('T')[0])
 
-// Auto-fill date when switching to Later
-watch(isLater, (newVal) => {
-  if (newVal && !activateAt.value) {
-    const d = new Date()
-    d.setDate(d.getDate() + 14)
-    activateAt.value = d.toISOString().split('T')[0]
-  }
+const locationHint = computed(() => {
+  if (!location.value) return ''
+  const col = ALL_COLUMNS.find(c => c.id === location.value)
+  return col ? `→ ${col.label}` : ''
 })
 
 const isEditing = ref(false)
@@ -110,19 +101,24 @@ watch(() => props.show, (newVal) => {
       isEditing.value = true
       title.value = props.task.title
       editor.value?.commands.setContent(props.task.notes || '')
-      location.value = props.task.location
+      // For 'later' tasks, use the activateAt date; otherwise convert location to a date
+      selectedDate.value = props.task.location === 'later'
+        ? (props.task.activateAt || '')
+        : (locationToDate(props.task.location) || '')
       workstream.value = props.task.workstream || null
       tags.value = [...(props.task.tags || [])]
-      activateAt.value = props.task.activateAt || null
     } else {
       // Adding new task
       isEditing.value = false
       title.value = ''
       editor.value?.commands.setContent('')
-      location.value = props.defaultLocation || ''
+      selectedDate.value = props.defaultLocation
+        ? (props.defaultLocation === 'later'
+          ? (props.defaultActivateAt || '')
+          : (locationToDate(props.defaultLocation) || ''))
+        : ''
       workstream.value = props.defaultWorkstream || null
       tags.value = []
-      activateAt.value = props.defaultActivateAt || null
     }
   }
 })
@@ -140,7 +136,7 @@ const handleSubmit = () => {
     location: location.value,
     workstream: workstream.value,
     tags: tags.value,
-    activateAt: location.value === 'later' ? (activateAt.value || null) : null
+    activateAt: location.value === 'later' ? (selectedDate.value || null) : null
   }
 
   if (isEditing.value && props.task) {
@@ -236,46 +232,16 @@ const handleCreateWorkstream = (wsData) => {
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="task-location">When</label>
-            <select
-              id="task-location"
-              v-model="location"
+            <label class="form-label" for="task-date">When</label>
+            <input
+              id="task-date"
+              type="date"
+              v-model="selectedDate"
               class="form-input"
+              :min="minDate"
               required
-            >
-              <option value="" disabled>Choose where to add this task</option>
-              <option
-                v-for="col in ALL_COLUMNS"
-                :key="col.id"
-                :value="col.id"
-              >
-                {{ col.label }}
-              </option>
-            </select>
-          </div>
-
-          <div v-if="isLater" class="form-group">
-            <label class="form-label" for="task-activate-at">
-              Revisit on
-            </label>
-            <div class="activate-at-row">
-              <input
-                id="task-activate-at"
-                type="date"
-                v-model="activateAt"
-                class="form-input"
-                :min="minActivateDate"
-              />
-              <button
-                v-if="activateAt"
-                type="button"
-                class="activate-at-clear"
-                @click="activateAt = null"
-                title="Clear date"
-              >
-                &times;
-              </button>
-            </div>
+            />
+            <span v-if="locationHint" class="location-hint">{{ locationHint }}</span>
           </div>
 
           <div class="form-group">
@@ -356,7 +322,7 @@ const handleCreateWorkstream = (wsData) => {
           <button
             type="submit"
             class="btn btn-primary"
-            :disabled="!title.trim() || !location"
+            :disabled="!title.trim() || !selectedDate"
           >
             {{ isEditing ? 'Save' : 'Add Task' }}
           </button>
@@ -407,6 +373,13 @@ select.form-input {
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
+}
+
+.location-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
 .linked-tasks-section {
@@ -467,36 +440,6 @@ select.form-input {
   font-weight: 400;
   color: var(--color-text-muted);
   font-size: 0.85em;
-}
-
-.activate-at-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.activate-at-row .form-input {
-  flex: 1;
-}
-
-.activate-at-clear {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.activate-at-clear:hover {
-  background: var(--color-border);
-  color: var(--color-text);
 }
 
 /* ── Rich text notes editor ── */
