@@ -801,6 +801,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
 }
 
 .tag-filter-label {
@@ -835,6 +836,16 @@
   font-size: 0.75rem;
   color: var(--color-text-secondary);
   text-decoration: underline;
+}
+
+/* Mobile filter toggle button — hidden on desktop */
+.tag-filter-toggle {
+  display: none;
+}
+
+/* Mobile filter dropdown — hidden on desktop */
+.tag-filter-dropdown {
+  display: none;
 }
 
 /* Review modal */
@@ -923,7 +934,73 @@
 @media (max-width: 768px) {
   .app-header {
     padding: 12px 16px;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  /* Hide desktop tag filter inline list and label */
+  .tag-filter-label {
+    display: none;
+  }
+
+  .tag-filter-desktop {
+    display: none;
+  }
+
+  /* Show the mobile toggle button */
+  .tag-filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    position: relative;
+    transition: all var(--transition);
+  }
+
+  .tag-filter-toggle:hover,
+  .tag-filter-toggle:active {
+    background: var(--color-border);
+    color: var(--color-text);
+  }
+
+  .tag-filter-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--color-primary);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 700;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Show dropdown when open */
+  .tag-filter-dropdown {
+    display: flex;
     flex-wrap: wrap;
+    gap: 6px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    padding: 12px;
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+    min-width: 200px;
   }
 
   .app-main {
@@ -971,9 +1048,7 @@
   }
 
   .search-bar {
-    width: 100%;
-    order: 3;
-    margin-top: 8px;
+    display: none;
   }
 
   .modal {
