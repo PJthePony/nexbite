@@ -560,7 +560,7 @@ function buildEmailHtml(data: {
 
     <!-- CTA -->
     <div style="text-align:center;padding:24px;">
-      <a href="https://tessio.tanzillo.ai" style="display:inline-block;background:#1a5f4a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Open Tessio</a>
+      <a href="https://tessio.tanzillo.ai/app" style="display:inline-block;background:#1a5f4a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Open Tessio</a>
     </div>
 
     <!-- Footer -->

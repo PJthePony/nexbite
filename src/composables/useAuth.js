@@ -19,7 +19,7 @@ function syncSessionCookie(newSession, redirect = false) {
   const params = new URLSearchParams({
     token: newSession.access_token,
     refresh: newSession.refresh_token,
-    returnTo: window.location.origin + window.location.pathname,
+    returnTo: window.location.origin + '/app',
   })
 
   if (redirect) {
@@ -78,7 +78,7 @@ export function useAuth() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: 'https://tessio.tanzillo.ai'
+        emailRedirectTo: 'https://tessio.tanzillo.ai/app'
       }
     })
     if (error) throw error
