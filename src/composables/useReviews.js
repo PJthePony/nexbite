@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
+import { toLocalDateString } from '../lib/dates'
 import { useAuth } from './useAuth'
 import { useTasks } from './useTasks'
 import { useWeekLogic, LOCATIONS, DAY_LOCATIONS } from './useWeekLogic'
@@ -12,7 +13,7 @@ function getNextWeekStart() {
   const daysUntilMonday = day === 0 ? 1 : (8 - day)
   d.setDate(d.getDate() + daysUntilMonday)
   d.setHours(0, 0, 0, 0)
-  return d.toISOString().split('T')[0]
+  return toLocalDateString(d)
 }
 
 const reviewState = ref({
@@ -153,7 +154,7 @@ export function useReviews() {
     // weekStart override allows advancing to next week early (from weekend)
     reviewState.value.lastWeeklyReview = new Date().toISOString()
     reviewState.value.lastWeekStart = weekStart || getCurrentWeekStart()
-    reviewState.value.lastDailyReview = new Date().toISOString().split('T')[0]
+    reviewState.value.lastDailyReview = toLocalDateString()
     await saveReviewState()
   }
 
@@ -198,7 +199,7 @@ export function useReviews() {
     }
 
     // Update review state
-    reviewState.value.lastDailyReview = new Date().toISOString().split('T')[0]
+    reviewState.value.lastDailyReview = toLocalDateString()
     await saveReviewState()
   }
 

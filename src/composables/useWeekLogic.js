@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { toLocalDateString } from '../lib/dates'
 
 export const LOCATIONS = {
   THIS_WEEK: 'this-week',
@@ -77,17 +78,17 @@ export function locationToDate(location) {
   if (location in dayOffsets) {
     const d = new Date(weekStart)
     d.setDate(d.getDate() + dayOffsets[location])
-    return d.toISOString().split('T')[0]
+    return toLocalDateString(d)
   }
 
   if (location === 'next-week') {
     const d = new Date(weekStart)
     d.setDate(d.getDate() + 7)
-    return d.toISOString().split('T')[0]
+    return toLocalDateString(d)
   }
 
   if (location === 'this-week') {
-    return new Date().toISOString().split('T')[0]
+    return toLocalDateString()
   }
 
   // 'later' — caller should use task.activateAt instead
@@ -131,7 +132,7 @@ export function useWeekLogic() {
   }
 
   const getCurrentWeekStart = () => {
-    return getWeekStartDate().toISOString().split('T')[0]
+    return toLocalDateString(getWeekStartDate())
   }
 
   const isNewWeek = (lastWeekStart) => {
@@ -144,7 +145,7 @@ export function useWeekLogic() {
 
   const isNewDay = (lastDayCheck) => {
     if (!lastDayCheck) return true
-    const today = new Date().toISOString().split('T')[0]
+    const today = toLocalDateString()
     return today !== lastDayCheck
   }
 

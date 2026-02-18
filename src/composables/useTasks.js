@@ -1,5 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import { supabase } from '../lib/supabase'
+import { toLocalDateString } from '../lib/dates'
 import { useAuth } from './useAuth'
 import { DAY_LOCATIONS, LOCATIONS } from './useWeekLogic'
 
@@ -287,7 +288,7 @@ export function useTasks() {
 
   // Promote "later" tasks whose activate_at date has arrived
   const promoteScheduledTasks = async () => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = toLocalDateString()
     const toPromote = tasks.value.filter(t =>
       t.location === 'later' && t.activateAt && t.activateAt <= today && !t.completed
     )

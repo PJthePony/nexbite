@@ -6,6 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TagPicker from './TagPicker.vue'
 import WorkstreamPicker from './WorkstreamPicker.vue'
 import { ALL_COLUMNS, dateToLocation, locationToDate } from '../composables/useWeekLogic'
+import { toLocalDateString } from '../lib/dates'
 
 const props = defineProps({
   show: {
@@ -84,7 +85,7 @@ onBeforeUnmount(() => {
 
 const location = computed(() => dateToLocation(selectedDate.value))
 
-const minDate = computed(() => new Date().toISOString().split('T')[0])
+const minDate = computed(() => toLocalDateString())
 
 const locationHint = computed(() => {
   if (!location.value) return ''

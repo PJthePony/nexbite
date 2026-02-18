@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { toLocalDateString } from '../lib/dates'
 
 const props = defineProps({
   show: {
@@ -23,7 +24,7 @@ const selectedDate = ref('')
 const minDate = computed(() => {
   const d = new Date()
   d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
+  return toLocalDateString(d)
 })
 
 watch(() => props.show, (newVal) => {

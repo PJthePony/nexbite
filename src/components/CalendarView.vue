@@ -4,6 +4,7 @@ import draggable from 'vuedraggable'
 import { getTagColor } from '../composables/useTags'
 import { useWorkstreams } from '../composables/useWorkstreams'
 import { useMultiSelect } from '../composables/useMultiSelect'
+import { toLocalDateString } from '../lib/dates'
 
 const { getWorkstreamColor } = useWorkstreams()
 const { selectedTaskIds, isSelectMode, toggleSelection, isSelected, startDrag, endDrag, clearSelection } = useMultiSelect()
@@ -55,12 +56,13 @@ const calendarWeeks = computed(() => {
     for (let d = 0; d < 7; d++) {
       const date = new Date(startOfWeek)
       date.setDate(date.getDate() + (w * 7) + d)
-      const dateStr = date.toISOString().split('T')[0]
+      const dateStr = toLocalDateString(date)
+      const todayStr = toLocalDateString(today)
       week.push({
         date: dateStr,
         dayOfMonth: date.getDate(),
-        isToday: dateStr === today.toISOString().split('T')[0],
-        isPast: date < new Date(today.toISOString().split('T')[0]),
+        isToday: dateStr === todayStr,
+        isPast: dateStr < todayStr,
         isWeekend: date.getDay() === 0 || date.getDay() === 6,
         month: date.toLocaleDateString(undefined, { month: 'short' }),
         isFirstOfMonth: date.getDate() === 1,

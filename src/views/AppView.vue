@@ -20,6 +20,7 @@ import { useReviews } from '../composables/useReviews'
 import { useMultiSelect } from '../composables/useMultiSelect'
 import { useAuth } from '../composables/useAuth'
 import { usePreferences } from '../composables/usePreferences'
+import { toLocalDateString } from '../lib/dates'
 
 const router = useRouter()
 const { signOut, user } = useAuth()
@@ -96,7 +97,7 @@ const laterPromptDefaultDate = ref('')
 const getTwoWeeksFromNow = () => {
   const d = new Date()
   d.setDate(d.getDate() + 14)
-  return d.toISOString().split('T')[0]
+  return toLocalDateString(d)
 }
 
 // Review modals
