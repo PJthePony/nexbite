@@ -66,10 +66,14 @@ function jsonResponse(body: unknown, status: number) {
   });
 }
 
+type AuthResult =
+  | { userId: string; isServiceCall: false }
+  | { isServiceCall: true };
+
 async function authenticate(
   req: Request,
   supabase: ReturnType<typeof createClient>
-): Promise<{ userId: string } | Response> {
+): Promise<AuthResult | Response> {
   const authHeader = req.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return jsonResponse(
@@ -79,6 +83,13 @@ async function authenticate(
   }
 
   const apiKey = authHeader.slice(7).trim();
+
+  // Service-to-service auth (e.g., Luca creating tasks on behalf of users)
+  const serviceSecret = Deno.env.get("TESSIO_SERVICE_SECRET");
+  if (serviceSecret && apiKey === serviceSecret) {
+    return { isServiceCall: true };
+  }
+
   if (!apiKey.startsWith("nb_")) {
     return jsonResponse({ error: "Invalid API key format" }, 401);
   }
@@ -101,7 +112,7 @@ async function authenticate(
     .eq("key_hash", keyHash)
     .then(() => {});
 
-  return { userId: keyRow.user_id };
+  return { userId: keyRow.user_id, isServiceCall: false };
 }
 
 // GET — list tasks with optional filters
@@ -149,19 +160,21 @@ async function handleGetTasks(
   return jsonResponse({ tasks: data || [] }, 200);
 }
 
+interface TaskBody {
+  title?: string;
+  notes?: string;
+  location?: string;
+  tags?: string[];
+  activate_at?: string;
+  target_user_id?: string;
+}
+
 // POST — create a task
 async function handleCreateTask(
-  req: Request,
+  body: TaskBody,
   userId: string,
   supabase: ReturnType<typeof createClient>
 ) {
-  let body: { title?: string; notes?: string; location?: string; tags?: string[]; activate_at?: string };
-  try {
-    body = await req.json();
-  } catch {
-    return jsonResponse({ error: "Invalid JSON body" }, 400);
-  }
-
   const title = body.title?.trim();
   if (!title) {
     return jsonResponse(
@@ -256,13 +269,36 @@ Deno.serve(async (req: Request) => {
       return authResult;
     }
 
-    const { userId } = authResult;
-
     if (req.method === "GET") {
-      return await handleGetTasks(req, userId, supabase);
-    } else {
-      return await handleCreateTask(req, userId, supabase);
+      if (authResult.isServiceCall) {
+        return jsonResponse({ error: "Service keys only support POST" }, 405);
+      }
+      return await handleGetTasks(req, authResult.userId, supabase);
     }
+
+    // POST — parse body once
+    let body: TaskBody;
+    try {
+      body = await req.json();
+    } catch {
+      return jsonResponse({ error: "Invalid JSON body" }, 400);
+    }
+
+    // Resolve effective userId
+    let userId: string;
+    if (authResult.isServiceCall) {
+      if (!body.target_user_id || typeof body.target_user_id !== "string") {
+        return jsonResponse(
+          { error: "Service calls require target_user_id (Supabase auth UUID)" },
+          400
+        );
+      }
+      userId = body.target_user_id;
+    } else {
+      userId = authResult.userId;
+    }
+
+    return await handleCreateTask(body, userId, supabase);
   } catch (error) {
     console.error("Function error:", error);
     return jsonResponse({ error: "Internal server error" }, 500);

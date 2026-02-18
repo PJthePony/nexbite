@@ -26,3 +26,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/tasks-api/deno.json"
 entrypoint = "./functions/tasks-api/index.ts"
+
+[functions.email-to-task]
+enabled = true
+verify_jwt = false
+import_map = "./functions/email-to-task/deno.json"
+entrypoint = "./functions/email-to-task/index.ts"
