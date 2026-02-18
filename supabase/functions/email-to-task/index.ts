@@ -266,9 +266,15 @@ LOCATION MAPPING (critical — follow these rules exactly):
 
 TASK EXTRACTION:
 - Make the task title concise and action-oriented
-- Pull any relevant details into task_notes
 - If the subject line IS the task, use it as the title
-- If the email body adds context, summarize it into notes
+
+FORWARDED THREADS & CONTEXT:
+- The email may contain a forwarded thread or quoted conversation below the sender's message
+- Your job is to extract relevant context from the ENTIRE email (including forwarded/quoted content) and put it in task_notes
+- Summarize the key context from the thread: who's involved, what's being discussed, any deadlines or details mentioned, and what the sender needs to do
+- Keep task_notes concise but useful — someone reading the task later should understand the context without re-reading the email thread
+- Format notes as plain text with line breaks for readability
+- If there's no forwarded content, just pull any relevant details from the body into notes
 
 RESPONSE:
 - Write a brief, warm confirmation. Mention the task title and when it's scheduled.
@@ -284,14 +290,14 @@ RESPONSE:
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-5-20250929",
-      max_tokens: 512,
+      max_tokens: 1024,
       system: systemPrompt,
       tools: [PARSE_TASK_EMAIL_TOOL],
       tool_choice: { type: "tool", name: "parse_task_email" },
       messages: [
         {
           role: "user",
-          content: `From: ${senderName || senderEmail} <${senderEmail}>\nSubject: ${subject}\n\n${emailBody}`,
+          content: `From: ${senderName || senderEmail} <${senderEmail}>\nSubject: ${subject}\n\n${emailBody}\n\nIMPORTANT: The sender's instruction is at the TOP of the email body. Everything below (forwarded messages, quoted replies, "---------- Forwarded message ----------" sections) is CONTEXT. Extract the task from the sender's instruction, and summarize the relevant thread context into task_notes.`,
         },
       ],
     }),
@@ -368,7 +374,12 @@ Deno.serve(async (req: Request) => {
   }
 
   const email = parseInboundWebhook(body);
-  const emailText = email.strippedText || email.bodyPlain;
+
+  // Use full body so Claude can extract context from forwarded threads.
+  // Prefer body-plain (includes quoted/forwarded content) over stripped-text
+  // (which Mailgun strips of quoted replies). If the sender forwarded an
+  // email thread, the context lives in the quoted portion.
+  const emailText = email.bodyPlain || email.strippedText;
 
   // Helper to send error replies
   const replyWithError = async (message: string) => {
