@@ -41,14 +41,14 @@ const tasksByDate = computed(() => {
   return map
 })
 
-// Generate calendar grid starting from today (weeks start on Sunday)
+// Generate calendar grid starting from next week (weeks start on Sunday)
 const calendarWeeks = computed(() => {
   const weeks = []
   const today = new Date()
-  // Start from Sunday of current week
+  // Start from Sunday of next week
   const startOfWeek = new Date(today)
   const day = startOfWeek.getDay()
-  startOfWeek.setDate(startOfWeek.getDate() - day)
+  startOfWeek.setDate(startOfWeek.getDate() - day + 7)
 
   for (let w = 0; w < WEEKS_TO_SHOW; w++) {
     const week = []
