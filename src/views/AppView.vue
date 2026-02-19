@@ -88,6 +88,12 @@ const selectedTagFilters = ref([])
 const showSettings = ref(false)
 const activeView = ref('week') // 'week' or 'calendar'
 
+// Page header date
+const dateStr = computed(() => {
+  const today = new Date()
+  return today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+})
+
 // Later date prompt
 const showLaterPrompt = ref(false)
 const laterPromptTaskId = ref(null)
@@ -601,6 +607,11 @@ const handleToggleDay = (dayId) => {
       </button>
     </header>
 
+    <div class="page-header">
+      <div class="page-date">{{ dateStr }}</div>
+      <h1 class="page-title">The Hit List</h1>
+    </div>
+
     <!-- Weekend advance-week CTA -->
     <div v-if="canAdvanceWeek" class="advance-week-banner">
       <span class="advance-week-text">Week's over — ready to plan next week?</span>
@@ -738,6 +749,32 @@ const handleToggleDay = (dayId) => {
 .loading-text {
   color: var(--color-text-muted);
   font-size: 14px;
+}
+
+.page-header {
+  padding: 20px 24px 0;
+}
+
+.page-date {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 12px 16px 0;
+  }
 }
 
 .view-toggle-btn {
