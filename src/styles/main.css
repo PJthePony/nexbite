@@ -689,12 +689,11 @@ html {
 
 /* Buttons */
 .btn {
-  padding: 8px 18px;
+  padding: 0.5rem 1rem;
   border-radius: var(--radius-md);
   font-weight: 500;
   font-size: 0.875rem;
-  letter-spacing: -0.01em;
-  transition: background var(--transition), color var(--transition), transform var(--transition);
+  transition: background 150ms ease, color 150ms ease;
 }
 
 .btn:active {
@@ -720,12 +719,14 @@ html {
 }
 
 .btn-danger {
-  background: var(--color-danger);
-  color: white;
+  background: none;
+  color: var(--color-danger);
+  border: none;
+  font-size: 0.8rem;
 }
 
 .btn-danger:hover {
-  opacity: 0.9;
+  text-decoration: underline;
 }
 
 .btn-ghost {
