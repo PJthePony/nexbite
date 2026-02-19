@@ -239,7 +239,7 @@ onMounted(() => {
               <div
                 class="calendar-task"
                 :class="{ 'is-selected': isSelected(task.id) }"
-                :style="task.workstream && getWorkstreamColor(task.workstream) ? { borderColor: getWorkstreamColor(task.workstream).text } : {}"
+                :style="task.workstream && getWorkstreamColor(task.workstream) ? { borderLeftColor: getWorkstreamColor(task.workstream).text, borderLeftWidth: '3px' } : {}"
                 @click.stop="handleTaskClick(task)"
               >
                 <template v-if="task.tags && task.tags.length > 0">

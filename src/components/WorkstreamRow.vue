@@ -114,12 +114,8 @@ const rowLabel = computed(() => {
 })
 
 const rowStyle = computed(() => {
-  if (props.workstreamColor) {
-    return {
-      borderLeftColor: props.workstreamColor.text,
-      backgroundColor: props.workstreamColor.bg
-    }
-  }
+  // No background fill or border on the row — color lives in the label text
+  // and the task card left borders only
   return {}
 })
 

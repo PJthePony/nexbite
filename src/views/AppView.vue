@@ -15,7 +15,7 @@ import CalendarView from '../components/CalendarView.vue'
 import { useTasks } from '../composables/useTasks'
 import { useTags } from '../composables/useTags'
 import { useWorkstreams } from '../composables/useWorkstreams'
-import { useWeekLogic, ALL_COLUMNS } from '../composables/useWeekLogic'
+import { useWeekLogic, ALL_COLUMNS, DAY_LOCATIONS } from '../composables/useWeekLogic'
 import { useReviews } from '../composables/useReviews'
 import { useMultiSelect } from '../composables/useMultiSelect'
 import { useAuth } from '../composables/useAuth'
@@ -40,7 +40,8 @@ const {
   promoteScheduledTasks,
   relocateHiddenDayTasks,
   subscribeToChanges,
-  unsubscribeFromChanges
+  unsubscribeFromChanges,
+  bulkMoveToLocation
 } = useTasks()
 
 const { recentTags, allTags, getTagCounts } = useTags()
@@ -175,6 +176,29 @@ const tasksByLocation = computed(() => {
 
   return byLocation
 })
+
+// Orphaned tasks: incomplete on a prior day, or in 'later' without a scheduled date
+const orphanedTasks = computed(() => {
+  const todayIndex = DAY_LOCATIONS.indexOf(currentDayLocation.value)
+  const priorDays = todayIndex > 0 ? DAY_LOCATIONS.slice(0, todayIndex) : []
+
+  return tasks.value.filter(t => {
+    if (t.completed) return false
+    // Case 1: Incomplete task assigned to a day before today
+    if (priorDays.includes(t.location)) return true
+    // Case 2: Task in 'later' with no activate_at date (invisible in calendar)
+    if (t.location === 'later' && !t.activateAt) return true
+    return false
+  })
+})
+
+const handleFixOrphans = () => {
+  // Move all orphaned tasks to today
+  const ids = orphanedTasks.value.map(t => t.id)
+  if (ids.length > 0) {
+    bulkMoveToLocation(ids, currentDayLocation.value)
+  }
+}
 
 // Seed test data via ?seed
 const seedTestData = async () => {
@@ -637,6 +661,16 @@ const handleToggleDay = (dayId) => {
       <button class="advance-week-btn" @click="handleAdvanceWeek">
         Plan Next Week
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <!-- Orphaned tasks banner -->
+    <div v-if="orphanedTasks.length > 0" class="orphan-banner">
+      <span class="orphan-text">
+        {{ orphanedTasks.length }} task{{ orphanedTasks.length === 1 ? '' : 's' }} stuck — incomplete from a past day or in Later without a date
+      </span>
+      <button class="orphan-fix-btn" @click="handleFixOrphans">
+        Move to Today
       </button>
     </div>
 

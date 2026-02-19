@@ -99,18 +99,7 @@ const handleDragChange = (evt) => {
 }
 
 const cellStyle = computed(() => {
-  if (props.workstreamColor) {
-    if (props.isToday) {
-      // Blend workstream tint with today background for a subtler effect
-      return {
-        backgroundColor: props.workstreamColor.bg,
-        backgroundImage: 'linear-gradient(rgba(249,250,248,0.4), rgba(249,250,248,0.4))'
-      }
-    }
-    return {
-      backgroundColor: props.workstreamColor.bg
-    }
-  }
+  // No workstream background on cells — color lives in card left borders
   return {}
 })
 

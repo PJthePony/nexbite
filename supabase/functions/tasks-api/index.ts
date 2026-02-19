@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
 };
 
 const VALID_LOCATIONS = [
@@ -245,13 +245,92 @@ async function handleCreateTask(
   );
 }
 
+interface PatchBody {
+  id: string;
+  location?: string;
+  title?: string;
+  notes?: string;
+  tags?: string[];
+  activate_at?: string | null;
+  target_user_id?: string;
+}
+
+// PATCH — update a task
+async function handleUpdateTask(
+  body: PatchBody,
+  userId: string,
+  supabase: ReturnType<typeof createClient>
+) {
+  const taskId = body.id?.trim();
+  if (!taskId) {
+    return jsonResponse(
+      { error: '"id" is required' },
+      400
+    );
+  }
+
+  // Verify task belongs to user
+  const { data: existing, error: fetchError } = await supabase
+    .from("tasks")
+    .select("id")
+    .eq("id", taskId)
+    .eq("user_id", userId)
+    .single();
+
+  if (fetchError || !existing) {
+    return jsonResponse({ error: "Task not found" }, 404);
+  }
+
+  const updates: Record<string, unknown> = {};
+
+  if (body.location !== undefined) {
+    const resolved = resolveLocation(body.location);
+    if (!resolved) {
+      return jsonResponse(
+        {
+          error: `Invalid location "${body.location}". Valid values: today, this-week, monday, tuesday, wednesday, thursday, friday, saturday, sunday, next-week, later`,
+        },
+        400
+      );
+    }
+    updates.location = resolved;
+  }
+
+  if (body.title !== undefined) updates.title = body.title.trim();
+  if (body.notes !== undefined) updates.notes = body.notes.trim();
+  if (body.tags !== undefined) {
+    updates.tags = Array.isArray(body.tags)
+      ? body.tags.filter((t): t is string => typeof t === "string").map(t => t.trim()).filter(Boolean)
+      : [];
+  }
+  if ("activate_at" in body) updates.activate_at = body.activate_at;
+
+  if (Object.keys(updates).length === 0) {
+    return jsonResponse({ error: "No fields to update" }, 400);
+  }
+
+  const { error: updateError } = await supabase
+    .from("tasks")
+    .update(updates)
+    .eq("id", taskId)
+    .eq("user_id", userId);
+
+  if (updateError) {
+    console.error("Failed to update task:", updateError);
+    return jsonResponse({ error: "Failed to update task" }, 500);
+  }
+
+  return jsonResponse({ ok: true, id: taskId, updates }, 200);
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  if (req.method !== "GET" && req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed. Use GET or POST." }, 405);
+  const allowedMethods = ["GET", "POST", "PATCH"];
+  if (!allowedMethods.includes(req.method)) {
+    return jsonResponse({ error: `Method not allowed. Use ${allowedMethods.join(", ")}.` }, 405);
   }
 
   try {
@@ -276,8 +355,8 @@ Deno.serve(async (req: Request) => {
       return await handleGetTasks(req, authResult.userId, supabase);
     }
 
-    // POST — parse body once
-    let body: TaskBody;
+    // POST/PATCH — parse body once
+    let body: TaskBody & PatchBody;
     try {
       body = await req.json();
     } catch {
@@ -296,6 +375,10 @@ Deno.serve(async (req: Request) => {
       userId = body.target_user_id;
     } else {
       userId = authResult.userId;
+    }
+
+    if (req.method === "PATCH") {
+      return await handleUpdateTask(body, userId, supabase);
     }
 
     return await handleCreateTask(body, userId, supabase);

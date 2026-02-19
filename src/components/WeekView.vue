@@ -500,7 +500,6 @@ defineExpose({
         <div
           class="ws-pill"
           :style="{
-            backgroundColor: getWorkstreamColor(wsName)?.bg,
             borderLeftColor: getWorkstreamColor(wsName)?.text,
             color: getWorkstreamColor(wsName)?.text
           }"

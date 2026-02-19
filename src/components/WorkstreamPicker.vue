@@ -32,14 +32,21 @@ const clearWorkstream = () => {
   selectedWorkstream.value = null
 }
 
-const getWorkstreamStyle = (workstream) => {
+const getWorkstreamStyle = (workstream, isActive = false) => {
   if (!workstream || !workstream.color) {
     return {}
   }
+  if (isActive) {
+    return {
+      backgroundColor: workstream.color.bg,
+      color: workstream.color.text,
+      borderColor: workstream.color.text
+    }
+  }
   return {
-    backgroundColor: workstream.color.bg,
+    backgroundColor: 'transparent',
     color: workstream.color.text,
-    borderColor: workstream.color.text
+    borderColor: workstream.color.text + '40'
   }
 }
 
@@ -86,7 +93,7 @@ const handleKeydown = (e) => {
       <span v-if="selectedWorkstream" class="workstream-selected">
         <span
           class="workstream-badge"
-          :style="getWorkstreamStyle(workstreams.find(w => w.name === selectedWorkstream) || {})"
+          :style="getWorkstreamStyle(workstreams.find(w => w.name === selectedWorkstream) || {}, true)"
         >
           {{ selectedWorkstream }}
         </span>
@@ -104,7 +111,7 @@ const handleKeydown = (e) => {
         :key="ws.name"
         class="workstream-option"
         :class="{ 'is-selected': selectedWorkstream === ws.name }"
-        :style="getWorkstreamStyle(ws)"
+        :style="getWorkstreamStyle(ws, selectedWorkstream === ws.name)"
         @click="selectWorkstream(ws.name)"
         type="button"
       >

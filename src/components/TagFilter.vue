@@ -42,8 +42,9 @@ const clearFilters = () => {
 const getTagStyle = (tag) => {
   const color = getTagColor(tag)
   return {
-    backgroundColor: color.bg,
-    color: color.text
+    backgroundColor: color.text + '14',  // ~8% opacity whisper fill
+    color: color.text,
+    borderColor: color.text + '26'       // ~15% opacity border
   }
 }
 

@@ -87,12 +87,25 @@ const handleClick = () => {
 
 const cardStyle = computed(() => {
   if (props.workstreamColor) {
+    if (props.compact) {
+      return {} // compact cards rely on ws-dot/tag-dots only
+    }
     return {
-      borderColor: props.compact ? props.workstreamColor.text + '40' : props.workstreamColor.text
+      borderLeftColor: props.workstreamColor.text,
+      borderLeftWidth: '3px'
     }
   }
   return {}
 })
+
+const getTagStyle = (tag) => {
+  const color = getTagColor(tag)
+  return {
+    backgroundColor: color.text + '14',  // ~8% opacity
+    color: color.text,
+    borderColor: color.text + '26'       // ~15% opacity
+  }
+}
 
 
 </script>
@@ -146,7 +159,7 @@ const cardStyle = computed(() => {
         v-for="tag in task.tags"
         :key="tag"
         class="task-tag"
-        :style="{ backgroundColor: getTagColor(tag).bg, color: getTagColor(tag).text }"
+        :style="getTagStyle(tag)"
       >
         {{ tag }}
       </span>
@@ -232,7 +245,7 @@ const cardStyle = computed(() => {
           v-for="tag in task.tags"
           :key="tag"
           class="task-tag"
-          :style="{ backgroundColor: getTagColor(tag).bg, color: getTagColor(tag).text }"
+          :style="getTagStyle(tag)"
         >
           {{ tag }}
         </span>

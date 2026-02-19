@@ -58,7 +58,11 @@ const handleKeydown = (e) => {
         :key="tag"
         class="tag-option"
         :class="{ 'is-selected': isSelected(tag) }"
-        :style="{ backgroundColor: getTagColor(tag).bg, color: getTagColor(tag).text, borderColor: isSelected(tag) ? getTagColor(tag).text : getTagColor(tag).bg }"
+        :style="{
+          backgroundColor: isSelected(tag) ? getTagColor(tag).bg : getTagColor(tag).text + '14',
+          color: getTagColor(tag).text,
+          borderColor: isSelected(tag) ? getTagColor(tag).text : getTagColor(tag).text + '26'
+        }"
         @click="toggleTag(tag)"
         type="button"
       >
@@ -89,7 +93,7 @@ const handleKeydown = (e) => {
         v-for="tag in selectedTags"
         :key="tag"
         class="task-tag"
-        :style="{ backgroundColor: getTagColor(tag).bg, color: getTagColor(tag).text, borderColor: getTagColor(tag).text }"
+        :style="{ backgroundColor: getTagColor(tag).text + '14', color: getTagColor(tag).text, borderColor: getTagColor(tag).text + '26' }"
       >
         {{ tag }}
         <button
