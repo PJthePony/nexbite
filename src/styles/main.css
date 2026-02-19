@@ -962,6 +962,7 @@ html {
     padding: 12px 16px;
     flex-wrap: nowrap;
     gap: 8px;
+    border-bottom: none;
   }
 
   /* Hide desktop tag filter inline list and label */

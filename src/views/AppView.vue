@@ -75,6 +75,9 @@ const { hiddenDays, loadPreferences, toggleDay, setTagColor, removeTagColor, ren
 // Loading state
 const isLoading = computed(() => !tasksLoaded.value || !workstreamsLoaded.value)
 
+// WeekView ref for mobile nav
+const weekViewRef = ref(null)
+
 // UI State
 const showTaskForm = ref(false)
 const editingTask = ref(null)
@@ -607,6 +610,22 @@ const handleToggleDay = (dayId) => {
       </button>
     </header>
 
+    <!-- Mobile day navigation (replaces header border-bottom) -->
+    <div v-if="activeView === 'week' && weekViewRef?.isMobile" class="column-nav-bar">
+      <button
+        v-for="(column, index) in weekViewRef.visibleColumns"
+        :key="column.id"
+        class="nav-pill"
+        :class="{
+          'is-active': index === weekViewRef.currentColumnIndex,
+          'is-today': weekViewRef.isActiveColumn(column.id)
+        }"
+        @click="weekViewRef.goToColumn(index)"
+      >
+        {{ column.shortLabel || column.label }}
+      </button>
+    </div>
+
     <div class="page-header">
       <div class="page-date">{{ dateStr }}</div>
       <h1 class="page-title">The Hit List</h1>
@@ -624,6 +643,7 @@ const handleToggleDay = (dayId) => {
     <main class="app-main">
       <WeekView
         v-if="activeView === 'week'"
+        ref="weekViewRef"
         :tasks-by-location="tasksByLocation"
         :workstreams="allWorkstreams"
         :all-tasks="tasks"
@@ -775,6 +795,47 @@ const handleToggleDay = (dayId) => {
   .page-header {
     padding: 12px 16px 0;
   }
+}
+
+/* Mobile day navigation bar */
+.column-nav-bar {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  justify-content: center;
+}
+
+.column-nav-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-pill {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nav-pill.is-active {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+}
+
+.nav-pill.is-today:not(.is-active) {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .view-toggle-btn {

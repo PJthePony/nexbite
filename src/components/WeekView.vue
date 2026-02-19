@@ -424,6 +424,14 @@ onUnmounted(() => {
   clearEdgeScrollTimer()
   document.removeEventListener('touchmove', handleDragEdgeDetection)
 })
+
+defineExpose({
+  isMobile,
+  visibleColumns,
+  currentColumnIndex,
+  isActiveColumn,
+  goToColumn
+})
 </script>
 
 <template>
@@ -589,21 +597,6 @@ onUnmounted(() => {
     <div v-if="mobileDragActive" class="mobile-drag-edge left-edge"></div>
     <div v-if="mobileDragActive" class="mobile-drag-edge right-edge"></div>
 
-    <!-- Column navigation bar -->
-    <div class="column-nav-bar">
-      <button
-        v-for="(column, index) in visibleColumns"
-        :key="column.id"
-        class="nav-pill"
-        :class="{
-          'is-active': index === currentColumnIndex,
-          'is-today': isActiveColumn(column.id)
-        }"
-        @click="goToColumn(index)"
-      >
-        {{ column.shortLabel || column.label }}
-      </button>
-    </div>
   </div>
 </template>
 
@@ -853,46 +846,6 @@ onUnmounted(() => {
 .mobile-columns-wrapper {
   display: flex;
   touch-action: pan-y;
-}
-
-.column-nav-bar {
-  display: flex;
-  gap: 4px;
-  padding: 8px 12px;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  justify-content: center;
-}
-
-.column-nav-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.nav-pill {
-  flex-shrink: 0;
-  padding: 10px 14px;
-  border-radius: 16px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  background: var(--color-bg);
-  color: var(--color-text-muted);
-  border: 1px solid transparent;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.nav-pill.is-active {
-  background: var(--color-primary);
-  color: white;
-  font-weight: 600;
-}
-
-.nav-pill.is-today:not(.is-active) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
 }
 
 /* Mobile drag-to-edge zones */
