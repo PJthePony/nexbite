@@ -1065,13 +1065,10 @@ html {
 
   .task-column.is-today {
     border: none;
-    border-top: 3px solid var(--color-primary);
-    box-shadow: inset 0 3px 8px rgba(71, 85, 105, 0.06);
   }
 
-  .column-nav-bar {
-    position: sticky;
-    bottom: 0;
+  .column-header {
+    border-bottom: none;
   }
 
   .search-bar {

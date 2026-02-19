@@ -610,7 +610,12 @@ const handleToggleDay = (dayId) => {
       </button>
     </header>
 
-    <!-- Mobile day navigation (replaces header border-bottom) -->
+    <div class="page-header">
+      <div class="page-date">{{ dateStr }}</div>
+      <h1 class="page-title">The Hit List</h1>
+    </div>
+
+    <!-- Mobile day navigation (between title and content) -->
     <div v-if="activeView === 'week' && weekViewRef?.isMobile" class="column-nav-bar">
       <button
         v-for="(column, index) in weekViewRef.visibleColumns"
@@ -624,11 +629,6 @@ const handleToggleDay = (dayId) => {
       >
         {{ column.shortLabel || column.label }}
       </button>
-    </div>
-
-    <div class="page-header">
-      <div class="page-date">{{ dateStr }}</div>
-      <h1 class="page-title">The Hit List</h1>
     </div>
 
     <!-- Weekend advance-week CTA -->
@@ -801,9 +801,7 @@ const handleToggleDay = (dayId) => {
 .column-nav-bar {
   display: flex;
   gap: 4px;
-  padding: 8px 12px;
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
+  padding: 8px 16px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
