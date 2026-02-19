@@ -36,6 +36,17 @@
    Everything below is unique to the task manager.
    ────────────────────────────────────────────── */
 
+/* ── Base ── */
+html {
+  font-size: 21px;
+}
+
+@media (min-width: 641px) {
+  html {
+    font-size: 16px;
+  }
+}
+
 #app {
   min-height: 100vh;
 }
