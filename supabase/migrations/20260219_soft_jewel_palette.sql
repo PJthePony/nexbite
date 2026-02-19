@@ -1,36 +1,36 @@
--- Tessio Color Refinement: Migrate from Electric Brights to Soft Jewel palette
--- This migration remaps existing workstream color_text and color_bg values.
+-- Tessio Color Revert: Migrate from Soft Jewel back to original vivid accent colors
+-- Run this if you previously ran the Soft Jewel migration.
 
--- Map old text colors (accent) to new Soft Jewel values
+-- Map Soft Jewel text colors back to vivid originals
 UPDATE workstreams SET color_text = CASE color_text
-  WHEN '#2563eb' THEN '#3b6fc2'   -- Electric Blue  → Sapphire
-  WHEN '#f43f5e' THEN '#d4576b'   -- Neon Rose      → Rose
-  WHEN '#14b8a6' THEN '#27907e'   -- Turquoise      → Jade
-  WHEN '#f97316' THEN '#d48a3a'   -- Tangerine      → Amber
-  WHEN '#a855f7' THEN '#8855bb'   -- Violet         → Amethyst
-  WHEN '#10b981' THEN '#2e9664'   -- Neon Green     → Emerald
-  WHEN '#ca8a04' THEN '#b09630'   -- Lemon          → Gold
-  WHEN '#ec4899' THEN '#c45580'   -- Flamingo       → Peony
-  WHEN '#06b6d4' THEN '#1a96a8'   -- Aqua           → Teal
-  WHEN '#e11d48' THEN '#c43e44'   -- Watermelon     → Ruby
-  WHEN '#78716c' THEN '#7a7168'   -- Stone          → Stone
-  WHEN '#64748b' THEN '#5c6b7a'   -- Slate          → Slate
+  WHEN '#3b6fc2' THEN '#2563eb'   -- Sapphire → Electric Blue
+  WHEN '#d4576b' THEN '#f43f5e'   -- Rose     → Neon Rose
+  WHEN '#27907e' THEN '#14b8a6'   -- Jade     → Turquoise
+  WHEN '#d48a3a' THEN '#f97316'   -- Amber    → Tangerine
+  WHEN '#8855bb' THEN '#a855f7'   -- Amethyst → Violet
+  WHEN '#2e9664' THEN '#10b981'   -- Emerald  → Neon Green
+  WHEN '#b09630' THEN '#ca8a04'   -- Gold     → Lemon
+  WHEN '#c45580' THEN '#ec4899'   -- Peony    → Flamingo
+  WHEN '#1a96a8' THEN '#06b6d4'   -- Teal     → Aqua
+  WHEN '#c43e44' THEN '#e11d48'   -- Ruby     → Watermelon
+  WHEN '#7a7168' THEN '#78716c'   -- Stone    → Stone
+  WHEN '#5c6b7a' THEN '#64748b'   -- Slate    → Slate
   ELSE color_text
 END;
 
--- Map old bg colors (pastel fill) to new Soft Jewel values
+-- Map Soft Jewel bg colors back to vivid originals
 UPDATE workstreams SET color_bg = CASE color_bg
-  WHEN '#dbeafe' THEN '#dce8f5'   -- Electric Blue  → Sapphire
-  WHEN '#ffe4e6' THEN '#f5dde1'   -- Neon Rose      → Rose
-  WHEN '#ccfbf1' THEN '#d4efe9'   -- Turquoise      → Jade
-  WHEN '#ffedd5' THEN '#f5e8d5'   -- Tangerine      → Amber
-  WHEN '#e9d5ff' THEN '#e8ddf5'   -- Violet         → Amethyst
-  WHEN '#d1fae5' THEN '#d5f0e2'   -- Neon Green     → Emerald
-  WHEN '#fef08a' THEN '#f0ebd3'   -- Lemon          → Gold
-  WHEN '#fce7f3' THEN '#f5dde8'   -- Flamingo       → Peony
-  WHEN '#cffafe' THEN '#d3eff3'   -- Aqua           → Teal
-  WHEN '#fecdd3' THEN '#f5dcdd'   -- Watermelon     → Ruby
-  WHEN '#f5f5f4' THEN '#eeecea'   -- Stone          → Stone
-  WHEN '#f1f5f9' THEN '#e3e8ed'   -- Slate          → Slate
+  WHEN '#dce8f5' THEN '#dbeafe'   -- Sapphire → Electric Blue
+  WHEN '#f5dde1' THEN '#ffe4e6'   -- Rose     → Neon Rose
+  WHEN '#d4efe9' THEN '#ccfbf1'   -- Jade     → Turquoise
+  WHEN '#f5e8d5' THEN '#ffedd5'   -- Amber    → Tangerine
+  WHEN '#e8ddf5' THEN '#e9d5ff'   -- Amethyst → Violet
+  WHEN '#d5f0e2' THEN '#d1fae5'   -- Emerald  → Neon Green
+  WHEN '#f0ebd3' THEN '#fef08a'   -- Gold     → Lemon
+  WHEN '#f5dde8' THEN '#fce7f3'   -- Peony    → Flamingo
+  WHEN '#d3eff3' THEN '#cffafe'   -- Teal     → Aqua
+  WHEN '#f5dcdd' THEN '#fecdd3'   -- Ruby     → Watermelon
+  WHEN '#eeecea' THEN '#f5f5f4'   -- Stone    → Stone
+  WHEN '#e3e8ed' THEN '#f1f5f9'   -- Slate    → Slate
   ELSE color_bg
 END;

@@ -2,21 +2,21 @@ import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
-// 13 predefined colors for workstreams - Soft Jewel palette + neutrals
+// 13 predefined colors for workstreams - Vivid palette + neutrals
 export const WORKSTREAM_COLORS = [
-  { name: 'Stone',    bg: '#eeecea', text: '#7a7168' },
-  { name: 'Slate',    bg: '#e3e8ed', text: '#5c6b7a' },
+  { name: 'Stone',    bg: '#f5f5f4', text: '#78716c' },
+  { name: 'Slate',    bg: '#f1f5f9', text: '#64748b' },
   { name: 'Charcoal', bg: '#e5e5e5', text: '#454545' },
-  { name: 'Sapphire', bg: '#dce8f5', text: '#3b6fc2' },
-  { name: 'Rose',     bg: '#f5dde1', text: '#d4576b' },
-  { name: 'Jade',     bg: '#d4efe9', text: '#27907e' },
-  { name: 'Amber',    bg: '#f5e8d5', text: '#d48a3a' },
-  { name: 'Amethyst', bg: '#e8ddf5', text: '#8855bb' },
-  { name: 'Emerald',  bg: '#d5f0e2', text: '#2e9664' },
-  { name: 'Gold',     bg: '#f0ebd3', text: '#b09630' },
-  { name: 'Peony',    bg: '#f5dde8', text: '#c45580' },
-  { name: 'Teal',     bg: '#d3eff3', text: '#1a96a8' },
-  { name: 'Ruby',     bg: '#f5dcdd', text: '#c43e44' },
+  { name: 'Sapphire', bg: '#dbeafe', text: '#2563eb' },
+  { name: 'Rose',     bg: '#ffe4e6', text: '#f43f5e' },
+  { name: 'Jade',     bg: '#ccfbf1', text: '#14b8a6' },
+  { name: 'Amber',    bg: '#ffedd5', text: '#f97316' },
+  { name: 'Amethyst', bg: '#e9d5ff', text: '#a855f7' },
+  { name: 'Emerald',  bg: '#d1fae5', text: '#10b981' },
+  { name: 'Gold',     bg: '#fef08a', text: '#ca8a04' },
+  { name: 'Peony',    bg: '#fce7f3', text: '#ec4899' },
+  { name: 'Teal',     bg: '#cffafe', text: '#06b6d4' },
+  { name: 'Ruby',     bg: '#fecdd3', text: '#e11d48' },
 ]
 
 // Shared state across all usages (singleton)
