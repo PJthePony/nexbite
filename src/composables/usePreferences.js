@@ -5,6 +5,7 @@ import { useAuth } from './useAuth'
 // Singleton state
 const hiddenDays = ref([])
 const tagColors = ref({}) // { tagName: { bg, text } }
+const standaloneTags = ref([]) // Tags created from settings (persist without tasks)
 const isLoaded = ref(false)
 
 export function usePreferences() {
@@ -21,6 +22,7 @@ export function usePreferences() {
     if (data) {
       hiddenDays.value = data.hidden_days || []
       tagColors.value = data.tag_colors || {}
+      standaloneTags.value = data.standalone_tags || []
     }
     // If no row yet, keep defaults (empty array = all days visible)
     isLoaded.value = true
@@ -64,6 +66,25 @@ export function usePreferences() {
     }
   }
 
+  const addStandaloneTag = async (tagName) => {
+    if (!standaloneTags.value.includes(tagName)) {
+      standaloneTags.value = [...standaloneTags.value, tagName]
+      await savePreferences({ standalone_tags: standaloneTags.value })
+    }
+  }
+
+  const removeStandaloneTag = async (tagName) => {
+    standaloneTags.value = standaloneTags.value.filter(t => t !== tagName)
+    await savePreferences({ standalone_tags: standaloneTags.value })
+  }
+
+  const renameStandaloneTag = async (oldName, newName) => {
+    if (standaloneTags.value.includes(oldName)) {
+      standaloneTags.value = standaloneTags.value.map(t => t === oldName ? newName : t)
+      await savePreferences({ standalone_tags: standaloneTags.value })
+    }
+  }
+
   const toggleDay = async (dayId) => {
     const index = hiddenDays.value.indexOf(dayId)
     if (index === -1) {
@@ -81,12 +102,16 @@ export function usePreferences() {
   return {
     hiddenDays,
     tagColors,
+    standaloneTags,
     isLoaded,
     loadPreferences,
     toggleDay,
     isDayVisible,
     setTagColor,
     removeTagColor,
-    renameTagColor
+    renameTagColor,
+    addStandaloneTag,
+    removeStandaloneTag,
+    renameStandaloneTag
   }
 }

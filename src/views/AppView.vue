@@ -70,7 +70,7 @@ const {
   teardownListeners
 } = useMultiSelect()
 
-const { hiddenDays, loadPreferences, toggleDay, setTagColor, removeTagColor, renameTagColor } = usePreferences()
+const { hiddenDays, loadPreferences, toggleDay, setTagColor, removeTagColor, renameTagColor, addStandaloneTag, removeStandaloneTag, renameStandaloneTag } = usePreferences()
 
 // Loading state
 const isLoading = computed(() => !tasksLoaded.value || !workstreamsLoaded.value)
@@ -505,6 +505,11 @@ const handleLaterDateSave = (date) => {
   laterPromptTaskId.value = null
 }
 
+const handleAddTag = async ({ name, color }) => {
+  await addStandaloneTag(name)
+  await setTagColor(name, { bg: color.bg, text: color.text })
+}
+
 const handleRenameTag = ({ oldName, newName }) => {
   tasks.value.forEach(task => {
     if (task.tags && task.tags.includes(oldName)) {
@@ -515,6 +520,7 @@ const handleRenameTag = ({ oldName, newName }) => {
     }
   })
   renameTagColor(oldName, newName)
+  renameStandaloneTag(oldName, newName)
 }
 
 const handleRenameWorkstream = async ({ oldName, newName }) => {
@@ -536,6 +542,7 @@ const handleDeleteTag = (tagName) => {
     }
   })
   removeTagColor(tagName)
+  removeStandaloneTag(tagName)
 }
 
 const handleRecolorTag = ({ tagName, color }) => {
@@ -686,6 +693,7 @@ const handleToggleDay = (dayId) => {
       @delete-workstream="handleSettingsDeleteWorkstream"
       @rename-workstream="handleRenameWorkstream"
       @recolor-workstream="({ wsName, color }) => handleUpdateWorkstreamColor(wsName, color)"
+      @add-tag="handleAddTag"
       @rename-tag="handleRenameTag"
       @delete-tag="handleDeleteTag"
       @recolor-tag="handleRecolorTag"

@@ -43,10 +43,14 @@ export function getTagColor(tagName) {
 
 export function useTags() {
   const { tasks } = useTasks()
+  const { standaloneTags } = usePreferences()
 
   const recentTags = computed(() => {
     const thirtyDaysAgo = Date.now() - THIRTY_DAYS_MS
     const tagSet = new Set()
+
+    // Include standalone tags (created from settings)
+    standaloneTags.value.forEach(tag => tagSet.add(tag))
 
     tasks.value.forEach(task => {
       // Include tags from tasks created in last 30 days
@@ -64,6 +68,8 @@ export function useTags() {
 
   const allTags = computed(() => {
     const tagSet = new Set()
+    // Include standalone tags (created from settings, persist without tasks)
+    standaloneTags.value.forEach(tag => tagSet.add(tag))
     tasks.value.forEach(task => {
       if (task.tags) {
         task.tags.forEach(tag => tagSet.add(tag))

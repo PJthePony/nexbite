@@ -34,6 +34,7 @@ const emit = defineEmits([
   'delete-workstream',
   'rename-workstream',
   'recolor-workstream',
+  'add-tag',
   'rename-tag',
   'delete-tag',
   'recolor-tag',
@@ -59,6 +60,10 @@ const renameWsValue = ref('')
 
 // Workstream recolor state
 const coloringWorkstream = ref(null)
+
+// Tag form state
+const newTagName = ref('')
+const newTagColor = ref(TAG_COLORS[0])
 
 // Tag rename state
 const renamingTag = ref(null)
@@ -86,6 +91,8 @@ watch(() => props.show, (newVal) => {
     renamingWorkstream.value = null
     renameWsValue.value = ''
     coloringWorkstream.value = null
+    newTagName.value = ''
+    newTagColor.value = TAG_COLORS[0]
     renamingTag.value = null
     renameValue.value = ''
     coloringTag.value = null
@@ -172,6 +179,14 @@ const handleRecolorWorkstream = (wsName, color) => {
 }
 
 // Tag handlers
+const handleAddTag = () => {
+  const name = newTagName.value.trim()
+  if (!name) return
+  emit('add-tag', { name, color: newTagColor.value })
+  newTagName.value = ''
+  newTagColor.value = TAG_COLORS[0]
+}
+
 const startRenameTag = (tag) => {
   renamingTag.value = tag
   renameValue.value = tag
@@ -444,7 +459,7 @@ const activeTab = ref('claude')
         <section v-if="activeSection === 'tags'" class="settings-section">
           <h3 class="section-title">Tags</h3>
           <p class="section-desc">
-            Manage tags used across your tasks. Renaming or deleting a tag updates all tasks that use it.
+            Create tags to organize your tasks. Tags persist even when they have no tasks.
           </p>
 
           <div v-if="allTags.length > 0" class="item-manage-list">
@@ -513,7 +528,35 @@ const activeTab = ref('claude')
               </div>
             </div>
           </div>
-          <p v-else class="ws-empty">No tags in use.</p>
+          <p v-else class="ws-empty">No tags yet.</p>
+
+          <!-- Add tag form -->
+          <div class="ws-add-form">
+            <div class="ws-add-row">
+              <input
+                v-model="newTagName"
+                class="form-input ws-name-input"
+                placeholder="New tag name"
+                @keydown.enter="handleAddTag"
+              />
+              <button
+                class="btn-primary ws-add-btn"
+                @click="handleAddTag"
+                :disabled="!newTagName.trim()"
+              >Add</button>
+            </div>
+            <div class="ws-color-select">
+              <button
+                v-for="(color, index) in TAG_COLORS"
+                :key="index"
+                class="color-dot"
+                :class="{ 'is-selected': newTagColor.bg === color.bg }"
+                :style="{ backgroundColor: color.bg, borderColor: color.text }"
+                :title="color.name"
+                @click="newTagColor = color"
+              />
+            </div>
+          </div>
         </section>
 
         <!-- ═══ API Key Section ═══ -->
