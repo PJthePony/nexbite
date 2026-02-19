@@ -28,7 +28,10 @@ const handleSubmit = async () => {
   <div class="login-container">
     <div class="login-card">
       <div class="login-logo">
-        <img src="/logo.svg" alt="pjt" width="56" height="54" />
+        <div class="login-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        </div>
+        <span class="login-app-name">Tessio</span>
       </div>
       <p class="login-subtitle">Weekly task management, one bite at a time</p>
 
@@ -70,10 +73,11 @@ const handleSubmit = async () => {
           No password needed. We'll email you a link to sign in.
         </p>
       </form>
-    </div>
-    <div class="login-legal">
-      <a href="https://tanzillo.ai/privacy.html" target="_blank">Privacy</a>
-      <a href="https://tanzillo.ai/terms.html" target="_blank">Terms</a>
+
+      <div class="login-legal">
+        <a href="https://tanzillo.ai/privacy.html" target="_blank">Privacy</a>
+        <a href="https://tanzillo.ai/terms.html" target="_blank">Terms</a>
+      </div>
     </div>
   </div>
 </template>
@@ -82,6 +86,7 @@ const handleSubmit = async () => {
 .login-container {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px;
@@ -101,8 +106,28 @@ const handleSubmit = async () => {
 
 .login-logo {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.login-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-app-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
 }
 
 .login-subtitle {
@@ -240,7 +265,9 @@ const handleSubmit = async () => {
   display: flex;
   justify-content: center;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
 }
 
 .login-legal a {

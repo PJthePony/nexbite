@@ -685,6 +685,7 @@ const handleToggleDay = (dayId) => {
       @add-workstream="handleSettingsAddWorkstream"
       @delete-workstream="handleSettingsDeleteWorkstream"
       @rename-workstream="handleRenameWorkstream"
+      @recolor-workstream="({ wsName, color }) => handleUpdateWorkstreamColor(wsName, color)"
       @rename-tag="handleRenameTag"
       @delete-tag="handleDeleteTag"
       @recolor-tag="handleRecolorTag"

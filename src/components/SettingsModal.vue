@@ -33,6 +33,7 @@ const emit = defineEmits([
   'add-workstream',
   'delete-workstream',
   'rename-workstream',
+  'recolor-workstream',
   'rename-tag',
   'delete-tag',
   'recolor-tag',
@@ -55,6 +56,9 @@ const newWorkstreamColor = ref(WORKSTREAM_COLORS[0])
 // Workstream rename state
 const renamingWorkstream = ref(null)
 const renameWsValue = ref('')
+
+// Workstream recolor state
+const coloringWorkstream = ref(null)
 
 // Tag rename state
 const renamingTag = ref(null)
@@ -81,6 +85,7 @@ watch(() => props.show, (newVal) => {
     newWorkstreamColor.value = WORKSTREAM_COLORS[0]
     renamingWorkstream.value = null
     renameWsValue.value = ''
+    coloringWorkstream.value = null
     renamingTag.value = null
     renameValue.value = ''
     coloringTag.value = null
@@ -155,6 +160,15 @@ const confirmRenameWorkstream = () => {
 const cancelRenameWorkstream = () => {
   renamingWorkstream.value = null
   renameWsValue.value = ''
+}
+
+const toggleWorkstreamColorPicker = (wsName) => {
+  coloringWorkstream.value = coloringWorkstream.value === wsName ? null : wsName
+}
+
+const handleRecolorWorkstream = (wsName, color) => {
+  emit('recolor-workstream', { wsName, color })
+  coloringWorkstream.value = null
 }
 
 // Tag handlers
@@ -330,51 +344,69 @@ const activeTab = ref('claude')
           </p>
 
           <!-- Existing workstreams -->
-          <div v-if="workstreams.length > 0" class="ws-list">
+          <div v-if="workstreams.length > 0" class="item-manage-list">
             <div
               v-for="ws in workstreams"
               :key="ws.name"
-              class="ws-list-item"
+              class="item-manage-wrapper"
             >
-              <!-- Normal display -->
-              <template v-if="renamingWorkstream !== ws.name">
-                <div
-                  class="ws-list-swatch"
-                  :style="{ backgroundColor: ws.color.bg, borderColor: ws.color.text }"
-                ></div>
-                <span class="ws-list-name">{{ ws.name }}</span>
-                <button
-                  class="tag-manage-action"
-                  @click="startRenameWorkstream(ws)"
-                  title="Rename workstream"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <button
-                  class="ws-list-delete"
-                  @click="handleDeleteWorkstream(ws.name)"
-                  title="Delete workstream"
-                >&times;</button>
-              </template>
+              <div class="item-manage-row">
+                <!-- Normal display -->
+                <template v-if="renamingWorkstream !== ws.name">
+                  <button
+                    class="item-manage-swatch"
+                    :style="{ backgroundColor: ws.color.bg, borderColor: ws.color.text }"
+                    :title="'Change color for ' + ws.name"
+                    @click="toggleWorkstreamColorPicker(ws.name)"
+                  />
+                  <span class="item-manage-name">{{ ws.name }}</span>
+                  <button
+                    class="item-manage-action"
+                    @click="startRenameWorkstream(ws)"
+                    title="Rename workstream"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button
+                    class="item-manage-action delete"
+                    @click="handleDeleteWorkstream(ws.name)"
+                    title="Delete workstream"
+                  >&times;</button>
+                </template>
 
-              <!-- Rename mode -->
-              <template v-else>
-                <div
-                  class="ws-list-swatch"
-                  :style="{ backgroundColor: ws.color.bg, borderColor: ws.color.text }"
-                ></div>
-                <input
-                  v-model="renameWsValue"
-                  class="form-input tag-rename-input"
-                  @keydown.enter="confirmRenameWorkstream"
-                  @keydown.escape="cancelRenameWorkstream"
-                  autofocus
+                <!-- Rename mode -->
+                <template v-else>
+                  <button
+                    class="item-manage-swatch"
+                    :style="{ backgroundColor: ws.color.bg, borderColor: ws.color.text }"
+                    disabled
+                  />
+                  <input
+                    v-model="renameWsValue"
+                    class="form-input tag-rename-input"
+                    @keydown.enter="confirmRenameWorkstream"
+                    @keydown.escape="cancelRenameWorkstream"
+                    autofocus
+                  />
+                  <button class="item-manage-action save" @click="confirmRenameWorkstream" title="Save">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                  <button class="item-manage-action" @click="cancelRenameWorkstream" title="Cancel">&times;</button>
+                </template>
+              </div>
+
+              <!-- Expandable color picker -->
+              <div v-if="coloringWorkstream === ws.name" class="item-color-picker">
+                <button
+                  v-for="(color, index) in WORKSTREAM_COLORS"
+                  :key="index"
+                  class="color-dot"
+                  :class="{ 'is-selected': ws.color.bg === color.bg }"
+                  :style="{ backgroundColor: color.bg, borderColor: color.text }"
+                  :title="color.name"
+                  @click="handleRecolorWorkstream(ws.name, color)"
                 />
-                <button class="tag-manage-action save" @click="confirmRenameWorkstream" title="Save">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                </button>
-                <button class="tag-manage-action" @click="cancelRenameWorkstream" title="Cancel">&times;</button>
-              </template>
+              </div>
             </div>
           </div>
           <p v-else class="ws-empty">No workstreams yet.</p>
@@ -398,7 +430,7 @@ const activeTab = ref('claude')
               <button
                 v-for="(color, index) in WORKSTREAM_COLORS"
                 :key="index"
-                class="ws-color-dot"
+                class="color-dot"
                 :class="{ 'is-selected': newWorkstreamColor.bg === color.bg }"
                 :style="{ backgroundColor: color.bg, borderColor: color.text }"
                 :title="color.name"
@@ -415,38 +447,32 @@ const activeTab = ref('claude')
             Manage tags used across your tasks. Renaming or deleting a tag updates all tasks that use it.
           </p>
 
-          <div v-if="allTags.length > 0" class="tag-manage-list">
+          <div v-if="allTags.length > 0" class="item-manage-list">
             <div
               v-for="tag in allTags"
               :key="tag"
-              class="tag-manage-item-wrapper"
+              class="item-manage-wrapper"
             >
-              <div class="tag-manage-item">
+              <div class="item-manage-row">
                 <!-- Normal display -->
                 <template v-if="renamingTag !== tag">
                   <button
-                    class="tag-color-swatch"
+                    class="item-manage-swatch"
                     :style="{ backgroundColor: getTagColor(tag).bg, borderColor: getTagColor(tag).text }"
                     :title="'Change color for ' + tag"
                     @click="toggleTagColorPicker(tag)"
                   />
-                  <span
-                    class="tag-manage-pill"
-                    :style="{
-                      backgroundColor: getTagColor(tag).bg,
-                      color: getTagColor(tag).text
-                    }"
-                  >{{ tag }}</span>
-                  <span class="tag-manage-count">{{ tagCounts[tag] || 0 }} task{{ (tagCounts[tag] || 0) !== 1 ? 's' : '' }}</span>
+                  <span class="item-manage-name">{{ tag }}</span>
+                  <span class="item-manage-count">{{ tagCounts[tag] || 0 }} task{{ (tagCounts[tag] || 0) !== 1 ? 's' : '' }}</span>
                   <button
-                    class="tag-manage-action"
+                    class="item-manage-action"
                     @click="startRenameTag(tag)"
                     title="Rename tag"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
                   <button
-                    class="tag-manage-action delete"
+                    class="item-manage-action delete"
                     @click="handleDeleteTag(tag)"
                     title="Delete tag from all tasks"
                   >&times;</button>
@@ -454,6 +480,11 @@ const activeTab = ref('claude')
 
                 <!-- Rename mode -->
                 <template v-else>
+                  <button
+                    class="item-manage-swatch"
+                    :style="{ backgroundColor: getTagColor(tag).bg, borderColor: getTagColor(tag).text }"
+                    disabled
+                  />
                   <input
                     v-model="renameValue"
                     class="form-input tag-rename-input"
@@ -461,19 +492,19 @@ const activeTab = ref('claude')
                     @keydown.escape="cancelRenameTag"
                     autofocus
                   />
-                  <button class="tag-manage-action save" @click="confirmRenameTag" title="Save">
+                  <button class="item-manage-action save" @click="confirmRenameTag" title="Save">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                   </button>
-                  <button class="tag-manage-action" @click="cancelRenameTag" title="Cancel">&times;</button>
+                  <button class="item-manage-action" @click="cancelRenameTag" title="Cancel">&times;</button>
                 </template>
               </div>
 
               <!-- Expandable color picker -->
-              <div v-if="coloringTag === tag" class="tag-color-picker">
+              <div v-if="coloringTag === tag" class="item-color-picker">
                 <button
                   v-for="(color, index) in TAG_COLORS"
                   :key="index"
-                  class="ws-color-dot"
+                  class="color-dot"
                   :class="{ 'is-selected': getTagColor(tag).bg === color.bg }"
                   :style="{ backgroundColor: color.bg, borderColor: color.text }"
                   :title="color.name"
@@ -709,38 +740,58 @@ const activeTab = ref('claude')
   transform: translateX(20px);
 }
 
-/* ── Workstream list ── */
-.ws-list {
+/* ── Unified item manage list (workstreams & tags) ── */
+.item-manage-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
   margin-bottom: 16px;
 }
 
-.ws-list-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+.item-manage-wrapper {
   background: var(--color-bg);
   border-radius: var(--radius-md);
 }
 
-.ws-list-swatch {
+.item-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.item-manage-swatch {
   width: 16px;
   height: 16px;
   border-radius: 4px;
   border: 2px solid;
   flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  background: none;
 }
 
-.ws-list-name {
+.item-manage-swatch:hover:not(:disabled) {
+  transform: scale(1.15);
+}
+
+.item-manage-swatch:disabled {
+  cursor: default;
+}
+
+.item-manage-name {
   flex: 1;
   font-size: 0.88rem;
   font-weight: 500;
 }
 
-.ws-list-delete {
+.item-manage-count {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.item-manage-action {
   width: 24px;
   height: 24px;
   display: flex;
@@ -748,16 +799,37 @@ const activeTab = ref('claude')
   justify-content: center;
   border-radius: var(--radius-sm);
   color: var(--color-text-muted);
-  font-size: 1.1rem;
   background: none;
   border: none;
   cursor: pointer;
   transition: all var(--transition);
+  font-size: 1.1rem;
 }
 
-.ws-list-delete:hover {
+.item-manage-action:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+.item-manage-action.delete:hover {
   background: #fef2f2;
   color: var(--color-danger);
+}
+
+.item-manage-action.save {
+  color: var(--color-primary);
+}
+
+.item-manage-action.save:hover {
+  background: rgba(71, 85, 105, 0.08);
+}
+
+.item-color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px 10px;
+  border-top: 1px solid var(--color-border);
 }
 
 .ws-empty {
@@ -808,112 +880,25 @@ const activeTab = ref('claude')
   gap: 6px;
 }
 
-.ws-color-dot {
+.color-dot {
   width: 24px;
   height: 24px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.15s ease;
-}
-
-.ws-color-dot:hover {
-  transform: scale(1.15);
-}
-
-.ws-color-dot.is-selected {
-  border-style: solid;
-  border-width: 2px;
-  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px currentColor;
-}
-
-/* ── Tag management ── */
-.tag-manage-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.tag-manage-item-wrapper {
-  background: var(--color-bg);
-  border-radius: var(--radius-md);
-}
-
-.tag-manage-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-}
-
-.tag-color-swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 2px solid;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: all 0.15s ease;
   padding: 0;
   background: none;
 }
 
-.tag-color-swatch:hover {
+.color-dot:hover {
   transform: scale(1.15);
 }
 
-.tag-color-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px 12px 10px;
-  border-top: 1px solid var(--color-border);
-}
-
-.tag-manage-pill {
-  font-size: 0.78rem;
-  font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 4px;
-}
-
-.tag-manage-count {
-  flex: 1;
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-}
-
-.tag-manage-action {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: all var(--transition);
-  font-size: 1.1rem;
-}
-
-.tag-manage-action:hover {
-  background: var(--color-border);
-  color: var(--color-text);
-}
-
-.tag-manage-action.delete:hover {
-  background: #fef2f2;
-  color: var(--color-danger);
-}
-
-.tag-manage-action.save {
-  color: var(--color-primary);
-}
-
-.tag-manage-action.save:hover {
-  background: rgba(71, 85, 105, 0.08);
+.color-dot.is-selected {
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px currentColor;
 }
 
 .tag-rename-input {
@@ -1202,24 +1187,19 @@ const activeTab = ref('claude')
     min-height: 44px;
   }
 
-  .ws-list-delete {
+  .item-manage-action {
     width: 44px;
     height: 44px;
   }
 
-  .tag-manage-action {
+  .color-dot {
     width: 44px;
     height: 44px;
   }
 
-  .ws-color-dot {
-    width: 44px;
-    height: 44px;
-  }
-
-  .tag-color-swatch {
-    width: 44px;
-    height: 44px;
+  .item-manage-swatch {
+    width: 28px;
+    height: 28px;
   }
 
   .ws-add-btn {
@@ -1237,10 +1217,8 @@ const activeTab = ref('claude')
     min-height: 44px;
   }
 
-  .day-toggle-switch {
-    min-width: 44px;
+  .day-toggle-row {
     min-height: 44px;
-    height: 28px;
   }
 }
 </style>

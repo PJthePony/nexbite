@@ -189,6 +189,13 @@ html {
   font-size: 0.9rem;
 }
 
+@media (max-width: 768px) {
+  .column-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+}
+
 .column-count {
   background: var(--color-border);
   color: var(--color-text-secondary);
@@ -1079,6 +1086,7 @@ html {
     bottom: 0;
     left: 0;
     right: 0;
+    overflow-x: hidden;
   }
 
   .modal-overlay {
