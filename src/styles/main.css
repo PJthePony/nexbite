@@ -617,8 +617,8 @@ html {
 }
 
 .modal-close {
-  width: 26px;
-  height: 26px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-sm);
   font-size: 1.1rem;
   color: var(--color-text-secondary);
@@ -1091,6 +1091,95 @@ html {
   .form-input.form-textarea,
   select.form-input {
     font-size: 16px;
+  }
+
+  /* Touch targets — minimum 44px */
+  .task-action-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .column-add-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tag-filter-toggle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .advance-week-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  .review-action-btn {
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  .workstream-color-option {
+    width: 44px;
+    height: 44px;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .column-empty-cta {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tag-option {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .tag-filter-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .workstream-add-btn {
+    min-height: 44px;
+  }
+
+  .workstream-create-btn {
+    min-height: 44px;
+  }
+
+  .tag-add-btn {
+    min-height: 44px;
+  }
+
+  .task-checkbox {
+    width: 22px;
+    height: 22px;
+  }
+
+  .review-task-checkbox {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Reduce padding on mobile */
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
   }
 
 }

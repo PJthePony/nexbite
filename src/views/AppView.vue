@@ -794,4 +794,13 @@ const handleToggleDay = (dayId) => {
   background: var(--color-surface);
   color: var(--color-text);
 }
+
+@media (max-width: 768px) {
+  .view-toggle-btn,
+  .settings-btn,
+  .logout-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
 </style>

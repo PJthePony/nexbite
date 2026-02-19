@@ -310,7 +310,7 @@ const handleCreateWorkstream = (wsData) => {
             class="btn btn-bite"
             @click="emit('bite', task); emit('close')"
           >
-            Take a Bite
+            Bite
           </button>
           <div style="flex: 1"></div>
           <button
@@ -522,5 +522,21 @@ select.form-input {
   float: left;
   pointer-events: none;
   height: 0;
+}
+
+@media (max-width: 768px) {
+  .toolbar-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .modal-footer-sticky {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .linked-task-item {
+    min-height: 44px;
+  }
 }
 </style>

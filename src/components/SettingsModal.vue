@@ -1187,6 +1187,7 @@ const activeTab = ref('claude')
 
   .copy-btn {
     align-self: flex-start;
+    min-height: 44px;
   }
 
   .settings-tabs {
@@ -1198,6 +1199,48 @@ const activeTab = ref('claude')
   .settings-tab {
     padding: 10px 12px;
     white-space: nowrap;
+    min-height: 44px;
+  }
+
+  .ws-list-delete {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tag-manage-action {
+    width: 44px;
+    height: 44px;
+  }
+
+  .ws-color-dot {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tag-color-swatch {
+    width: 44px;
+    height: 44px;
+  }
+
+  .ws-add-btn {
+    min-height: 44px;
+  }
+
+  .btn-primary,
+  .btn-danger,
+  .btn-danger-outline,
+  .btn-secondary {
+    min-height: 44px;
+  }
+
+  .guide-tab {
+    min-height: 44px;
+  }
+
+  .day-toggle-switch {
+    min-width: 44px;
+    min-height: 44px;
+    height: 28px;
   }
 }
 </style>
