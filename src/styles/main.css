@@ -692,7 +692,7 @@ html {
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   transition: background 150ms ease, color 150ms ease;
 }
 

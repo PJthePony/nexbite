@@ -813,8 +813,8 @@ const handleToggleDay = (dayId) => {
 }
 
 .nav-pill {
-  flex-shrink: 0;
-  padding: 10px 14px;
+  flex: 1;
+  padding: 10px 0;
   border-radius: 16px;
   font-size: 0.78rem;
   font-weight: 500;
@@ -823,6 +823,7 @@ const handleToggleDay = (dayId) => {
   border: 1px solid transparent;
   white-space: nowrap;
   cursor: pointer;
+  text-align: center;
 }
 
 .nav-pill.is-active {
