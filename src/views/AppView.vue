@@ -558,7 +558,9 @@ const handleToggleDay = (dayId) => {
   <div v-else class="app-container" :class="{ 'select-mode': isSelectMode || selectedTaskIds.size > 0 }">
     <header class="app-header">
       <div class="app-title">
-        <img src="/logo.svg" alt="pjt" width="44" height="42" class="app-logo" />
+        <div class="header-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        </div>
         <span class="app-name">Tessio</span>
       </div>
 
