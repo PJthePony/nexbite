@@ -121,6 +121,10 @@ const handleCellClick = (e) => {
   <div class="workstream-cell" :class="{ 'is-empty': isEmpty, 'is-later': isLater }" :style="cellStyle" @click="handleCellClick">
     <!-- Later column: show count only, but still accept drops -->
     <template v-if="isLater">
+      <div v-if="localTasks.length > 0" class="later-count">
+        <span class="later-count-number">{{ localTasks.length }}</span>
+        <span class="later-count-label">{{ localTasks.length === 1 ? 'task' : 'tasks' }}</span>
+      </div>
       <draggable
         v-model="localTasks"
         :group="{ name: 'tasks', pull: true, put: true }"
@@ -140,10 +144,6 @@ const handleCellClick = (e) => {
           <div class="later-hidden-item"></div>
         </template>
       </draggable>
-      <div v-if="localTasks.length > 0" class="later-count">
-        <span class="later-count-number">{{ localTasks.length }}</span>
-        <span class="later-count-label">{{ localTasks.length === 1 ? 'task' : 'tasks' }}</span>
-      </div>
     </template>
 
     <!-- Normal columns: full task rendering -->
@@ -251,16 +251,12 @@ const handleCellClick = (e) => {
 /* Later column: count-only display */
 .workstream-cell.is-later {
   min-height: 36px;
-  justify-content: center;
-  align-items: center;
   position: relative;
 }
 
 .later-drop-zone {
-  position: absolute;
-  inset: 0;
+  flex: 1;
   min-height: 36px;
-  z-index: 2;
 }
 
 .later-hidden-item {
@@ -268,6 +264,8 @@ const handleCellClick = (e) => {
 }
 
 .later-count {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
