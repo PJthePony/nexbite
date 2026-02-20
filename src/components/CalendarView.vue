@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { ref, computed } from 'vue'
 import draggable from 'vuedraggable'
 import { getTagColor } from '../composables/useTags'
 import { useWorkstreams } from '../composables/useWorkstreams'
@@ -25,11 +25,9 @@ const emit = defineEmits(['edit', 'add', 'add-to-day', 'move-task', 'move-task-t
 
 // Number of weeks to show
 const WEEKS_TO_SHOW = 52
-const DAY_MAX_HEIGHT = 140 // max height in px before "See all" appears
+const VISIBLE_TASK_COUNT = 3 // max tasks shown per day before collapsing
 
 const expandedDays = ref(new Set())
-const overflowingDays = ref(new Set())
-const calendarGridRef = ref(null)
 
 // Get all Later tasks with activateAt dates
 const laterTasks = computed(() => {
@@ -52,6 +50,17 @@ const dayLocationDateMap = computed(() => {
     map[dayNames[i]] = toLocalDateString(d)
   }
   return map
+})
+
+// Get Monday of next week as a date string
+const nextWeekMondayStr = computed(() => {
+  const today = new Date()
+  const day = today.getDay() // Sunday = 0
+  const weekStart = new Date(today)
+  weekStart.setDate(weekStart.getDate() - day) // Sunday of this week
+  const nextMonday = new Date(weekStart)
+  nextMonday.setDate(nextMonday.getDate() + 8) // Next week's Monday
+  return toLocalDateString(nextMonday)
 })
 
 // Group tasks by date — includes both "later" tasks and this-week day-location tasks
@@ -81,6 +90,14 @@ const tasksByDate = computed(() => {
     const todayStr = toLocalDateString()
     if (!map[todayStr]) map[todayStr] = []
     map[todayStr].push(...thisWeekTasks)
+  }
+
+  // Add next-week bucket tasks (no specific day) to Monday of next week
+  const nextWeekTasks = (props.tasksByLocation['next-week'] || []).filter(t => !t.completed)
+  if (nextWeekTasks.length > 0) {
+    const mondayStr = nextWeekMondayStr.value
+    if (!map[mondayStr]) map[mondayStr] = []
+    map[mondayStr].push(...nextWeekTasks)
   }
 
   return map
@@ -158,22 +175,6 @@ const toggleExpand = (dateStr) => {
 }
 
 const isExpanded = (dateStr) => expandedDays.value.has(dateStr)
-const isOverflowing = (dateStr) => overflowingDays.value.has(dateStr)
-
-// Check which day cells overflow their max height
-const checkOverflows = () => {
-  if (!calendarGridRef.value) return
-  const days = calendarGridRef.value.querySelectorAll('.calendar-day')
-  const newOverflowing = new Set()
-  days.forEach(el => {
-    const dateStr = el.dataset.date
-    if (!dateStr || expandedDays.value.has(dateStr)) return
-    if (el.scrollHeight > el.clientHeight + 2) {
-      newOverflowing.add(dateStr)
-    }
-  })
-  overflowingDays.value = newOverflowing
-}
 
 // Handle task click: edit or toggle selection
 const handleTaskClick = (task) => {
@@ -235,14 +236,6 @@ const handleDragEnd = () => {
   endDrag()
 }
 
-// Re-check overflows when tasks change
-watch(() => props.tasks, () => {
-  nextTick(checkOverflows)
-}, { deep: true })
-
-onMounted(() => {
-  nextTick(checkOverflows)
-})
 </script>
 
 <template>
@@ -257,7 +250,7 @@ onMounted(() => {
     </div>
 
     <!-- Calendar grid -->
-    <div class="calendar-grid" ref="calendarGridRef">
+    <div class="calendar-grid">
       <template
         v-for="(week, wi) in calendarWeeks"
         :key="wi"
@@ -296,6 +289,7 @@ onMounted(() => {
             :group="{ name: 'calendar-tasks', pull: true, put: true }"
             item-key="id"
             class="day-tasks"
+            :class="{ 'is-collapsed': !isExpanded(day.date) && day.tasks.length > VISIBLE_TASK_COUNT }"
             ghost-class="sortable-ghost"
             chosen-class="sortable-chosen"
             drag-class="sortable-drag"
@@ -323,17 +317,17 @@ onMounted(() => {
             </template>
           </draggable>
 
-          <!-- See all / Show less buttons -->
+          <!-- Expand / Collapse buttons -->
           <button
-            v-if="!isExpanded(day.date) && isOverflowing(day.date)"
+            v-if="!isExpanded(day.date) && day.tasks.length > VISIBLE_TASK_COUNT"
             class="day-expand-btn day-see-all"
             @click.stop="toggleExpand(day.date)"
           >
-            See all ({{ day.tasks.length }})
+            +{{ day.tasks.length - VISIBLE_TASK_COUNT }} more
           </button>
 
           <button
-            v-if="isExpanded(day.date) && day.tasks.length > 0"
+            v-if="isExpanded(day.date) && day.tasks.length > VISIBLE_TASK_COUNT"
             class="day-expand-btn"
             @click.stop="toggleExpand(day.date)"
           >
@@ -382,8 +376,7 @@ onMounted(() => {
 }
 
 .calendar-day {
-  min-height: 160px;
-  max-height: 180px;
+  min-height: 80px;
   padding: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -392,7 +385,6 @@ onMounted(() => {
   flex-direction: column;
   transition: background 0.15s ease;
   cursor: pointer;
-  overflow: hidden;
   min-width: 0;
   position: relative;
 }
@@ -414,9 +406,6 @@ onMounted(() => {
   background: rgba(249, 115, 22, 0.04);
 }
 
-.calendar-day.is-expanded {
-  max-height: none;
-}
 
 .day-header {
   display: flex;
@@ -468,9 +457,13 @@ onMounted(() => {
   flex-direction: column;
   gap: 2px;
   flex: 1;
-  overflow: hidden;
   min-width: 0;
   min-height: 20px;
+}
+
+/* Hide tasks beyond the visible count when collapsed */
+.day-tasks.is-collapsed > :nth-child(n+4) {
+  display: none;
 }
 
 .calendar-task {
@@ -532,22 +525,7 @@ onMounted(() => {
 }
 
 .day-see-all {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px 8px 6px;
-  text-align: center;
-  background: linear-gradient(to bottom, transparent, var(--color-surface) 40%);
-  z-index: 1;
-}
-
-.calendar-day.is-weekend .day-see-all {
-  background: linear-gradient(to bottom, transparent, var(--color-bg) 40%);
-}
-
-.calendar-day.is-today .day-see-all {
-  background: linear-gradient(to bottom, transparent, rgba(255, 253, 250, 1) 40%);
+  margin-top: 2px;
 }
 
 .day-expand-btn:hover {
@@ -577,8 +555,7 @@ onMounted(() => {
 /* Mobile */
 @media (max-width: 768px) {
   .calendar-day {
-    min-height: 90px;
-    max-height: 120px;
+    min-height: 60px;
     padding: 5px;
   }
 

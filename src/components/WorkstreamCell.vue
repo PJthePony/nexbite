@@ -260,7 +260,11 @@ const handleCellClick = (e) => {
 }
 
 .later-hidden-item {
-  display: none;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .later-count {
