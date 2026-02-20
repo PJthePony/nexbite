@@ -5,6 +5,7 @@ import { getTagColor } from '../composables/useTags'
 import { useWorkstreams } from '../composables/useWorkstreams'
 import { useMultiSelect } from '../composables/useMultiSelect'
 import { toLocalDateString } from '../lib/dates'
+import { dateToLocation } from '../composables/useWeekLogic'
 
 const { getWorkstreamColor } = useWorkstreams()
 const { selectedTaskIds, isSelectMode, toggleSelection, isSelected, startDrag, endDrag, clearSelection } = useMultiSelect()
@@ -13,10 +14,14 @@ const props = defineProps({
   tasks: {
     type: Array,
     required: true
+  },
+  tasksByLocation: {
+    type: Object,
+    default: () => ({})
   }
 })
 
-const emit = defineEmits(['edit', 'add', 'move-task'])
+const emit = defineEmits(['edit', 'add', 'add-to-day', 'move-task', 'move-task-to-day'])
 
 // Number of weeks to show
 const WEEKS_TO_SHOW = 52
@@ -31,25 +36,64 @@ const laterTasks = computed(() => {
   return props.tasks.filter(t => t.location === 'later' && t.activateAt && !t.completed)
 })
 
-// Group tasks by date
+// Build a map from day-location to calendar date for the current week
+const dayLocationDateMap = computed(() => {
+  const today = new Date()
+  const day = today.getDay() // Sunday = 0
+  const weekStart = new Date(today)
+  weekStart.setDate(weekStart.getDate() - day)
+  weekStart.setHours(0, 0, 0, 0)
+
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  const map = {}
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + i)
+    map[dayNames[i]] = toLocalDateString(d)
+  }
+  return map
+})
+
+// Group tasks by date — includes both "later" tasks and this-week day-location tasks
 const tasksByDate = computed(() => {
   const map = {}
+
+  // Add later tasks by their activateAt date
   laterTasks.value.forEach(task => {
     const date = task.activateAt
     if (!map[date]) map[date] = []
     map[date].push(task)
   })
+
+  // Add this-week tasks (from day-location columns) mapped to their calendar dates
+  const locationDateMap = dayLocationDateMap.value
+  for (const [location, dateStr] of Object.entries(locationDateMap)) {
+    const columnTasks = (props.tasksByLocation[location] || []).filter(t => !t.completed)
+    if (columnTasks.length > 0) {
+      if (!map[dateStr]) map[dateStr] = []
+      map[dateStr].push(...columnTasks)
+    }
+  }
+
+  // Also add "this-week" bucket tasks to today's date
+  const thisWeekTasks = (props.tasksByLocation['this-week'] || []).filter(t => !t.completed)
+  if (thisWeekTasks.length > 0) {
+    const todayStr = toLocalDateString()
+    if (!map[todayStr]) map[todayStr] = []
+    map[todayStr].push(...thisWeekTasks)
+  }
+
   return map
 })
 
-// Generate calendar grid starting from next week (weeks start on Sunday)
+// Generate calendar grid starting from this week (weeks start on Sunday)
 const calendarWeeks = computed(() => {
   const weeks = []
   const today = new Date()
-  // Start from Sunday of next week
+  // Start from Sunday of the current week
   const startOfWeek = new Date(today)
   const day = startOfWeek.getDay()
-  startOfWeek.setDate(startOfWeek.getDate() - day + 7)
+  startOfWeek.setDate(startOfWeek.getDate() - day)
 
   for (let w = 0; w < WEEKS_TO_SHOW; w++) {
     const week = []
@@ -140,19 +184,43 @@ const handleTaskClick = (task) => {
   }
 }
 
-// Handle drag-and-drop: when a task is added to a day, update its activateAt
-// If multiple tasks are selected and one of them is dragged, move all selected
+// Handle clicking on a day to add a task
+const handleDayClick = (dateStr) => {
+  const resolvedLocation = dateToLocation(dateStr)
+  if (resolvedLocation && resolvedLocation !== 'later' && resolvedLocation !== 'next-week') {
+    // Current week — add to the day-location column
+    emit('add-to-day', resolvedLocation)
+  } else {
+    // Future date — add as a "later" task with activateAt
+    emit('add', dateStr)
+  }
+}
+
+// Handle drag-and-drop: when a task is added to a day, move it appropriately.
+// If the date falls in the current week, move to the day-location column.
+// Otherwise, update activateAt for "later" scheduling.
+// If multiple tasks are selected and one of them is dragged, move all selected.
 const handleDragChange = (dateStr, evt) => {
   if (evt.added) {
     const addedId = evt.added.element.id
-    if (selectedTaskIds.value.has(addedId) && selectedTaskIds.value.size > 1) {
-      // Move all selected tasks to this date
-      selectedTaskIds.value.forEach(taskId => {
+    const tasksToMove = (selectedTaskIds.value.has(addedId) && selectedTaskIds.value.size > 1)
+      ? [...selectedTaskIds.value]
+      : [addedId]
+
+    const resolvedLocation = dateToLocation(dateStr)
+
+    tasksToMove.forEach(taskId => {
+      if (resolvedLocation && resolvedLocation !== 'later' && resolvedLocation !== 'next-week') {
+        // Date is in the current week — move to the day column
+        emit('move-task-to-day', { taskId, location: resolvedLocation })
+      } else {
+        // Date is in the future — update activateAt
         emit('move-task', { taskId, newDate: dateStr })
-      })
+      }
+    })
+
+    if (selectedTaskIds.value.has(addedId) && selectedTaskIds.value.size > 1) {
       clearSelection()
-    } else {
-      emit('move-task', { taskId: addedId, newDate: dateStr })
     }
   }
 }
@@ -211,7 +279,7 @@ onMounted(() => {
             'has-tasks': day.tasks.length > 0,
             'is-expanded': isExpanded(day.date)
           }"
-          @click="emit('add', day.date)"
+          @click="handleDayClick(day.date)"
         >
           <div class="day-header">
             <span class="day-number" :class="{ 'is-first-of-month': day.isFirstOfMonth }">
@@ -314,8 +382,8 @@ onMounted(() => {
 }
 
 .calendar-day {
-  min-height: 130px;
-  max-height: 140px;
+  min-height: 160px;
+  max-height: 180px;
   padding: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -509,8 +577,8 @@ onMounted(() => {
 /* Mobile */
 @media (max-width: 768px) {
   .calendar-day {
-    min-height: 70px;
-    max-height: 100px;
+    min-height: 90px;
+    max-height: 120px;
     padding: 5px;
   }
 

@@ -353,6 +353,11 @@ const handleCalendarMoveTask = ({ taskId, newDate }) => {
   updateTask(taskId, { activateAt: newDate })
 }
 
+const handleCalendarMoveTaskToDay = ({ taskId, location }) => {
+  moveTask(taskId, location)
+  updateTask(taskId, { activateAt: null })
+}
+
 const handleEditTask = (task) => {
   editingTask.value = task
   defaultLocation.value = null
@@ -725,9 +730,12 @@ const handleToggleDay = (dayId) => {
       <CalendarView
         v-else
         :tasks="tasks"
+        :tasks-by-location="tasksByLocation"
         @edit="handleEditTask"
         @add="handleCalendarAdd"
+        @add-to-day="(location) => handleAddTask(location)"
         @move-task="handleCalendarMoveTask"
+        @move-task-to-day="handleCalendarMoveTaskToDay"
       />
     </main>
 

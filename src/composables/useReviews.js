@@ -84,9 +84,9 @@ export function useReviews() {
   // Can advance to next week early (weekend only, and haven't already advanced)
   const canAdvanceWeek = computed(() => {
     if (!isWeekend()) return false
-    // If lastWeekStart already matches next Monday, we've already advanced
-    const nextMonday = getNextWeekStart()
-    return reviewState.value.lastWeekStart !== nextMonday
+    // If lastWeekStart already matches next Sunday, we've already advanced
+    const nextSunday = getNextWeekStart()
+    return reviewState.value.lastWeekStart !== nextSunday
   })
 
   const getRolledOverTasks = () => {
