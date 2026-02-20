@@ -140,8 +140,7 @@ const handleCellClick = (e) => {
         @change="handleDragChange"
       >
         <template #item="{ element }">
-          <!-- Hidden: items exist for drag-and-drop but are not rendered -->
-          <div class="later-hidden-item"></div>
+          <div class="later-hidden-item" :data-id="element.id"></div>
         </template>
       </draggable>
     </template>
@@ -257,14 +256,17 @@ const handleCellClick = (e) => {
 .later-drop-zone {
   flex: 1;
   min-height: 36px;
+  gap: 0;
 }
 
 .later-hidden-item {
-  height: 0;
+  width: 100%;
+  height: 1px;
   overflow: hidden;
   margin: 0;
   padding: 0;
   border: 0;
+  opacity: 0;
 }
 
 .later-count {
