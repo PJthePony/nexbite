@@ -15,7 +15,7 @@ import CalendarView from '../components/CalendarView.vue'
 import { useTasks } from '../composables/useTasks'
 import { useTags } from '../composables/useTags'
 import { useWorkstreams } from '../composables/useWorkstreams'
-import { useWeekLogic, ALL_COLUMNS, DAY_LOCATIONS } from '../composables/useWeekLogic'
+import { useWeekLogic, ALL_COLUMNS, DAY_LOCATIONS, dateToLocation } from '../composables/useWeekLogic'
 import { useReviews } from '../composables/useReviews'
 import { useMultiSelect } from '../composables/useMultiSelect'
 import { useAuth } from '../composables/useAuth'
@@ -177,10 +177,11 @@ const tasksByLocation = computed(() => {
   return byLocation
 })
 
-// Orphaned tasks: incomplete on a prior day, or in 'later' without a scheduled date
+// Orphaned tasks: incomplete on a prior day, in 'later' without a date, or in 'later' with a date that's already this week or earlier
 const orphanedTasks = computed(() => {
   const todayIndex = DAY_LOCATIONS.indexOf(currentDayLocation.value)
   const priorDays = todayIndex > 0 ? DAY_LOCATIONS.slice(0, todayIndex) : []
+  const today = toLocalDateString()
 
   return tasks.value.filter(t => {
     if (t.completed) return false
@@ -188,16 +189,33 @@ const orphanedTasks = computed(() => {
     if (priorDays.includes(t.location)) return true
     // Case 2: Task in 'later' with no activate_at date (invisible in calendar)
     if (t.location === 'later' && !t.activateAt) return true
+    // Case 3: Task in 'later' but its date resolves to this week or next week (wrong bucket)
+    if (t.location === 'later' && t.activateAt) {
+      const resolved = dateToLocation(t.activateAt)
+      if (resolved && resolved !== 'later') return true
+    }
     return false
   })
 })
 
 const handleFixOrphans = () => {
-  // Move all orphaned tasks to today
-  const ids = orphanedTasks.value.map(t => t.id)
-  if (ids.length > 0) {
-    bulkMoveToLocation(ids, currentDayLocation.value)
-  }
+  orphanedTasks.value.forEach(t => {
+    if (t.location === 'later' && t.activateAt) {
+      // Task has a date — move to the correct column based on its date
+      const resolved = dateToLocation(t.activateAt)
+      if (resolved && resolved !== 'later') {
+        moveTask(t.id, resolved)
+        updateTask(t.id, { activateAt: null })
+      } else {
+        // Date is still far out but somehow orphaned — move to today
+        moveTask(t.id, currentDayLocation.value)
+        updateTask(t.id, { activateAt: null })
+      }
+    } else {
+      // No date or stale day — move to today
+      moveTask(t.id, currentDayLocation.value)
+    }
+  })
 }
 
 // Seed test data via ?seed
@@ -532,7 +550,17 @@ const handleSettingsDeleteWorkstream = (wsName) => {
 
 const handleLaterDateSave = (date) => {
   if (laterPromptTaskId.value) {
-    updateTask(laterPromptTaskId.value, { activateAt: date || getTwoWeeksFromNow() })
+    const effectiveDate = date || getTwoWeeksFromNow()
+    const resolvedLocation = dateToLocation(effectiveDate)
+
+    if (resolvedLocation && resolvedLocation !== 'later') {
+      // Date is this week or next week — move task to the right column
+      moveTask(laterPromptTaskId.value, resolvedLocation)
+      updateTask(laterPromptTaskId.value, { activateAt: null })
+    } else {
+      // Date is further out — keep in later with the scheduled date
+      updateTask(laterPromptTaskId.value, { activateAt: effectiveDate })
+    }
   }
   showLaterPrompt.value = false
   laterPromptTaskId.value = null
@@ -667,10 +695,10 @@ const handleToggleDay = (dayId) => {
     <!-- Orphaned tasks banner -->
     <div v-if="orphanedTasks.length > 0" class="orphan-banner">
       <span class="orphan-text">
-        {{ orphanedTasks.length }} task{{ orphanedTasks.length === 1 ? '' : 's' }} stuck — incomplete from a past day or in Later without a date
+        {{ orphanedTasks.length }} task{{ orphanedTasks.length === 1 ? " isn't" : "s aren't" }} showing — stuck in a past day, in Later without a date, or in Later with a date that's already here
       </span>
       <button class="orphan-fix-btn" @click="handleFixOrphans">
-        Move to Today
+        Fix Now
       </button>
     </div>
 

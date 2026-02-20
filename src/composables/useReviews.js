@@ -5,13 +5,13 @@ import { useAuth } from './useAuth'
 import { useTasks } from './useTasks'
 import { useWeekLogic, LOCATIONS, DAY_LOCATIONS } from './useWeekLogic'
 
-// Get next Monday's week start date (for advancing week early on weekends)
+// Get next Sunday's week start date (for advancing week early on weekends)
 function getNextWeekStart() {
   const d = new Date()
   const day = d.getDay()
-  // Days until next Monday: Sun(0)=1, Sat(6)=2
-  const daysUntilMonday = day === 0 ? 1 : (8 - day)
-  d.setDate(d.getDate() + daysUntilMonday)
+  // Days until next Sunday: Sun(0)=7, Mon(1)=6, ... Sat(6)=1
+  const daysUntilSunday = day === 0 ? 7 : (7 - day)
+  d.setDate(d.getDate() + daysUntilSunday)
   d.setHours(0, 0, 0, 0)
   return toLocalDateString(d)
 }

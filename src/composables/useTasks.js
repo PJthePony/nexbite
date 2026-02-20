@@ -2,7 +2,7 @@ import { ref, computed, watch } from 'vue'
 import { supabase } from '../lib/supabase'
 import { toLocalDateString } from '../lib/dates'
 import { useAuth } from './useAuth'
-import { DAY_LOCATIONS, LOCATIONS } from './useWeekLogic'
+import { DAY_LOCATIONS, LOCATIONS, dateToLocation } from './useWeekLogic'
 
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2)
@@ -294,20 +294,33 @@ export function useTasks() {
     )
     if (toPromote.length === 0) return
 
-    const ids = toPromote.map(t => t.id)
-    // Optimistic update
+    // Group by resolved destination so each task lands in the right column
+    const byDestination = {}
     toPromote.forEach(t => {
-      t.location = 'next-week'
-      t.activateAt = null
+      const destination = dateToLocation(t.activateAt) || 'this-week'
+      // If dateToLocation returns 'later' (date is far future but <= today shouldn't happen),
+      // fall back to this-week
+      const finalDest = destination === 'later' ? 'this-week' : destination
+      if (!byDestination[finalDest]) byDestination[finalDest] = []
+      byDestination[finalDest].push(t)
     })
 
-    const { error } = await supabase
-      .from('tasks')
-      .update({ location: 'next-week', activate_at: null })
-      .in('id', ids)
+    // Optimistic update + batch DB writes per destination
+    for (const [destination, group] of Object.entries(byDestination)) {
+      const ids = group.map(t => t.id)
+      group.forEach(t => {
+        t.location = destination
+        t.activateAt = null
+      })
 
-    if (error) {
-      console.error('Failed to promote scheduled tasks:', error)
+      const { error } = await supabase
+        .from('tasks')
+        .update({ location: destination, activate_at: null })
+        .in('id', ids)
+
+      if (error) {
+        console.error('Failed to promote scheduled tasks:', error)
+      }
     }
   }
 

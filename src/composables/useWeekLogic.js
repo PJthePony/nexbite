@@ -15,24 +15,24 @@ export const LOCATIONS = {
 }
 
 export const DAY_LOCATIONS = [
+  LOCATIONS.SUNDAY,
   LOCATIONS.MONDAY,
   LOCATIONS.TUESDAY,
   LOCATIONS.WEDNESDAY,
   LOCATIONS.THURSDAY,
   LOCATIONS.FRIDAY,
-  LOCATIONS.SATURDAY,
-  LOCATIONS.SUNDAY
+  LOCATIONS.SATURDAY
 ]
 
 export const ALL_COLUMNS = [
   { id: LOCATIONS.THIS_WEEK, label: 'This Week', shortLabel: 'Wk', hideWhenEmpty: true },
+  { id: LOCATIONS.SUNDAY, label: 'Sunday', shortLabel: 'Sun', isDay: true },
   { id: LOCATIONS.MONDAY, label: 'Monday', shortLabel: 'Mon', isDay: true },
   { id: LOCATIONS.TUESDAY, label: 'Tuesday', shortLabel: 'Tue', isDay: true },
   { id: LOCATIONS.WEDNESDAY, label: 'Wednesday', shortLabel: 'Wed', isDay: true },
   { id: LOCATIONS.THURSDAY, label: 'Thursday', shortLabel: 'Thu', isDay: true },
   { id: LOCATIONS.FRIDAY, label: 'Friday', shortLabel: 'Fri', isDay: true },
   { id: LOCATIONS.SATURDAY, label: 'Saturday', shortLabel: 'Sat', isDay: true },
-  { id: LOCATIONS.SUNDAY, label: 'Sunday', shortLabel: 'Sun', isDay: true },
   { id: LOCATIONS.NEXT_WEEK, label: 'Next Week', shortLabel: 'Next' },
   { id: LOCATIONS.LATER, label: 'Later', shortLabel: 'Later' }
 ]
@@ -40,9 +40,8 @@ export const ALL_COLUMNS = [
 // Convert an ISO date string to a location bucket
 function getWeekStartDateStatic(date = new Date()) {
   const d = new Date(date)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  d.setDate(diff)
+  const day = d.getDay() // Sunday = 0
+  d.setDate(d.getDate() - day) // Go back to Sunday
   d.setHours(0, 0, 0, 0)
   return d
 }
@@ -71,8 +70,8 @@ export function dateToLocation(dateString) {
 export function locationToDate(location) {
   const weekStart = getWeekStartDateStatic()
   const dayOffsets = {
-    'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3,
-    'friday': 4, 'saturday': 5, 'sunday': 6,
+    'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
+    'thursday': 4, 'friday': 5, 'saturday': 6,
   }
 
   if (location in dayOffsets) {
@@ -115,7 +114,7 @@ export function useWeekLogic() {
 
   const isWeekend = () => {
     const day = new Date().getDay()
-    return day === 0 || day === 6
+    return day === 6 // Saturday only — Sunday is the start of the new week
   }
 
   const isToday = (location) => {
@@ -124,9 +123,8 @@ export function useWeekLogic() {
 
   const getWeekStartDate = (date = new Date()) => {
     const d = new Date(date)
-    const day = d.getDay()
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1) // Adjust if Sunday
-    d.setDate(diff)
+    const day = d.getDay() // Sunday = 0
+    d.setDate(d.getDate() - day) // Go back to Sunday
     d.setHours(0, 0, 0, 0)
     return d
   }
@@ -159,17 +157,17 @@ export function useWeekLogic() {
     return ALL_COLUMNS.findIndex(col => col.id === location)
   }
 
-  // Get the calendar date for each day column (Mon=0 offset, Tue=1, etc.)
+  // Get the calendar date for each day column (Sun=0 offset, Mon=1, etc.)
   const getColumnDate = (location) => {
-    const weekStart = getWeekStartDate() // Monday
+    const weekStart = getWeekStartDate() // Sunday
     const dayOffsets = {
-      [LOCATIONS.MONDAY]: 0,
-      [LOCATIONS.TUESDAY]: 1,
-      [LOCATIONS.WEDNESDAY]: 2,
-      [LOCATIONS.THURSDAY]: 3,
-      [LOCATIONS.FRIDAY]: 4,
-      [LOCATIONS.SATURDAY]: 5,
-      [LOCATIONS.SUNDAY]: 6,
+      [LOCATIONS.SUNDAY]: 0,
+      [LOCATIONS.MONDAY]: 1,
+      [LOCATIONS.TUESDAY]: 2,
+      [LOCATIONS.WEDNESDAY]: 3,
+      [LOCATIONS.THURSDAY]: 4,
+      [LOCATIONS.FRIDAY]: 5,
+      [LOCATIONS.SATURDAY]: 6,
     }
     const offset = dayOffsets[location]
     if (offset === undefined) return null
