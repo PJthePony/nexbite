@@ -7,7 +7,7 @@ import { useMultiSelect } from '../composables/useMultiSelect'
 import { toLocalDateString } from '../lib/dates'
 import { dateToLocation } from '../composables/useWeekLogic'
 
-const { getWorkstreamColor } = useWorkstreams()
+const { getWorkstreamColor, allWorkstreams } = useWorkstreams()
 const { selectedTaskIds, isSelectMode, toggleSelection, isSelected, startDrag, endDrag, clearSelection } = useMultiSelect()
 
 const props = defineProps({
@@ -92,12 +92,29 @@ const tasksByDate = computed(() => {
     map[todayStr].push(...thisWeekTasks)
   }
 
-  // Add next-week bucket tasks (no specific day) to Monday of next week
+  // Add next-week bucket tasks: place on their activateAt date if set, otherwise Monday
   const nextWeekTasks = (props.tasksByLocation['next-week'] || []).filter(t => !t.completed)
-  if (nextWeekTasks.length > 0) {
-    const mondayStr = nextWeekMondayStr.value
-    if (!map[mondayStr]) map[mondayStr] = []
-    map[mondayStr].push(...nextWeekTasks)
+  const mondayStr = nextWeekMondayStr.value
+  nextWeekTasks.forEach(task => {
+    const dateStr = task.activateAt || mondayStr
+    if (!map[dateStr]) map[dateStr] = []
+    map[dateStr].push(task)
+  })
+
+  // Sort each day's tasks by workstream (grouped)
+  const wsOrder = {}
+  allWorkstreams.value.forEach((ws, i) => {
+    wsOrder[ws.name] = i + 1
+  })
+  for (const date of Object.keys(map)) {
+    map[date].sort((a, b) => {
+      const aOrder = a.workstream ? (wsOrder[a.workstream] ?? 999) : 0
+      const bOrder = b.workstream ? (wsOrder[b.workstream] ?? 999) : 0
+      if (aOrder !== bOrder) return aOrder - bOrder
+      const aSortOrder = a.sortOrder ?? a.createdAt
+      const bSortOrder = b.sortOrder ?? b.createdAt
+      return aSortOrder - bSortOrder
+    })
   }
 
   return map

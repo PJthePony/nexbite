@@ -350,7 +350,12 @@ const handleCalendarAdd = (dateStr) => {
 }
 
 const handleCalendarMoveTask = ({ taskId, newDate }) => {
-  updateTask(taskId, { activateAt: newDate })
+  const resolvedLocation = dateToLocation(newDate)
+  if (resolvedLocation === 'next-week') {
+    updateTask(taskId, { location: 'next-week', activateAt: newDate })
+  } else {
+    updateTask(taskId, { location: 'later', activateAt: newDate })
+  }
 }
 
 const handleCalendarMoveTaskToDay = ({ taskId, location }) => {
