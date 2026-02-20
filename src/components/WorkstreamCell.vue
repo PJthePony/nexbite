@@ -259,7 +259,8 @@ const handleCellClick = (e) => {
 .later-drop-zone {
   position: absolute;
   inset: 0;
-  min-height: 0;
+  min-height: 36px;
+  z-index: 2;
 }
 
 .later-hidden-item {
@@ -272,8 +273,7 @@ const handleCellClick = (e) => {
   justify-content: center;
   gap: 4px;
   padding: 4px 8px;
-  position: relative;
-  z-index: 1;
+  pointer-events: none;
 }
 
 .later-count-number {

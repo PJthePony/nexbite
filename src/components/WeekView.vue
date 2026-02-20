@@ -33,6 +33,18 @@ const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'move', 're
 
 const { isToday, LOCATIONS, getColumnDate } = useWeekLogic()
 
+// Check if a column is a "bucket" (Next Week / Later) vs a day column
+const isBucketColumn = (columnId) => {
+  const col = ALL_COLUMNS.find(c => c.id === columnId)
+  return col && !col.isDay && col.id !== LOCATIONS.THIS_WEEK
+}
+
+// Check if a column is the first bucket column after the day columns
+const isFirstBucket = (columnId) => {
+  const firstBucket = visibleColumns.value.find(c => isBucketColumn(c.id))
+  return firstBucket && firstBucket.id === columnId
+}
+
 const formatColumnDate = (columnId) => {
   const date = getColumnDate(columnId)
   if (!date) return null
@@ -444,7 +456,7 @@ defineExpose({
       v-for="column in visibleColumns"
       :key="'header-' + column.id"
       class="grid-header"
-      :class="{ 'is-today': isActiveColumn(column.id) }"
+      :class="{ 'is-today': isActiveColumn(column.id), 'is-first-bucket': isFirstBucket(column.id) }"
     >
       <span class="column-title">
         {{ column.label }}
@@ -476,7 +488,7 @@ defineExpose({
       :all-tasks="allTasks"
       :is-today="isActiveColumn(column.id)"
       :show-empty-state="isActiveColumn(column.id) && todayHasNoTasks"
-      :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': visibleWorkstreamNames.length === 0 }"
+      :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': visibleWorkstreamNames.length === 0, 'is-first-bucket': isFirstBucket(column.id) }"
       @add="(location, workstream) => emit('add', location, workstream)"
       @toggle="emit('toggle', $event)"
       @edit="emit('edit', $event)"
@@ -519,7 +531,7 @@ defineExpose({
         :location="column.id"
         :all-tasks="allTasks"
         :is-today="isActiveColumn(column.id)"
-        :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': isLastRow(wsName) }"
+        :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': isLastRow(wsName), 'is-first-bucket': isFirstBucket(column.id) }"
         @add="(location, workstream) => emit('add', location, workstream)"
         @toggle="emit('toggle', $event)"
         @edit="emit('edit', $event)"
@@ -644,6 +656,15 @@ defineExpose({
   background: var(--color-today);
   color: var(--color-text);
   font-size: 0.92rem;
+}
+
+/* Separator between day columns and bucket columns (Next Week / Later) */
+.grid-header.is-first-bucket {
+  margin-left: 6px;
+}
+
+.week-grid :deep(.workstream-cell.is-first-bucket) {
+  margin-left: 6px;
 }
 
 .column-title {
