@@ -33,6 +33,15 @@ const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'move', 're
 
 const { isToday, LOCATIONS, getColumnDate } = useWeekLogic()
 
+// Check if a day column is in the past (for drag-drop validation)
+const isPastDay = (columnId) => {
+  const date = getColumnDate(columnId)
+  if (!date) return false
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return date < today
+}
+
 // Check if a column is a "bucket" (Next Week / Later) vs a day column
 const isBucketColumn = (columnId) => {
   const col = ALL_COLUMNS.find(c => c.id === columnId)
@@ -487,6 +496,7 @@ defineExpose({
       :location="column.id"
       :all-tasks="allTasks"
       :is-today="isActiveColumn(column.id)"
+      :is-past-day="isPastDay(column.id)"
       :show-empty-state="isActiveColumn(column.id) && todayHasNoTasks"
       :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': visibleWorkstreamNames.length === 0, 'is-first-bucket': isFirstBucket(column.id) }"
       @add="(location, workstream) => emit('add', location, workstream)"
@@ -531,6 +541,7 @@ defineExpose({
         :location="column.id"
         :all-tasks="allTasks"
         :is-today="isActiveColumn(column.id)"
+        :is-past-day="isPastDay(column.id)"
         :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': isLastRow(wsName), 'is-first-bucket': isFirstBucket(column.id) }"
         @add="(location, workstream) => emit('add', location, workstream)"
         @toggle="emit('toggle', $event)"
@@ -587,6 +598,7 @@ defineExpose({
         :column="column"
         :tasks="tasksByLocation[column.id] || []"
         :is-today="isActiveColumn(column.id)"
+        :is-past-day="isPastDay(column.id)"
         :is-currently-viewed="index === currentColumnIndex"
         :is-mobile="true"
         :workstreams="workstreams"

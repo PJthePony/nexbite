@@ -15,7 +15,7 @@ import CalendarView from '../components/CalendarView.vue'
 import { useTasks } from '../composables/useTasks'
 import { useTags } from '../composables/useTags'
 import { useWorkstreams } from '../composables/useWorkstreams'
-import { useWeekLogic, ALL_COLUMNS, DAY_LOCATIONS, dateToLocation } from '../composables/useWeekLogic'
+import { useWeekLogic, ALL_COLUMNS, DAY_LOCATIONS, dateToLocation, setWeekStartOverride } from '../composables/useWeekLogic'
 import { useReviews } from '../composables/useReviews'
 import { useMultiSelect } from '../composables/useMultiSelect'
 import { useAuth } from '../composables/useAuth'
@@ -46,7 +46,7 @@ const {
 
 const { recentTags, allTags, getTagCounts } = useTags()
 const { allWorkstreams, addWorkstream, updateWorkstream, renameWorkstream, reorderWorkstreams, deleteWorkstream, loadWorkstreams, isLoaded: workstreamsLoaded } = useWorkstreams()
-const { isToday, currentDayLocation, isWeekend } = useWeekLogic()
+const { isToday, currentDayLocation, getCurrentWeekStart } = useWeekLogic()
 const {
   needsWeeklyReview,
   needsDailyReview,
@@ -120,8 +120,20 @@ const dailyRolloverTasks = ref([])
 // Advance week (weekend early planning)
 const isAdvancingWeek = ref(false)
 
-// After advancing week on a weekend, the week hasn't started yet — focus "This Week"
-const weekAdvanced = computed(() => isWeekend() && !canAdvanceWeek.value)
+// Sync the week start override whenever logicalWeekStart changes
+watch(logicalWeekStart, (newVal) => {
+  const calendarWeekStart = getCurrentWeekStart()
+  if (newVal && newVal > calendarWeekStart) {
+    setWeekStartOverride(newVal)
+  } else {
+    setWeekStartOverride(null)
+  }
+}, { immediate: true })
+
+// After advancing week, the calendar week hasn't started yet — focus "This Week"
+const weekAdvanced = computed(() => {
+  return logicalWeekStart.value > getCurrentWeekStart()
+})
 
 // Bite modal
 const showBiteModal = ref(false)
@@ -179,13 +191,14 @@ const tasksByLocation = computed(() => {
 
 // Orphaned tasks: incomplete on a prior day, in 'later' without a date, or in 'later' with a date that's already this week or earlier
 const orphanedTasks = computed(() => {
+  // When week is advanced (planning mode), there are no "past days" to worry about
+  const checkPastDays = !weekAdvanced.value
   const todayIndex = DAY_LOCATIONS.indexOf(currentDayLocation.value)
-  const priorDays = todayIndex > 0 ? DAY_LOCATIONS.slice(0, todayIndex) : []
-  const today = toLocalDateString()
+  const priorDays = (checkPastDays && todayIndex > 0) ? DAY_LOCATIONS.slice(0, todayIndex) : []
 
   return tasks.value.filter(t => {
     if (t.completed) return false
-    // Case 1: Incomplete task assigned to a day before today
+    // Case 1: Incomplete task assigned to a day before today (skip in planning mode)
     if (priorDays.includes(t.location)) return true
     // Case 2: Task in 'later' with no activate_at date (invisible in calendar)
     if (t.location === 'later' && !t.activateAt) return true

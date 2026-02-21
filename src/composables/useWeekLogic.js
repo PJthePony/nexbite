@@ -1,6 +1,14 @@
 import { ref, computed } from 'vue'
 import { toLocalDateString } from '../lib/dates'
 
+// Module-level override: when set, date functions use this as the week start
+// instead of computing from new Date(). Used when the week is advanced early.
+const weekStartOverride = ref(null)
+
+export function setWeekStartOverride(dateStr) {
+  weekStartOverride.value = dateStr || null
+}
+
 export const LOCATIONS = {
   THIS_WEEK: 'this-week',
   MONDAY: 'monday',
@@ -38,8 +46,12 @@ export const ALL_COLUMNS = [
 ]
 
 // Convert an ISO date string to a location bucket
-function getWeekStartDateStatic(date = new Date()) {
-  const d = new Date(date)
+// When called with no argument and weekStartOverride is set, uses the override.
+function getWeekStartDateStatic(date) {
+  if (date === undefined && weekStartOverride.value) {
+    return new Date(weekStartOverride.value + 'T00:00:00')
+  }
+  const d = new Date(date ?? new Date())
   const day = d.getDay() // Sunday = 0
   d.setDate(d.getDate() - day) // Go back to Sunday
   d.setHours(0, 0, 0, 0)
@@ -112,25 +124,30 @@ export function useWeekLogic() {
 
   const currentDayLocation = ref(getCurrentDayLocation())
 
-  const isWeekend = () => {
-    const day = new Date().getDay()
-    return day === 6 // Saturday only — Sunday is the start of the new week
-  }
-
   const isToday = (location) => {
     return location === currentDayLocation.value
   }
 
-  const getWeekStartDate = (date = new Date()) => {
-    const d = new Date(date)
+  // When called with no argument and weekStartOverride is set, uses the override.
+  const getWeekStartDate = (date) => {
+    if (date === undefined && weekStartOverride.value) {
+      return new Date(weekStartOverride.value + 'T00:00:00')
+    }
+    const d = new Date(date ?? new Date())
     const day = d.getDay() // Sunday = 0
     d.setDate(d.getDate() - day) // Go back to Sunday
     d.setHours(0, 0, 0, 0)
     return d
   }
 
+  // Always uses the real calendar date — independent of the override.
+  // Used for isNewWeek() and natural week transitions.
   const getCurrentWeekStart = () => {
-    return toLocalDateString(getWeekStartDate())
+    const d = new Date()
+    const day = d.getDay()
+    d.setDate(d.getDate() - day)
+    d.setHours(0, 0, 0, 0)
+    return toLocalDateString(d)
   }
 
   const isNewWeek = (lastWeekStart) => {
@@ -182,7 +199,6 @@ export function useWeekLogic() {
     ALL_COLUMNS,
     currentDayLocation,
     getCurrentDayLocation,
-    isWeekend,
     isToday,
     getWeekStartDate,
     getCurrentWeekStart,

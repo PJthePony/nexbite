@@ -19,6 +19,10 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  isPastDay: {
+    type: Boolean,
+    default: false
+  },
   hideWhenEmpty: {
     type: Boolean,
     default: false
@@ -117,6 +121,7 @@ const handleAdd = (location, workstream) => {
         :location="column.id"
         :all-tasks="allTasks"
         :is-today="isToday"
+        :is-past-day="isPastDay"
         :is-currently-viewed="isCurrentlyViewed"
         :is-mobile="isMobile"
         @add="handleAdd"

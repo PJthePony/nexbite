@@ -39,6 +39,10 @@ const props = defineProps({
   isMobile: {
     type: Boolean,
     default: false
+  },
+  isPastDay: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -109,6 +113,15 @@ const handleDragChange = (evt) => {
   }
 }
 
+// Prevent incomplete tasks from being dropped into past day columns
+const checkMove = (evt) => {
+  if (props.isPastDay) {
+    const task = evt.draggedContext.element
+    if (task && !task.completed) return false
+  }
+  return true
+}
+
 const rowLabel = computed(() => {
   return props.workstream || 'Tasks'
 })
@@ -144,6 +157,7 @@ const handleAdd = () => {
       drag-class="sortable-drag"
       :force-fallback="true"
       :animation="150"
+      :move="checkMove"
       :delay="isMobile ? 300 : 0"
       :delay-on-touch-only="true"
       @start="handleDragStart"

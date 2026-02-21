@@ -4,6 +4,7 @@ import { toLocalDateString } from '../lib/dates'
 import { useAuth } from './useAuth'
 import { useTasks } from './useTasks'
 import { useWeekLogic, LOCATIONS, DAY_LOCATIONS } from './useWeekLogic'
+import { usePreferences } from './usePreferences'
 
 // Get next Sunday's week start date (for advancing week early on weekends)
 function getNextWeekStart() {
@@ -26,7 +27,8 @@ const reviewLoaded = ref(false)
 export function useReviews() {
   const { user } = useAuth()
   const { tasks, bulkMoveToLocation, bulkDelete } = useTasks()
-  const { getCurrentWeekStart, isNewWeek, isNewDay, isWeekend, currentDayLocation, getPriorDayLocations } = useWeekLogic()
+  const { getCurrentWeekStart, isNewWeek, isNewDay, currentDayLocation, getPriorDayLocations } = useWeekLogic()
+  const { hiddenDays } = usePreferences()
 
   const getUserId = () => user.value?.id
 
@@ -81,12 +83,31 @@ export function useReviews() {
     )
   })
 
-  // Can advance to next week early (weekend only, and haven't already advanced)
+  // Can advance to next week once all visible day columns are in the past
   const canAdvanceWeek = computed(() => {
-    if (!isWeekend()) return false
-    // If lastWeekStart already matches next Sunday, we've already advanced
+    // Already advanced this week? Can't advance again.
     const nextSunday = getNextWeekStart()
-    return reviewState.value.lastWeekStart !== nextSunday
+    if (reviewState.value.lastWeekStart === nextSunday) return false
+
+    // Check: are all visible day columns now in the past?
+    const visibleDays = DAY_LOCATIONS.filter(loc => !hiddenDays.value.includes(loc))
+    if (visibleDays.length === 0) return false
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    // Use the real calendar week start (not the override) to compute each day's date
+    const calendarWeekStart = new Date(getCurrentWeekStart() + 'T00:00:00')
+    const dayOffsets = {
+      'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
+      'thursday': 4, 'friday': 5, 'saturday': 6,
+    }
+
+    return visibleDays.every(loc => {
+      const dayDate = new Date(calendarWeekStart)
+      dayDate.setDate(dayDate.getDate() + dayOffsets[loc])
+      return dayDate < today
+    })
   })
 
   const getRolledOverTasks = () => {
