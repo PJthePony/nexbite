@@ -65,6 +65,7 @@ const {
 const {
   isSelectMode,
   selectedTaskIds,
+  isDraggingSelected,
   clearSelection,
   getSelectedIds,
   setupListeners,
@@ -420,6 +421,9 @@ const handleMoveTask = (taskId, newLocation) => {
 }
 
 const handleReorder = (location, orderedTaskIds, workstream) => {
+  // Skip normal reorder during multi-select drags — handleMultiDrop handles everything
+  if (isDraggingSelected.value) return
+
   reorderTasks(location, orderedTaskIds, workstream)
 
   // When tasks are dropped into Later, auto-set activateAt and show date prompt
@@ -450,6 +454,11 @@ const handleMultiDrop = (location, workstream, draggedTaskId) => {
   const selectedIds = getSelectedIds()
   if (!selectedIds.includes(draggedTaskId)) return
 
+  // Move the dragged task (vuedraggable moved it in the DOM, but we skipped
+  // handleReorder so its location/workstream hasn't been persisted yet)
+  moveTask(draggedTaskId, location)
+  updateTask(draggedTaskId, { workstream: workstream })
+
   // Get other selected tasks sorted by their current sortOrder (preserves relative order)
   const otherSelectedIds = selectedIds.filter(id => id !== draggedTaskId)
   const otherTasks = otherSelectedIds
@@ -476,9 +485,11 @@ const handleMultiDrop = (location, workstream, draggedTaskId) => {
   const insertAt = draggedIndex !== -1 ? draggedIndex + 1 : cellTasks.length
   cellTasks.splice(insertAt, 0, ...otherTasks)
 
-  // Re-index sort orders
+  // Re-index sort orders and persist to DB
   cellTasks.forEach((t, i) => {
-    t.sortOrder = i
+    if (t.sortOrder !== i) {
+      updateTask(t.id, { sortOrder: i })
+    }
   })
 
   // Auto-set activateAt for multi-dropped tasks going to Later
