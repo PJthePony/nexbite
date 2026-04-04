@@ -232,62 +232,71 @@ const isDayVisible = (dayId) => {
 
 // API guides
 const claudeGuide = computed(() =>
-`When the user asks you to create a task, make an HTTP POST request:
+`Option 1: MCP Server (recommended for Claude Code)
 
-POST ${apiEndpoint.value}
-Authorization: Bearer YOUR_API_KEY
-Content-Type: application/json
+Install the Tessio MCP server for full task management:
 
-{"title": "Task name", "notes": "Optional details", "location": "today"}
+1. Copy the tessio-mcp folder to your machine
+2. Run: npm install (in the tessio-mcp directory)
+3. Add to ~/.claude/.mcp.json:
+{
+  "mcpServers": {
+    "tessio": {
+      "command": "node",
+      "args": ["/path/to/tessio-mcp/index.js"],
+      "env": { "TESSIO_API_KEY": "YOUR_API_KEY" }
+    }
+  }
+}
+4. Restart Claude Code
 
-When the user asks to see their tasks, make an HTTP GET request:
+This gives Claude tools to list, create, update, complete, move, and delete tasks.
 
-GET ${apiEndpoint.value}
-Authorization: Bearer YOUR_API_KEY
+Option 2: API Instructions (for claude.ai or custom prompts)
 
-Optional query params: ?location=today&completed=false
-
-Valid locations: today, this-week, monday, tuesday, wednesday, thursday, friday, saturday, sunday, next-week, later`)
-
-const chatgptGuide = computed(() =>
-`When I ask you to create a task, make an HTTP POST request to my task manager API:
-
-POST ${apiEndpoint.value}
-Authorization: Bearer YOUR_API_KEY
-Content-Type: application/json
-
-Body: {"title": "Task name", "notes": "Optional details", "location": "today"}
-
-When I ask to see my tasks, make an HTTP GET request:
-
-GET ${apiEndpoint.value}
+API endpoint: ${apiEndpoint.value}
 Authorization: Bearer YOUR_API_KEY
 
-Optional query params: ?location=today&completed=false
+List tasks:     GET  ?location=today&completed=false&workstream=X&tag=X
+Get one task:   GET  ?id=TASK_ID
+Get workstreams: GET ?resource=workstreams
+Create task:    POST {"title": "...", "location": "today", "tags": [...]}
+Update task:    PATCH {"id": "...", "completed": true, "workstream": "..."}
+Delete task:    DELETE ?id=TASK_ID
 
-Valid locations: today, this-week, monday-sunday, next-week, later
-"today" maps to the current day of the week.`)
+Valid locations: today, this-week, monday-sunday, next-week, later`)
 
 const siriGuide = computed(() =>
-`1. Open the Shortcuts app on your iPhone/iPad/Mac
+`Create a Task with Siri:
+
+1. Open the Shortcuts app on your iPhone, iPad, or Mac
 2. Tap "+" to create a new shortcut
-3. Add an "Ask for Input" action (type: Text, prompt: "What's the task?")
-4. Add a "Get Contents of URL" action:
+3. Add "Ask for Input" (type: Text, prompt: "What's the task?")
+4. Add "Get Contents of URL":
    - URL: ${apiEndpoint.value}
    - Method: POST
-   - Headers: Authorization = Bearer YOUR_API_KEY
-   - Headers: Content-Type = application/json
+   - Headers:
+     Authorization = Bearer YOUR_API_KEY
+     Content-Type = application/json
    - Request Body (JSON):
      title = Provided Input
      location = today
-5. Name the shortcut "Add Task" and tap Done
+5. Name it "Add Task" and tap Done
 6. Say "Hey Siri, Add Task" to use it!
 
-To read tasks, create a second shortcut:
-1. Add "Get Contents of URL" with method GET
-2. URL: ${apiEndpoint.value}?location=today&completed=false
-3. Headers: Authorization = Bearer YOUR_API_KEY
-4. Add "Show Result" action to display the response`)
+Read Today's Tasks with Siri:
+
+1. Create a new shortcut
+2. Add "Get Contents of URL":
+   - URL: ${apiEndpoint.value}?location=today&completed=false
+   - Method: GET
+   - Headers: Authorization = Bearer YOUR_API_KEY
+3. Add "Get Dictionary Value" for key "tasks"
+4. Add "Repeat with Each":
+   - Get Dictionary Value for key "title"
+   - Add to a Text variable
+5. Add "Show Result" to display the task list
+6. Name it "My Tasks" — say "Hey Siri, My Tasks"`)
 
 const activeTab = ref('claude')
 </script>
@@ -563,7 +572,7 @@ const activeTab = ref('claude')
         <section v-if="activeSection === 'api'" class="settings-section">
           <h3 class="section-title">AI Assistant API Key</h3>
           <p class="section-desc">
-            Generate an API key to let Claude, ChatGPT, or Siri create and read tasks on your behalf.
+            Generate an API key to let Claude or Siri create and manage tasks on your behalf.
           </p>
 
           <!-- Newly generated key (shown once) -->
@@ -623,11 +632,6 @@ const activeTab = ref('claude')
               >Claude</button>
               <button
                 class="guide-tab"
-                :class="{ active: activeTab === 'chatgpt' }"
-                @click="activeTab = 'chatgpt'"
-              >ChatGPT</button>
-              <button
-                class="guide-tab"
                 :class="{ active: activeTab === 'siri' }"
                 @click="activeTab = 'siri'"
               >Siri</button>
@@ -639,16 +643,6 @@ const activeTab = ref('claude')
                 <div class="guide-code-wrapper">
                   <pre class="guide-code">{{ claudeGuide }}</pre>
                   <button class="copy-btn copy-btn-sm" @click="copyToClipboard(claudeGuide)">
-                    {{ copied ? 'Copied!' : 'Copy' }}
-                  </button>
-                </div>
-              </div>
-
-              <div v-if="activeTab === 'chatgpt'" class="guide-panel">
-                <p class="guide-intro">Add this to ChatGPT's custom instructions (Settings &rarr; Personalization &rarr; Custom instructions):</p>
-                <div class="guide-code-wrapper">
-                  <pre class="guide-code">{{ chatgptGuide }}</pre>
-                  <button class="copy-btn copy-btn-sm" @click="copyToClipboard(chatgptGuide)">
                     {{ copied ? 'Copied!' : 'Copy' }}
                   </button>
                 </div>

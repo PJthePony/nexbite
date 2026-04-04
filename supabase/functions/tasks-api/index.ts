@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
 };
 
 const VALID_LOCATIONS = [
@@ -115,19 +115,57 @@ async function authenticate(
   return { userId: keyRow.user_id, isServiceCall: false };
 }
 
-// GET — list tasks with optional filters
+// GET — list tasks with optional filters, single task by ID, or workstreams
 async function handleGetTasks(
   req: Request,
   userId: string,
   supabase: ReturnType<typeof createClient>
 ) {
   const url = new URL(req.url);
+
+  // GET ?resource=workstreams — list user's workstreams
+  const resource = url.searchParams.get("resource");
+  if (resource === "workstreams") {
+    const { data, error } = await supabase
+      .from("workstreams")
+      .select("name, color_bg, color_text, sort_order")
+      .eq("user_id", userId)
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      console.error("Failed to fetch workstreams:", error);
+      return jsonResponse({ error: "Failed to fetch workstreams" }, 500);
+    }
+    return jsonResponse({ workstreams: data || [] }, 200);
+  }
+
+  const selectFields = "id, title, notes, completed, location, workstream, tags, created_at, completed_at, activate_at, parent_task_id, sort_order";
+
+  // GET ?id=xxx — single task
+  const taskId = url.searchParams.get("id");
+  if (taskId) {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select(selectFields)
+      .eq("id", taskId)
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !data) {
+      return jsonResponse({ error: "Task not found" }, 404);
+    }
+    return jsonResponse({ task: data }, 200);
+  }
+
+  // List tasks with filters
   const location = url.searchParams.get("location");
   const completed = url.searchParams.get("completed");
+  const workstream = url.searchParams.get("workstream");
+  const tag = url.searchParams.get("tag");
 
   let query = supabase
     .from("tasks")
-    .select("id, title, notes, completed, location, workstream, tags, created_at, completed_at, sort_order")
+    .select(selectFields)
     .eq("user_id", userId)
     .order("sort_order", { ascending: true });
 
@@ -148,6 +186,14 @@ async function handleGetTasks(
     query = query.eq("completed", true);
   } else if (completed === "false") {
     query = query.eq("completed", false);
+  }
+
+  if (workstream) {
+    query = query.eq("workstream", workstream);
+  }
+
+  if (tag) {
+    query = query.filter("tags", "cs", JSON.stringify([tag]));
   }
 
   const { data, error } = await query;
@@ -252,6 +298,9 @@ interface PatchBody {
   notes?: string;
   tags?: string[];
   activate_at?: string | null;
+  completed?: boolean;
+  workstream?: string | null;
+  sort_order?: number;
   target_user_id?: string;
 }
 
@@ -304,6 +353,12 @@ async function handleUpdateTask(
       : [];
   }
   if ("activate_at" in body) updates.activate_at = body.activate_at;
+  if (typeof body.completed === "boolean") {
+    updates.completed = body.completed;
+    updates.completed_at = body.completed ? Date.now() : null;
+  }
+  if ("workstream" in body) updates.workstream = body.workstream;
+  if (typeof body.sort_order === "number") updates.sort_order = body.sort_order;
 
   if (Object.keys(updates).length === 0) {
     return jsonResponse({ error: "No fields to update" }, 400);
@@ -323,12 +378,51 @@ async function handleUpdateTask(
   return jsonResponse({ ok: true, id: taskId, updates }, 200);
 }
 
+// DELETE — remove a task
+async function handleDeleteTask(
+  req: Request,
+  userId: string,
+  supabase: ReturnType<typeof createClient>
+) {
+  const url = new URL(req.url);
+  const taskId = url.searchParams.get("id");
+
+  if (!taskId) {
+    return jsonResponse({ error: '"id" query parameter is required' }, 400);
+  }
+
+  // Verify task belongs to user
+  const { data: existing, error: fetchError } = await supabase
+    .from("tasks")
+    .select("id")
+    .eq("id", taskId)
+    .eq("user_id", userId)
+    .single();
+
+  if (fetchError || !existing) {
+    return jsonResponse({ error: "Task not found" }, 404);
+  }
+
+  const { error: deleteError } = await supabase
+    .from("tasks")
+    .delete()
+    .eq("id", taskId)
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    console.error("Failed to delete task:", deleteError);
+    return jsonResponse({ error: "Failed to delete task" }, 500);
+  }
+
+  return jsonResponse({ ok: true, id: taskId }, 200);
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  const allowedMethods = ["GET", "POST", "PATCH"];
+  const allowedMethods = ["GET", "POST", "PATCH", "DELETE"];
   if (!allowedMethods.includes(req.method)) {
     return jsonResponse({ error: `Method not allowed. Use ${allowedMethods.join(", ")}.` }, 405);
   }
@@ -353,6 +447,13 @@ Deno.serve(async (req: Request) => {
         return jsonResponse({ error: "Service keys only support POST" }, 405);
       }
       return await handleGetTasks(req, authResult.userId, supabase);
+    }
+
+    if (req.method === "DELETE") {
+      if (authResult.isServiceCall) {
+        return jsonResponse({ error: "Service keys do not support DELETE" }, 405);
+      }
+      return await handleDeleteTask(req, authResult.userId, supabase);
     }
 
     // POST/PATCH — parse body once
