@@ -234,7 +234,7 @@ const isDayVisible = (dayId) => {
 const mcpServerUrl = 'https://raw.githubusercontent.com/PJthePony/nexbite/main/mcp/index.js'
 
 const claudeSteps = computed(() => {
-  const keyDisplay = newlyGeneratedKey.value || 'YOUR_API_KEY'
+  const keyDisplay = newlyGeneratedKey.value || keyMeta.value?.raw || 'YOUR_API_KEY'
   return [
     { label: 'Create the directory', cmd: 'mkdir -p ~/tessio-mcp' },
     { label: 'Download the MCP server', cmd: `curl -o ~/tessio-mcp/index.js "${mcpServerUrl}"` },
@@ -553,25 +553,17 @@ const activeTab = ref('claude')
             Generate an API key to let Claude or Siri create and manage tasks on your behalf.
           </p>
 
-          <!-- Newly generated key (shown once) -->
-          <div v-if="newlyGeneratedKey" class="key-reveal">
-            <div class="key-reveal-warning">
-              Copy this key now — it won't be shown again.
-            </div>
+          <!-- Key display -->
+          <div v-if="hasKey || newlyGeneratedKey" class="key-info">
             <div class="key-display">
-              <code class="key-value">{{ newlyGeneratedKey }}</code>
-              <button class="copy-btn" @click="copyToClipboard(newlyGeneratedKey, 'key')">
+              <code class="key-value">{{ newlyGeneratedKey || keyMeta?.raw || keyMeta?.prefix }}</code>
+              <button class="copy-btn" @click="copyToClipboard(newlyGeneratedKey || keyMeta?.raw || keyMeta?.prefix, 'key')">
                 {{ copied === 'key' ? 'Copied!' : 'Copy' }}
               </button>
             </div>
-          </div>
-
-          <!-- Existing key info -->
-          <div v-else-if="hasKey" class="key-info">
             <div class="key-meta">
-              <span class="key-prefix">{{ keyMeta.prefix }}</span>
-              <span class="key-date">Created {{ formatDate(keyMeta.createdAt) }}</span>
-              <span class="key-date" v-if="keyMeta.lastUsedAt">Last used {{ formatDate(keyMeta.lastUsedAt) }}</span>
+              <span class="key-date">Created {{ formatDate(keyMeta?.createdAt) }}</span>
+              <span class="key-date" v-if="keyMeta?.lastUsedAt">Last used {{ formatDate(keyMeta.lastUsedAt) }}</span>
             </div>
             <div class="key-actions">
               <button

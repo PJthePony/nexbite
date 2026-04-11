@@ -29,7 +29,7 @@ export function useApiKey() {
   const loadKey = async () => {
     const { data, error } = await supabase
       .from('api_keys')
-      .select('key_prefix, created_at, last_used_at')
+      .select('key_prefix, key_raw, created_at, last_used_at')
       .single()
 
     if (error || !data) {
@@ -37,6 +37,7 @@ export function useApiKey() {
     } else {
       keyMeta.value = {
         prefix: data.key_prefix,
+        raw: data.key_raw,
         createdAt: data.created_at,
         lastUsedAt: data.last_used_at
       }
@@ -59,7 +60,8 @@ export function useApiKey() {
     const { error } = await supabase.from('api_keys').insert({
       user_id: userId,
       key_hash: hash,
-      key_prefix: prefix
+      key_prefix: prefix,
+      key_raw: rawKey
     })
 
     if (error) {
