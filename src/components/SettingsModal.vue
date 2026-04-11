@@ -45,7 +45,7 @@ const { keyMeta, hasKey, loadKey, generateKey, revokeKey } = useApiKey()
 
 const activeSection = ref('days')
 const newlyGeneratedKey = ref(null)
-const copied = ref(false)
+const copied = ref('')
 const isGenerating = ref(false)
 const isRevoking = ref(false)
 const showRevokeConfirm = ref(false)
@@ -116,10 +116,10 @@ const handleRevoke = async () => {
   isRevoking.value = false
 }
 
-const copyToClipboard = async (text) => {
+const copyToClipboard = async (text, id = 'default') => {
   await navigator.clipboard.writeText(text)
-  copied.value = true
-  setTimeout(() => { copied.value = false }, 2000)
+  copied.value = id
+  setTimeout(() => { if (copied.value === id) copied.value = '' }, 2000)
 }
 
 const handleOverlayClick = (e) => {
@@ -230,41 +230,19 @@ const isDayVisible = (dayId) => {
   return !props.hiddenDays.includes(dayId)
 }
 
-// API guides
-const claudeGuide = computed(() =>
-`Option 1: MCP Server (recommended for Claude Code)
+// API guides — Claude MCP setup steps
+const mcpServerUrl = 'https://raw.githubusercontent.com/PJthePony/nexbite/main/mcp/index.js'
 
-Install the Tessio MCP server for full task management:
-
-1. Copy the tessio-mcp folder to your machine
-2. Run: npm install (in the tessio-mcp directory)
-3. Add to ~/.claude/.mcp.json:
-{
-  "mcpServers": {
-    "tessio": {
-      "command": "node",
-      "args": ["/path/to/tessio-mcp/index.js"],
-      "env": { "TESSIO_API_KEY": "YOUR_API_KEY" }
-    }
-  }
-}
-4. Restart Claude Code
-
-This gives Claude tools to list, create, update, complete, move, and delete tasks.
-
-Option 2: API Instructions (for claude.ai or custom prompts)
-
-API endpoint: ${apiEndpoint.value}
-Authorization: Bearer YOUR_API_KEY
-
-List tasks:     GET  ?location=today&completed=false&workstream=X&tag=X
-Get one task:   GET  ?id=TASK_ID
-Get workstreams: GET ?resource=workstreams
-Create task:    POST {"title": "...", "location": "today", "tags": [...]}
-Update task:    PATCH {"id": "...", "completed": true, "workstream": "..."}
-Delete task:    DELETE ?id=TASK_ID
-
-Valid locations: today, this-week, monday-sunday, next-week, later`)
+const claudeSteps = computed(() => {
+  const keyDisplay = newlyGeneratedKey.value || 'YOUR_API_KEY'
+  return [
+    { label: 'Create the directory', cmd: 'mkdir -p ~/tessio-mcp' },
+    { label: 'Download the MCP server', cmd: `curl -o ~/tessio-mcp/index.js "${mcpServerUrl}"` },
+    { label: 'Initialize and install dependencies', cmd: 'cd ~/tessio-mcp && npm init -y && npm pkg set type=module && npm install @modelcontextprotocol/sdk' },
+    { label: 'Configure Claude Code to use it', cmd: 'mkdir -p ~/.claude && echo \'{"mcpServers":{"tessio":{"command":"node","args":["\'$HOME\'/tessio-mcp/index.js"],"env":{"TESSIO_API_KEY":"' + keyDisplay + '"}}}}\' > ~/.claude/.mcp.json' },
+    { label: 'Restart Claude Code to connect', cmd: null },
+  ]
+})
 
 const siriGuide = computed(() =>
 `Create a Task with Siri:
@@ -582,8 +560,8 @@ const activeTab = ref('claude')
             </div>
             <div class="key-display">
               <code class="key-value">{{ newlyGeneratedKey }}</code>
-              <button class="copy-btn" @click="copyToClipboard(newlyGeneratedKey)">
-                {{ copied ? 'Copied!' : 'Copy' }}
+              <button class="copy-btn" @click="copyToClipboard(newlyGeneratedKey, 'key')">
+                {{ copied === 'key' ? 'Copied!' : 'Copy' }}
               </button>
             </div>
           </div>
@@ -639,21 +617,32 @@ const activeTab = ref('claude')
 
             <div class="guide-content">
               <div v-if="activeTab === 'claude'" class="guide-panel">
-                <p class="guide-intro">Add this to Claude's custom instructions or system prompt:</p>
-                <div class="guide-code-wrapper">
-                  <pre class="guide-code">{{ claudeGuide }}</pre>
-                  <button class="copy-btn copy-btn-sm" @click="copyToClipboard(claudeGuide)">
-                    {{ copied ? 'Copied!' : 'Copy' }}
-                  </button>
+                <p class="guide-intro">Connect Claude Code to Tessio via MCP. Run these commands in your terminal:</p>
+                <div
+                  v-for="(step, i) in claudeSteps"
+                  :key="i"
+                  class="claude-step"
+                >
+                  <div class="step-label">{{ i + 1 }}. {{ step.label }}</div>
+                  <div v-if="step.cmd" class="step-cmd-wrapper">
+                    <code class="step-cmd">{{ step.cmd }}</code>
+                    <button
+                      class="copy-btn copy-btn-inline"
+                      @click="copyToClipboard(step.cmd, 'step-' + i)"
+                    >{{ copied === ('step-' + i) ? 'Copied!' : 'Copy' }}</button>
+                  </div>
                 </div>
+                <p class="guide-note" style="margin-top: 14px;">
+                  Claude will now have tools to list, create, update, complete, move, and delete your tasks.
+                </p>
               </div>
 
               <div v-if="activeTab === 'siri'" class="guide-panel">
                 <p class="guide-intro">Create an Apple Shortcut to use with Siri:</p>
                 <div class="guide-code-wrapper">
                   <pre class="guide-code">{{ siriGuide }}</pre>
-                  <button class="copy-btn copy-btn-sm" @click="copyToClipboard(siriGuide)">
-                    {{ copied ? 'Copied!' : 'Copy' }}
+                  <button class="copy-btn copy-btn-sm" @click="copyToClipboard(siriGuide, 'siri')">
+                    {{ copied === 'siri' ? 'Copied!' : 'Copy' }}
                   </button>
                 </div>
               </div>
@@ -1195,6 +1184,55 @@ const activeTab = ref('claude')
   background: var(--color-bg);
   padding: 1px 5px;
   border-radius: var(--radius-sm);
+}
+
+.claude-step {
+  margin-bottom: 12px;
+}
+
+.step-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.step-cmd-wrapper {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.step-cmd {
+  flex: 1;
+  background: var(--color-bg);
+  padding: 8px 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.73rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: auto;
+}
+
+.copy-btn-inline {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 8px 14px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.copy-btn-inline:hover {
+  background: var(--color-primary-hover);
 }
 
 /* Mobile */
