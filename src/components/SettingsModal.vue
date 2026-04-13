@@ -231,25 +231,11 @@ const isDayVisible = (dayId) => {
 }
 
 // API guides — Claude MCP setup
-const mcpServerUrl = 'https://raw.githubusercontent.com/PJthePony/nexbite/main/mcp/index.js'
 const remoteMcpUrl = 'https://jlkognkltdkzerzpcqpu.supabase.co/functions/v1/tessio-mcp'
 
-const claudeCodeSteps = computed(() => {
+const claudeConnectorInfo = computed(() => {
   const keyDisplay = newlyGeneratedKey.value || keyMeta.value?.raw || 'YOUR_API_KEY'
-  return [
-    { label: 'Create the directory', cmd: 'mkdir -p ~/tessio-mcp' },
-    { label: 'Download the MCP server', cmd: `curl -o ~/tessio-mcp/index.js "${mcpServerUrl}"` },
-    { label: 'Initialize and install dependencies', cmd: 'cd ~/tessio-mcp && npm init -y && npm pkg set type=module && npm install @modelcontextprotocol/sdk' },
-    { label: 'Configure Claude Code to use it', cmd: 'mkdir -p ~/.claude && echo \'{"mcpServers":{"tessio":{"command":"node","args":["\'$HOME\'/tessio-mcp/index.js"],"env":{"TESSIO_API_KEY":"' + keyDisplay + '"}}}}\' > ~/.claude/.mcp.json' },
-    { label: 'Restart Claude Code to connect', cmd: null },
-  ]
-})
-
-const claudeMethod = ref('code')
-
-const remoteMcpInfo = computed(() => {
-  const keyDisplay = newlyGeneratedKey.value || keyMeta.value?.raw || 'YOUR_API_KEY'
-  return { url: remoteMcpUrl, key: keyDisplay }
+  return { url: remoteMcpUrl, clientId: 'tessio', clientSecret: keyDisplay }
 })
 
 const siriGuide = computed(() =>
@@ -617,71 +603,47 @@ const activeTab = ref('claude')
 
             <div class="guide-content">
               <div v-if="activeTab === 'claude'" class="guide-panel">
-                <div class="method-toggle">
-                  <button
-                    class="method-btn"
-                    :class="{ active: claudeMethod === 'code' }"
-                    @click="claudeMethod = 'code'"
-                  >Claude Code (CLI)</button>
-                  <button
-                    class="method-btn"
-                    :class="{ active: claudeMethod === 'desktop' }"
-                    @click="claudeMethod = 'desktop'"
-                  >Desktop / Co-Work</button>
-                </div>
+                <p class="guide-intro">Connect Claude to Tessio so it can manage your tasks. Works with the Claude desktop app and Co-Work.</p>
 
-                <!-- Claude Code: local stdio MCP -->
-                <div v-if="claudeMethod === 'code'">
-                  <p class="guide-intro">Connect Claude Code to Tessio via a local MCP server. Run these commands in your terminal:</p>
-                  <div
-                    v-for="(step, i) in claudeCodeSteps"
-                    :key="i"
-                    class="claude-step"
-                  >
-                    <div class="step-label">{{ i + 1 }}. {{ step.label }}</div>
-                    <div v-if="step.cmd" class="step-cmd-wrapper">
-                      <code class="step-cmd">{{ step.cmd }}</code>
-                      <button
-                        class="copy-btn copy-btn-inline"
-                        @click="copyToClipboard(step.cmd, 'step-' + i)"
-                      >{{ copied === ('step-' + i) ? 'Copied!' : 'Copy' }}</button>
-                    </div>
+                <div class="claude-step">
+                  <div class="step-label">1. In Claude, go to Settings → Integrations → Add custom connector</div>
+                </div>
+                <div class="claude-step">
+                  <div class="step-label">2. Server URL</div>
+                  <div class="step-cmd-wrapper">
+                    <code class="step-cmd">{{ claudeConnectorInfo.url }}</code>
+                    <button
+                      class="copy-btn copy-btn-inline"
+                      @click="copyToClipboard(claudeConnectorInfo.url, 'mcp-url')"
+                    >{{ copied === 'mcp-url' ? 'Copied!' : 'Copy' }}</button>
                   </div>
                 </div>
-
-                <!-- Desktop / Co-Work: remote HTTP MCP -->
-                <div v-if="claudeMethod === 'desktop'">
-                  <p class="guide-intro">Connect the Claude desktop app or Co-Work to Tessio via a remote MCP server.</p>
-                  <div class="claude-step">
-                    <div class="step-label">1. Open Settings → Connectors → Add Custom Connector</div>
+                <div class="claude-step">
+                  <div class="step-label">3. OAuth Client ID</div>
+                  <div class="step-cmd-wrapper">
+                    <code class="step-cmd">{{ claudeConnectorInfo.clientId }}</code>
+                    <button
+                      class="copy-btn copy-btn-inline"
+                      @click="copyToClipboard(claudeConnectorInfo.clientId, 'mcp-client-id')"
+                    >{{ copied === 'mcp-client-id' ? 'Copied!' : 'Copy' }}</button>
                   </div>
-                  <div class="claude-step">
-                    <div class="step-label">2. Server URL</div>
-                    <div class="step-cmd-wrapper">
-                      <code class="step-cmd">{{ remoteMcpInfo.url }}</code>
-                      <button
-                        class="copy-btn copy-btn-inline"
-                        @click="copyToClipboard(remoteMcpInfo.url, 'remote-url')"
-                      >{{ copied === 'remote-url' ? 'Copied!' : 'Copy' }}</button>
-                    </div>
+                </div>
+                <div class="claude-step">
+                  <div class="step-label">4. OAuth Client Secret</div>
+                  <div class="step-cmd-wrapper">
+                    <code class="step-cmd">{{ claudeConnectorInfo.clientSecret }}</code>
+                    <button
+                      class="copy-btn copy-btn-inline"
+                      @click="copyToClipboard(claudeConnectorInfo.clientSecret, 'mcp-secret')"
+                    >{{ copied === 'mcp-secret' ? 'Copied!' : 'Copy' }}</button>
                   </div>
-                  <div class="claude-step">
-                    <div class="step-label">3. Authentication — Bearer Token</div>
-                    <div class="step-cmd-wrapper">
-                      <code class="step-cmd">{{ remoteMcpInfo.key }}</code>
-                      <button
-                        class="copy-btn copy-btn-inline"
-                        @click="copyToClipboard(remoteMcpInfo.key, 'remote-key')"
-                      >{{ copied === 'remote-key' ? 'Copied!' : 'Copy' }}</button>
-                    </div>
-                  </div>
-                  <div class="claude-step">
-                    <div class="step-label">4. Save and connect</div>
-                  </div>
+                </div>
+                <div class="claude-step">
+                  <div class="step-label">5. Save and connect</div>
                 </div>
 
                 <p class="guide-note" style="margin-top: 14px;">
-                  Claude will have tools to list, create, update, complete, move, and delete your tasks.
+                  Once connected, Claude will have tools to list, create, update, complete, move, and delete your tasks.
                 </p>
               </div>
 
@@ -1232,40 +1194,6 @@ const activeTab = ref('claude')
   background: var(--color-bg);
   padding: 1px 5px;
   border-radius: var(--radius-sm);
-}
-
-.method-toggle {
-  display: flex;
-  gap: 0;
-  margin-bottom: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.method-btn {
-  flex: 1;
-  padding: 7px 12px;
-  font-size: 0.78rem;
-  font-weight: 500;
-  background: var(--color-bg);
-  color: var(--color-text-secondary);
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.method-btn + .method-btn {
-  border-left: 1px solid var(--color-border);
-}
-
-.method-btn.active {
-  background: var(--color-primary);
-  color: #fff;
-}
-
-.method-btn:hover:not(.active) {
-  background: var(--color-bg-hover);
 }
 
 .claude-step {
