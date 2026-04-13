@@ -157,6 +157,24 @@ Deno.serve(async (req: Request) => {
             (t.location === "next-week" || t.location === "this-week")
         );
 
+        // Build 12-week historical completions data
+        const weeklyHistory: { weekLabel: string; count: number }[] = [];
+        const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+        for (let i = 11; i >= 0; i--) {
+          const weekStart = Date.now() - (i + 1) * oneWeekMs;
+          const weekEnd = Date.now() - i * oneWeekMs;
+          const count = tasks.filter(
+            (t) =>
+              t.completed &&
+              t.completed_at &&
+              t.completed_at >= weekStart &&
+              t.completed_at < weekEnd
+          ).length;
+          const d = new Date(weekEnd);
+          const weekLabel = `${d.getMonth() + 1}/${d.getDate()}`;
+          weeklyHistory.push({ weekLabel, count });
+        }
+
         if (completedThisWeek.length === 0) {
           console.log(`User ${userId} has 0 completions, skipping`);
           usersSkippedNoCompletions++;
@@ -313,6 +331,7 @@ Note: "bites" are smaller sub-tasks broken off from larger tasks. When bites of 
           upcomingByWorkstream,
           biteMap,
           allTasks: tasks,
+          weeklyHistory,
         });
 
         // Send via Mailgun
@@ -434,6 +453,7 @@ function buildEmailHtml(data: {
   upcomingByWorkstream: Record<string, Task[]>;
   biteMap: Record<string, string[]>;
   allTasks: Task[];
+  weeklyHistory: { weekLabel: string; count: number }[];
 }) {
   const {
     aiSummary,
@@ -445,10 +465,14 @@ function buildEmailHtml(data: {
     byWorkstream,
     upcomingByWorkstream,
     allTasks,
+    weeklyHistory,
   } = data;
 
   const deltaLabel = delta > 0 ? `+${delta}` : `${delta}`;
-  const deltaColor = delta > 0 ? "#1a5f4a" : delta < 0 ? "#c0392b" : "#888";
+  const deltaColor = delta > 0 ? "#059669" : delta < 0 ? "#ef4444" : "#94a3b8";
+
+  // Build SVG bar chart for 12-week history
+  const chartSvg = buildWeeklyChartSvg(weeklyHistory);
 
   const completedSections = Object.entries(byWorkstream)
     .map(([ws, wsTasks]) => {
@@ -466,7 +490,7 @@ function buildEmailHtml(data: {
 
       return `
         <div style="margin-bottom:20px;">
-          <h3 style="margin:0 0 8px 0;font-size:15px;color:#1a5f4a;border-bottom:2px solid #e8f4ef;padding-bottom:4px;">${escapeHtml(ws)} <span style="color:#888;font-weight:400;font-size:13px;">(${wsTasks.length})</span></h3>
+          <h3 style="margin:0 0 8px 0;font-size:15px;color:#475569;border-bottom:2px solid #e2e8f0;padding-bottom:4px;">${escapeHtml(ws)} <span style="color:#94a3b8;font-weight:400;font-size:13px;">(${wsTasks.length})</span></h3>
           <ul style="margin:0;padding-left:20px;list-style:none;">${taskItems}</ul>
         </div>`;
     })
@@ -483,7 +507,7 @@ function buildEmailHtml(data: {
 
       return `
         <div style="margin-bottom:16px;">
-          <h3 style="margin:0 0 8px 0;font-size:15px;color:#1565c0;border-bottom:2px solid #e3f2fd;padding-bottom:4px;">${escapeHtml(ws)}</h3>
+          <h3 style="margin:0 0 8px 0;font-size:15px;color:#f97316;border-bottom:2px solid #fed7aa;padding-bottom:4px;">${escapeHtml(ws)}</h3>
           <ul style="margin:0;padding-left:20px;list-style:none;">${taskItems}</ul>
         </div>`;
     })
@@ -492,7 +516,7 @@ function buildEmailHtml(data: {
   // Convert markdown-style **bold** to HTML <strong> tags in AI summary
   const formattedSummary = escapeHtml(aiSummary)
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\n\n/g, "</p><p style=\"margin:12px 0 0;color:#555;font-size:15px;line-height:1.6;\">")
+    .replace(/\n\n/g, "</p><p style=\"margin:12px 0 0;color:#64748b;font-size:15px;line-height:1.6;\">")
     .replace(/\n/g, "<br>");
 
   return `<!DOCTYPE html>
@@ -501,71 +525,77 @@ function buildEmailHtml(data: {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:600px;margin:0 auto;padding:20px;">
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#1a5f4a,#2d8a6e);border-radius:12px 12px 0 0;padding:30px;text-align:center;">
+    <div style="background:#475569;border-radius:12px 12px 0 0;padding:30px;text-align:center;">
       <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;">Weekly Status Report</h1>
-      <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Tessio — Week in Review</p>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,0.7);font-size:14px;">Tessio — Week in Review</p>
     </div>
 
     <!-- Stats Bar -->
-    <div style="background:#fff;padding:20px;border-bottom:1px solid #eee;">
+    <div style="background:#fff;padding:20px;border-bottom:1px solid #e2e8f0;">
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td width="25%" align="center" style="padding:8px;">
-            <div style="font-size:28px;font-weight:700;color:#1a5f4a;">${completedCount}</div>
-            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Completed</div>
+            <div style="font-size:28px;font-weight:700;color:#475569;">${completedCount}</div>
+            <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Completed</div>
           </td>
-          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #e2e8f0;">
             <div style="font-size:28px;font-weight:700;color:${deltaColor};">${deltaLabel}</div>
-            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">vs Last Week</div>
+            <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">vs Last Week</div>
           </td>
-          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
-            <div style="font-size:28px;font-weight:700;color:#1565c0;">${createdCount}</div>
-            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Created</div>
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #e2e8f0;">
+            <div style="font-size:28px;font-weight:700;color:#f97316;">${createdCount}</div>
+            <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Created</div>
           </td>
-          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
-            <div style="font-size:28px;font-weight:700;color:#e65100;">${pendingCount}</div>
-            <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Pending</div>
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #e2e8f0;">
+            <div style="font-size:28px;font-weight:700;color:#64748b;">${pendingCount}</div>
+            <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">Pending</div>
           </td>
         </tr>
       </table>
     </div>
 
+    <!-- 12-Week History Chart -->
+    <div style="background:#fff;padding:24px;border-bottom:1px solid #e2e8f0;">
+      <h2 style="margin:0 0 16px;font-size:18px;color:#0f172a;">12-Week Trend</h2>
+      ${chartSvg}
+    </div>
+
     <!-- Status Report Summary -->
-    <div style="background:#fff;padding:24px;border-bottom:1px solid #eee;">
-      <h2 style="margin:0 0 14px;font-size:18px;color:#333;">Status Report</h2>
-      <p style="margin:0;color:#555;font-size:15px;line-height:1.6;">${formattedSummary}</p>
+    <div style="background:#fff;padding:24px;border-bottom:1px solid #e2e8f0;">
+      <h2 style="margin:0 0 14px;font-size:18px;color:#0f172a;">Status Report</h2>
+      <p style="margin:0;color:#64748b;font-size:15px;line-height:1.6;">${formattedSummary}</p>
     </div>
 
     <!-- Completed Tasks by Workstream -->
-    <div style="background:#fff;padding:24px;border-bottom:1px solid #eee;">
-      <h2 style="margin:0 0 16px;font-size:18px;color:#333;">What Got Done</h2>
+    <div style="background:#fff;padding:24px;border-bottom:1px solid #e2e8f0;">
+      <h2 style="margin:0 0 16px;font-size:18px;color:#0f172a;">What Got Done</h2>
       ${completedSections}
     </div>
 
     <!-- Upcoming / Next Week -->
     ${upcomingSections ? `
     <div style="background:#fff;padding:24px;border-radius:0 0 12px 12px;">
-      <h2 style="margin:0 0 16px;font-size:18px;color:#333;">On Deck</h2>
+      <h2 style="margin:0 0 16px;font-size:18px;color:#0f172a;">On Deck</h2>
       ${upcomingSections}
     </div>
     ` : `
     <div style="background:#fff;padding:24px;border-radius:0 0 12px 12px;">
-      <h2 style="margin:0 0 8px;font-size:18px;color:#333;">On Deck</h2>
-      <p style="margin:0;color:#888;font-style:italic;">Nothing scheduled yet for next week.</p>
+      <h2 style="margin:0 0 8px;font-size:18px;color:#0f172a;">On Deck</h2>
+      <p style="margin:0;color:#94a3b8;font-style:italic;">Nothing scheduled yet for next week.</p>
     </div>
     `}
 
     <!-- CTA -->
     <div style="text-align:center;padding:24px;">
-      <a href="https://tessio.tanzillo.ai/app" style="display:inline-block;background:#1a5f4a;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Open Tessio</a>
+      <a href="https://tessio.tanzillo.ai/app" style="display:inline-block;background:#475569;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">Open Tessio</a>
     </div>
 
     <!-- Footer -->
-    <div style="text-align:center;padding:12px;color:#aaa;font-size:12px;">
-      Sent by Tessio
+    <div style="text-align:center;padding:12px;color:#94a3b8;font-size:12px;">
+      Sent by Tessio — tanzillo.ai
     </div>
   </div>
 </body>
@@ -605,10 +635,10 @@ function buildAdminReportHtml(data: {
     .map((u) => {
       const statusColor =
         u.status === "sent"
-          ? "#1a5f4a"
+          ? "#059669"
           : u.status.startsWith("skipped")
-          ? "#888"
-          : "#c0392b";
+          ? "#94a3b8"
+          : "#ef4444";
       return `
         <tr>
           <td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:14px;">${escapeHtml(u.email)}</td>
@@ -631,65 +661,65 @@ function buildAdminReportHtml(data: {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:700px;margin:0 auto;padding:20px;">
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#2c3e50,#3498db);border-radius:12px 12px 0 0;padding:24px;text-align:center;">
+    <div style="background:#334155;border-radius:12px 12px 0 0;padding:24px;text-align:center;">
       <h1 style="margin:0;color:#fff;font-size:22px;font-weight:700;">Tessio Admin Report</h1>
-      <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;">Weekly Summary Job — ${escapeHtml(runTime)}</p>
+      <p style="margin:6px 0 0;color:rgba(255,255,255,0.7);font-size:13px;">Weekly Summary Job — ${escapeHtml(runTime)}</p>
     </div>
 
     <!-- Overview Stats -->
-    <div style="background:#fff;padding:20px;border-bottom:1px solid #eee;">
-      <h2 style="margin:0 0 16px;font-size:16px;color:#333;">Job Overview</h2>
+    <div style="background:#fff;padding:20px;border-bottom:1px solid #e2e8f0;">
+      <h2 style="margin:0 0 16px;font-size:16px;color:#0f172a;">Job Overview</h2>
       <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td width="25%" align="center" style="padding:8px;">
-            <div style="font-size:28px;font-weight:700;color:#1a5f4a;">${emailsSent}</div>
-            <div style="font-size:11px;color:#888;text-transform:uppercase;">Emails Sent</div>
+            <div style="font-size:28px;font-weight:700;color:#059669;">${emailsSent}</div>
+            <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;">Emails Sent</div>
           </td>
-          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
-            <div style="font-size:28px;font-weight:700;color:#e65100;">${emailsFailed + userErrors}</div>
-            <div style="font-size:11px;color:#888;text-transform:uppercase;">Errors</div>
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #e2e8f0;">
+            <div style="font-size:28px;font-weight:700;color:#ef4444;">${emailsFailed + userErrors}</div>
+            <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;">Errors</div>
           </td>
-          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
-            <div style="font-size:28px;font-weight:700;color:#888;">${usersSkippedNoCompletions}</div>
-            <div style="font-size:11px;color:#888;text-transform:uppercase;">Skipped</div>
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #e2e8f0;">
+            <div style="font-size:28px;font-weight:700;color:#94a3b8;">${usersSkippedNoCompletions}</div>
+            <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;">Skipped</div>
           </td>
-          <td width="25%" align="center" style="padding:8px;border-left:1px solid #eee;">
-            <div style="font-size:28px;font-weight:700;color:#3498db;">${elapsed}s</div>
-            <div style="font-size:11px;color:#888;text-transform:uppercase;">Duration</div>
+          <td width="25%" align="center" style="padding:8px;border-left:1px solid #e2e8f0;">
+            <div style="font-size:28px;font-weight:700;color:#475569;">${elapsed}s</div>
+            <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;">Duration</div>
           </td>
         </tr>
       </table>
     </div>
 
     <!-- Detailed Stats -->
-    <div style="background:#fff;padding:20px;border-bottom:1px solid #eee;">
-      <h2 style="margin:0 0 12px;font-size:16px;color:#333;">Detailed Breakdown</h2>
-      <table style="width:100%;font-size:14px;color:#555;">
+    <div style="background:#fff;padding:20px;border-bottom:1px solid #e2e8f0;">
+      <h2 style="margin:0 0 12px;font-size:16px;color:#0f172a;">Detailed Breakdown</h2>
+      <table style="width:100%;font-size:14px;color:#64748b;">
         <tr><td style="padding:4px 0;">Total auth users in system</td><td style="text-align:right;font-weight:600;">${totalAuthUsers}</td></tr>
         <tr><td style="padding:4px 0;">Users with tasks in DB</td><td style="text-align:right;font-weight:600;">${totalUsers}</td></tr>
         <tr><td style="padding:4px 0;">Users with email found</td><td style="text-align:right;font-weight:600;">${usersWithEmail}</td></tr>
         <tr><td style="padding:4px 0;">Skipped — no email</td><td style="text-align:right;font-weight:600;">${usersSkippedNoEmail}</td></tr>
         <tr><td style="padding:4px 0;">Skipped — no completions</td><td style="text-align:right;font-weight:600;">${usersSkippedNoCompletions}</td></tr>
-        <tr><td style="padding:4px 0;">Emails sent successfully</td><td style="text-align:right;font-weight:600;color:#1a5f4a;">${emailsSent}</td></tr>
-        <tr><td style="padding:4px 0;">Mailgun failures</td><td style="text-align:right;font-weight:600;color:${emailsFailed > 0 ? '#c0392b' : '#555'};">${emailsFailed}</td></tr>
-        <tr><td style="padding:4px 0;">Processing errors</td><td style="text-align:right;font-weight:600;color:${userErrors > 0 ? '#c0392b' : '#555'};">${userErrors}</td></tr>
+        <tr><td style="padding:4px 0;">Emails sent successfully</td><td style="text-align:right;font-weight:600;color:#059669;">${emailsSent}</td></tr>
+        <tr><td style="padding:4px 0;">Mailgun failures</td><td style="text-align:right;font-weight:600;color:${emailsFailed > 0 ? '#ef4444' : '#64748b'};">${emailsFailed}</td></tr>
+        <tr><td style="padding:4px 0;">Processing errors</td><td style="text-align:right;font-weight:600;color:${userErrors > 0 ? '#ef4444' : '#64748b'};">${userErrors}</td></tr>
       </table>
     </div>
 
     <!-- Per-User Table -->
     <div style="background:#fff;padding:20px;border-radius:0 0 12px 12px;">
-      <h2 style="margin:0 0 12px;font-size:16px;color:#333;">Per-User Details</h2>
+      <h2 style="margin:0 0 12px;font-size:16px;color:#0f172a;">Per-User Details</h2>
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;">
         <thead>
-          <tr style="background:#f8f9fa;">
-            <th style="padding:8px 12px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #eee;">User</th>
-            <th style="padding:8px 12px;text-align:center;font-weight:600;color:#555;border-bottom:2px solid #eee;">Done</th>
-            <th style="padding:8px 12px;text-align:center;font-weight:600;color:#555;border-bottom:2px solid #eee;">New</th>
-            <th style="padding:8px 12px;text-align:center;font-weight:600;color:#555;border-bottom:2px solid #eee;">Pending</th>
-            <th style="padding:8px 12px;text-align:left;font-weight:600;color:#555;border-bottom:2px solid #eee;">Status</th>
+          <tr style="background:#f8fafc;">
+            <th style="padding:8px 12px;text-align:left;font-weight:600;color:#64748b;border-bottom:2px solid #e2e8f0;">User</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;color:#64748b;border-bottom:2px solid #e2e8f0;">Done</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;color:#64748b;border-bottom:2px solid #e2e8f0;">New</th>
+            <th style="padding:8px 12px;text-align:center;font-weight:600;color:#64748b;border-bottom:2px solid #e2e8f0;">Pending</th>
+            <th style="padding:8px 12px;text-align:left;font-weight:600;color:#64748b;border-bottom:2px solid #e2e8f0;">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -699,12 +729,45 @@ function buildAdminReportHtml(data: {
     </div>
 
     <!-- Footer -->
-    <div style="text-align:center;padding:16px;color:#aaa;font-size:12px;">
-      Tessio Admin Report — Auto-generated
+    <div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px;">
+      Tessio Admin Report — tanzillo.ai
     </div>
   </div>
 </body>
 </html>`;
+}
+
+function buildWeeklyChartSvg(
+  history: { weekLabel: string; count: number }[]
+): string {
+  const svgWidth = 540;
+  const svgHeight = 160;
+  const barPadding = 4;
+  const bottomPadding = 24;
+  const topPadding = 20;
+  const chartHeight = svgHeight - bottomPadding - topPadding;
+  const barWidth = (svgWidth - barPadding * (history.length - 1)) / history.length;
+  const maxCount = Math.max(...history.map((w) => w.count), 1);
+
+  const bars = history
+    .map((week, i) => {
+      const barHeight = Math.max((week.count / maxCount) * chartHeight, 2);
+      const x = i * (barWidth + barPadding);
+      const y = topPadding + chartHeight - barHeight;
+      const isCurrentWeek = i === history.length - 1;
+      const fill = isCurrentWeek ? "#f97316" : "#475569";
+      const opacity = isCurrentWeek ? "1" : "0.7";
+
+      const countLabel =
+        week.count > 0
+          ? `<text x="${x + barWidth / 2}" y="${y - 4}" text-anchor="middle" fill="#64748b" font-size="11" font-family="'IBM Plex Sans',sans-serif" font-weight="600">${week.count}</text>`
+          : "";
+
+      return `${countLabel}<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="3" fill="${fill}" opacity="${opacity}"/><text x="${x + barWidth / 2}" y="${svgHeight - 4}" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="'IBM Plex Sans',sans-serif">${week.weekLabel}</text>`;
+    })
+    .join("");
+
+  return `<svg width="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg" style="display:block;">${bars}</svg>`;
 }
 
 function escapeHtml(str: string): string {
