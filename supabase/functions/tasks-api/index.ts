@@ -210,6 +210,7 @@ interface TaskBody {
   title?: string;
   notes?: string;
   location?: string;
+  workstream?: string | null;
   tags?: string[];
   activate_at?: string;
   target_user_id?: string;
@@ -263,7 +264,7 @@ async function handleCreateTask(
     notes,
     completed: false,
     location,
-    workstream: null,
+    workstream: body.workstream?.trim() || null,
     tags: [...new Set(["API", ...(Array.isArray(body.tags) ? body.tags.filter((t): t is string => typeof t === "string").map(t => t.trim()).filter(Boolean) : [])])],
     created_at: Date.now(),
     completed_at: null,

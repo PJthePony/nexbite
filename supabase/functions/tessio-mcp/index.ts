@@ -6,11 +6,14 @@
  * that don't work cleanly in Deno).
  *
  * Supports: initialize, tools/list, tools/call
+ * Auth: Bearer nb_ token, or OAuth 2.0 client_credentials flow
+ *       (for Claude Co-Work custom connector)
  */
 
-// --- Tessio API helper ---
+const BASE_URL = "https://jlkognkltdkzerzpcqpu.supabase.co/functions/v1/tessio-mcp";
 const TASKS_API_BASE = "https://jlkognkltdkzerzpcqpu.supabase.co/functions/v1/tasks-api";
 
+// --- Tessio API helper ---
 async function apiCall(apiKey: string, method: string, params: Record<string, string | undefined> = {}, body: unknown = null) {
   const url = new URL(TASKS_API_BASE);
   for (const [key, value] of Object.entries(params)) {
@@ -47,6 +50,115 @@ function authenticateRequest(req: Request): string | null {
   const serverKey = Deno.env.get("TESSIO_API_KEY");
   if (serverKey) return serverKey;
   return null;
+}
+
+// --- OAuth 2.0 support for Co-Work ---
+
+function getSubpath(req: Request): string {
+  const url = new URL(req.url);
+  // Supabase Edge Function path: /functions/v1/tessio-mcp/...
+  const match = url.pathname.match(/\/tessio-mcp(\/.*)?$/);
+  return match?.[1] || "/";
+}
+
+function handleOAuthProtectedResource(): Response {
+  // RFC 9728: OAuth Protected Resource Metadata
+  return new Response(
+    JSON.stringify({
+      resource: BASE_URL,
+      authorization_servers: [BASE_URL],
+      bearer_methods_supported: ["header"],
+    }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
+function handleOAuthAuthorizationServer(): Response {
+  // RFC 8414: OAuth Authorization Server Metadata
+  return new Response(
+    JSON.stringify({
+      issuer: BASE_URL,
+      token_endpoint: `${BASE_URL}/token`,
+      token_endpoint_auth_methods_supported: ["client_secret_post", "client_secret_basic"],
+      grant_types_supported: ["client_credentials"],
+      response_types_supported: ["token"],
+      service_documentation: "https://tessio.tanzillo.ai",
+    }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
+async function handleTokenRequest(req: Request): Promise<Response> {
+  // OAuth 2.0 Client Credentials Grant (RFC 6749 §4.4)
+  let clientId = "";
+  let clientSecret = "";
+
+  const contentType = req.headers.get("content-type") || "";
+
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const formData = await req.text();
+    const params = new URLSearchParams(formData);
+    const grantType = params.get("grant_type");
+    if (grantType !== "client_credentials") {
+      return new Response(
+        JSON.stringify({ error: "unsupported_grant_type", error_description: "Only client_credentials is supported" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    clientId = params.get("client_id") || "";
+    clientSecret = params.get("client_secret") || "";
+  } else if (contentType.includes("application/json")) {
+    const body = await req.json();
+    if (body.grant_type !== "client_credentials") {
+      return new Response(
+        JSON.stringify({ error: "unsupported_grant_type", error_description: "Only client_credentials is supported" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    clientId = body.client_id || "";
+    clientSecret = body.client_secret || "";
+  }
+
+  // Also support HTTP Basic auth for client credentials
+  if (!clientSecret) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader?.startsWith("Basic ")) {
+      const decoded = atob(authHeader.slice(6));
+      const colonIndex = decoded.indexOf(":");
+      if (colonIndex > -1) {
+        clientId = clientId || decoded.slice(0, colonIndex);
+        clientSecret = decoded.slice(colonIndex + 1);
+      }
+    }
+  }
+
+  // Validate: client_secret must be an nb_ API key
+  if (!clientSecret.startsWith("nb_")) {
+    return new Response(
+      JSON.stringify({ error: "invalid_client", error_description: "client_secret must be a valid Tessio API key (nb_...)" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Verify the key works by making a lightweight API call
+  try {
+    await apiCall(clientSecret, "GET", { resource: "workstreams" });
+  } catch (_err) {
+    return new Response(
+      JSON.stringify({ error: "invalid_client", error_description: "API key validation failed" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Issue the API key as the access token
+  return new Response(
+    JSON.stringify({
+      access_token: clientSecret,
+      token_type: "bearer",
+      // No expiry — nb_ keys don't expire
+    }),
+    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } }
+  );
 }
 
 // --- Tool definitions ---
@@ -94,6 +206,7 @@ const TOOLS = [
         title: { type: "string", description: "Task title (required)" },
         notes: { type: "string", description: "Task notes/description" },
         location: { type: "string", enum: LOCATIONS, description: 'Where to place the task. Defaults to "later".' },
+        workstream: { type: "string", description: "Workstream to assign the task to (e.g. 'Coding', 'Personal')." },
         tags: { type: "array", items: { type: "string" }, description: "Tags to apply." },
         activate_at: { type: "string", description: "ISO date (YYYY-MM-DD) for auto-promotion from later." },
       },
@@ -181,6 +294,7 @@ async function executeTool(apiKey: string, name: string, args: Record<string, un
           title: args.title,
           notes: args.notes,
           location: args.location,
+          workstream: args.workstream,
           tags: args.tags,
           activate_at: args.activate_at,
         });
@@ -265,15 +379,45 @@ const corsHeaders: Record<string, string> = {
 
 // --- Main handler ---
 Deno.serve(async (req: Request) => {
+  // CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
+  const subpath = getSubpath(req);
+
+  // --- OAuth discovery & token endpoints (no auth required) ---
+
+  // RFC 9728: Protected Resource Metadata
+  if (req.method === "GET" && subpath === "/.well-known/oauth-protected-resource") {
+    return handleOAuthProtectedResource();
+  }
+
+  // RFC 8414: Authorization Server Metadata
+  if (req.method === "GET" && subpath === "/.well-known/oauth-authorization-server") {
+    return handleOAuthAuthorizationServer();
+  }
+
+  // OAuth token endpoint
+  if (req.method === "POST" && subpath === "/token") {
+    return await handleTokenRequest(req);
+  }
+
+  // --- MCP endpoints (auth required) ---
+
   const apiKey = authenticateRequest(req);
   if (!apiKey) {
+    // Return 401 with pointer to OAuth metadata per MCP auth spec
     return new Response(
-      JSON.stringify(jsonrpcError(null, -32001, "Unauthorized: provide a Bearer nb_ API key")),
-      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "unauthorized", error_description: "Bearer token required" }),
+      {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "WWW-Authenticate": `Bearer resource_metadata="${BASE_URL}/.well-known/oauth-protected-resource"`,
+        },
+      }
     );
   }
 

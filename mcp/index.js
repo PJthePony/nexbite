@@ -138,6 +138,10 @@ server.tool(
       ])
       .optional()
       .describe('Where to place the task. Defaults to "later".'),
+    workstream: z
+      .string()
+      .optional()
+      .describe("Workstream to assign the task to (e.g. 'Coding', 'Personal')."),
     tags: z
       .array(z.string())
       .optional()
@@ -149,8 +153,8 @@ server.tool(
         "ISO date (YYYY-MM-DD) for auto-promotion from later. Only relevant when location is later."
       ),
   },
-  async ({ title, notes, location, tags, activate_at }) => {
-    const data = await apiCall("POST", {}, { title, notes, location, tags, activate_at });
+  async ({ title, notes, location, workstream, tags, activate_at }) => {
+    const data = await apiCall("POST", {}, { title, notes, location, workstream, tags, activate_at });
     return {
       content: [
         {
