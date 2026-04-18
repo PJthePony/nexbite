@@ -857,7 +857,7 @@ const activeTab = ref('claude')
 }
 
 .item-manage-action.save:hover {
-  background: rgba(71, 85, 105, 0.08);
+  background: var(--color-primary-ghost);
 }
 
 .item-color-picker {
@@ -972,7 +972,7 @@ const activeTab = ref('claude')
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   word-break: break-all;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--nxb-font-mono);
 }
 
 .key-info {
@@ -991,7 +991,7 @@ const activeTab = ref('claude')
 }
 
 .key-prefix {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--nxb-font-mono);
   font-size: 0.85rem;
   font-weight: 600;
   background: var(--color-surface);
@@ -1172,7 +1172,7 @@ const activeTab = ref('claude')
   border-radius: var(--radius-md);
   padding: 14px;
   padding-right: 70px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--nxb-font-mono);
   font-size: 0.75rem;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -1189,7 +1189,7 @@ const activeTab = ref('claude')
 }
 
 .guide-note code {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--nxb-font-mono);
   font-size: 0.75rem;
   background: var(--color-bg);
   padding: 1px 5px;
@@ -1220,7 +1220,7 @@ const activeTab = ref('claude')
   flex: 1;
   background: var(--color-bg);
   padding: 8px 12px;
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--nxb-font-mono);
   font-size: 0.73rem;
   line-height: 1.5;
   white-space: pre-wrap;

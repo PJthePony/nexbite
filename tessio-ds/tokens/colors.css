@@ -1,33 +1,91 @@
+/* Tessio — palette aligned to tanzillo.ai design system.
+   Locked four: fuchsia (signal), teal (ground), navy (stage dark),
+   sage (stage light). Every token below derives from those. */
+
 :root {
-  /* Palette: Slate & Coral */
-  --nxb-color-bg: #f8fafc;
-  --nxb-color-surface: #ffffff;
-  --nxb-color-surface-elevated: #ffffff;
-  --nxb-color-border: #e2e8f0;
-  --nxb-color-border-light: #cbd5e1;
+  /* ── RAMPS (keep named scales available for components) ── */
+  --fuchsia-50:  #FAE8F1;
+  --fuchsia-100: #F3B4D2;
+  --fuchsia-200: #E880B0;
+  --fuchsia-400: #DE528C;
+  --fuchsia-600: #D4246F;
+  --fuchsia-800: #A01A54;
+  --fuchsia-900: #6A1038;
 
-  --nxb-color-text: #0f172a;
-  --nxb-color-text-secondary: #64748b;
-  --nxb-color-text-muted: #94a3b8;
+  --teal-50:  #D4EFEC;
+  --teal-100: #91D5CE;
+  --teal-200: #4CB8AF;
+  --teal-400: #239085;
+  --teal-600: #0D5C52;
+  --teal-800: #09403A;
+  --teal-900: #052620;
 
-  --nxb-color-primary: #475569;
-  --nxb-color-primary-hover: #334155;
-  --nxb-color-primary-ring: rgba(71, 85, 105, 0.1);
-  --nxb-color-primary-ghost: rgba(71, 85, 105, 0.06);
+  --navy-50:  #D6DEE9;
+  --navy-100: #9BAAC1;
+  --navy-200: #5E7189;
+  --navy-400: #334A66;
+  --navy-600: #142235;
+  --navy-800: #0C172A;
+  --navy-900: #060D1A;
 
-  --nxb-color-accent: #f97316;
-  --nxb-color-success: #059669;
-  --nxb-color-danger: #ef4444;
+  --sage-50:  #FFFFFF;
+  --sage-100: #F8FBF9;
+  --sage-200: #F0F5F3;
+  --sage-400: #E0EDEA;
+  --sage-600: #C4D9D5;
+  --sage-800: #8CAAA5;
+  --sage-900: #527872;
 
-  /* Tag palette — Electric Brights */
-  --nxb-tag-1: #ef4444;
-  --nxb-tag-2: #f97316;
-  --nxb-tag-3: #eab308;
-  --nxb-tag-4: #22c55e;
-  --nxb-tag-5: #06b6d4;
-  --nxb-tag-6: #3b82f6;
-  --nxb-tag-7: #8b5cf6;
-  --nxb-tag-8: #ec4899;
-  --nxb-tag-9: #14b8a6;
-  --nxb-tag-10: #f43f5e;
+  /* Semantic — tuned to sit next to fuchsia without reading as Tailwind default */
+  --success-100: #C9E6DB;
+  --success-600: #2B8A6E;
+  --warning-100: #F4D3BA;
+  --warning-600: #D0682A;
+  --danger-100:  #F0CCD4;
+  --danger-600:  #A83A4A;
+
+  /* Category accents for workstreams / tags (berry-arc) */
+  --violet-600: #7E3E9E;
+  --azure-600:  #3B5A8C;
+  --copper-400: #B43A5F;
+  --slate-accent: #4D7D7D;
+
+  /* ── SURFACES / TEXT / BORDERS ── */
+  --nxb-color-bg:               var(--sage-200);
+  --nxb-color-surface:          var(--sage-50);
+  --nxb-color-surface-elevated: var(--sage-100);
+  --nxb-color-surface-inset:    var(--sage-400);
+  --nxb-color-border:           rgba(11, 20, 30, 0.08);
+  --nxb-color-border-light:     rgba(11, 20, 30, 0.16);
+  --nxb-color-rule:             var(--sage-600);
+
+  --nxb-color-text:           var(--navy-600);
+  --nxb-color-text-secondary: var(--navy-400);
+  --nxb-color-text-muted:     var(--navy-200);
+  --nxb-color-text-ghost:     var(--sage-800);
+
+  /* Primary = fuchsia (signal). This is a structural colour, not an accent. */
+  --nxb-color-primary:       var(--fuchsia-600);
+  --nxb-color-primary-hover: var(--fuchsia-800);
+  --nxb-color-primary-ring:  rgba(212, 36, 111, 0.18);
+  --nxb-color-primary-ghost: rgba(212, 36, 111, 0.08);
+
+  --nxb-color-accent:  var(--fuchsia-600);
+  --nxb-color-ground:  var(--teal-600);
+  --nxb-color-success: var(--success-600);
+  --nxb-color-warning: var(--warning-600);
+  --nxb-color-danger:  var(--danger-600);
+
+  /* Tag palette — anchored to the berry-arc + teals + copper.
+     Ordered so common tag counts land on distinct hues. */
+  --nxb-tag-1:  var(--fuchsia-600);
+  --nxb-tag-2:  var(--teal-600);
+  --nxb-tag-3:  var(--copper-400);
+  --nxb-tag-4:  var(--violet-600);
+  --nxb-tag-5:  var(--azure-600);
+  --nxb-tag-6:  var(--success-600);
+  --nxb-tag-7:  var(--warning-600);
+  --nxb-tag-8:  var(--danger-600);
+  --nxb-tag-9:  var(--slate-accent);
+  --nxb-tag-10: var(--fuchsia-800);
 }

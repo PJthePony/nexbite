@@ -1,19 +1,29 @@
+/* Tessio — typography aligned to tanzillo.ai.
+   Fraunces (display/editorial), Bricolage Grotesque (UI/body),
+   JetBrains Mono (code/labels). Loaded via Google Fonts at index.html. */
+
 :root {
-  --nxb-font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --nxb-font-serif:  'Fraunces', 'Times New Roman', Georgia, serif;
+  --nxb-font-family: 'Bricolage Grotesque', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --nxb-font-mono:   'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --nxb-font-xs: 0.62rem;
-  --nxb-font-sm: 0.75rem;
+  --nxb-font-xs:   0.62rem;
+  --nxb-font-sm:   0.75rem;
   --nxb-font-base: 0.85rem;
-  --nxb-font-md: 0.875rem;
-  --nxb-font-lg: 1.05rem;
-  --nxb-font-xl: 1.25rem;
+  --nxb-font-md:   0.875rem;
+  --nxb-font-lg:   1.05rem;
+  --nxb-font-xl:   1.25rem;
+  --nxb-font-2xl:  1.75rem;
+  --nxb-font-display: clamp(2.25rem, 1.8rem + 2.25vw, 3rem);
 
-  --nxb-font-weight-normal: 400;
-  --nxb-font-weight-medium: 500;
+  --nxb-font-weight-normal:   400;
+  --nxb-font-weight-medium:   500;
   --nxb-font-weight-semibold: 600;
+  --nxb-font-weight-bold:     700;
 
-  --nxb-line-height: 1.55;
+  --nxb-line-height:  1.55;
   --nxb-letter-tight: -0.02em;
   --nxb-letter-normal: -0.01em;
-  --nxb-letter-wide: 0.06em;
+  --nxb-letter-wide:   0.06em;
+  --nxb-letter-eyebrow: 0.2em;
 }

@@ -661,7 +661,7 @@ const handleToggleDay = (dayId) => {
     <header class="app-header">
       <div class="app-title">
         <div class="header-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4246F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         </div>
         <span class="app-name">Tessio</span>
       </div>
@@ -719,20 +719,20 @@ const handleToggleDay = (dayId) => {
 
     <!-- Weekend advance-week CTA -->
     <div v-if="canAdvanceWeek" class="advance-week-banner">
-      <span class="advance-week-text">Week's over — ready to plan next week?</span>
+      <span class="advance-week-text">Week's over. Time to plan the next job.</span>
       <button class="advance-week-btn" @click="handleAdvanceWeek">
-        Plan Next Week
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        Plan next week
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </button>
     </div>
 
     <!-- Orphaned tasks banner -->
     <div v-if="orphanedTasks.length > 0" class="orphan-banner">
       <span class="orphan-text">
-        {{ orphanedTasks.length }} task{{ orphanedTasks.length === 1 ? " isn't" : "s aren't" }} showing — stuck in a past day, in Later without a date, or in Later with a date that's already here
+        {{ orphanedTasks.length }} task{{ orphanedTasks.length === 1 ? " isn't" : "s aren't" }} showing — stuck in a past day, or waiting on a date that's already come and gone.
       </span>
       <button class="orphan-fix-btn" @click="handleFixOrphans">
-        Fix Now
+        Straighten it out
       </button>
     </div>
 
@@ -848,17 +848,17 @@ const handleToggleDay = (dayId) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 20px;
   background-color: var(--color-bg);
 }
 
 .loading-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-primary);
+  border: 2px solid var(--color-border-light);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.9s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
 }
 
 @keyframes spin {
@@ -866,33 +866,59 @@ const handleToggleDay = (dayId) => {
 }
 
 .loading-text {
+  font-family: var(--nxb-font-serif);
+  font-style: italic;
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: 0.95rem;
 }
 
 .page-header {
-  padding: 20px 24px 0;
+  padding: 28px 24px 12px;
+  position: relative;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24px;
+  width: 1px;
+  height: 16px;
+  background: var(--color-accent);
+  opacity: 0.55;
 }
 
 .page-date {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
+  font-family: var(--nxb-font-family);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 4px;
+  letter-spacing: 0.2em;
+  margin-bottom: 6px;
 }
 
 .page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: var(--nxb-font-serif);
+  font-style: italic;
+  font-size: 2rem;
+  font-weight: 600;
+  font-variation-settings: 'opsz' 96, 'WONK' 1;
+  letter-spacing: -0.035em;
+  color: var(--color-text);
   margin: 0;
+  text-wrap: balance;
 }
 
 @media (max-width: 768px) {
   .page-header {
-    padding: 12px 16px 0;
+    padding: 16px 16px 8px;
+  }
+  .page-header::before {
+    left: 16px;
+  }
+  .page-title {
+    font-size: 1.6rem;
   }
 }
 
@@ -907,80 +933,39 @@ const handleToggleDay = (dayId) => {
   justify-content: center;
 }
 
-.column-nav-bar::-webkit-scrollbar {
-  display: none;
-}
+.column-nav-bar::-webkit-scrollbar { display: none; }
 
 .nav-pill {
   flex: 1;
   padding: 10px 0;
-  border-radius: 16px;
-  font-size: 0.78rem;
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 0.76rem;
   font-weight: 500;
-  background: var(--color-bg);
+  background: var(--color-surface);
   color: var(--color-text-muted);
-  border: 1px solid transparent;
+  border: 1px solid var(--color-border);
   white-space: nowrap;
   cursor: pointer;
   text-align: center;
+  transition: all var(--transition);
 }
 
 .nav-pill.is-active {
   background: var(--color-primary);
-  color: white;
+  color: var(--sage-50);
+  border-color: var(--color-primary);
   font-weight: 600;
+  box-shadow: var(--shadow-suspend);
 }
 
 .nav-pill.is-today:not(.is-active) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
-.view-toggle-btn {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  color: var(--color-text-secondary);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.view-toggle-btn:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-.view-toggle-btn.is-calendar {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.settings-btn {
-  margin-left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  color: var(--color-text-secondary);
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.settings-btn:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
+.view-toggle-btn,
+.settings-btn,
 .logout-btn {
   display: flex;
   align-items: center;
@@ -988,16 +973,27 @@ const handleToggleDay = (dayId) => {
   width: 34px;
   height: 34px;
   color: var(--color-text-secondary);
-  background: var(--color-bg);
+  background: transparent;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition);
 }
 
+.view-toggle-btn { margin-left: auto; }
+
+.view-toggle-btn:hover,
+.settings-btn:hover,
 .logout-btn:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
+  background: var(--color-primary-ghost);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.view-toggle-btn.is-calendar {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: var(--color-primary-ghost);
 }
 
 @media (max-width: 768px) {

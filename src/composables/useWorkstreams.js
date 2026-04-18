@@ -2,21 +2,24 @@ import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
-// 13 predefined colors for workstreams - Vivid palette + neutrals
+// Tanzillo.ai berry-arc palette — fuchsia family + muted neutrals that share DNA.
+// Each entry pairs a ~50-level bg with a ~600-level text for legible contrast.
 export const WORKSTREAM_COLORS = [
-  { name: 'Stone',    bg: '#f5f5f4', text: '#78716c' },
-  { name: 'Slate',    bg: '#f1f5f9', text: '#64748b' },
-  { name: 'Charcoal', bg: '#e5e5e5', text: '#454545' },
-  { name: 'Sapphire', bg: '#dbeafe', text: '#2563eb' },
-  { name: 'Rose',     bg: '#ffe4e6', text: '#f43f5e' },
-  { name: 'Jade',     bg: '#ccfbf1', text: '#14b8a6' },
-  { name: 'Amber',    bg: '#ffedd5', text: '#f97316' },
-  { name: 'Amethyst', bg: '#e9d5ff', text: '#a855f7' },
-  { name: 'Emerald',  bg: '#d1fae5', text: '#10b981' },
-  { name: 'Gold',     bg: '#fef08a', text: '#ca8a04' },
-  { name: 'Peony',    bg: '#fce7f3', text: '#ec4899' },
-  { name: 'Teal',     bg: '#cffafe', text: '#06b6d4' },
-  { name: 'Ruby',     bg: '#fecdd3', text: '#e11d48' },
+  { name: 'Fuchsia',   bg: '#FAE8F1', text: '#D4246F' }, // signal
+  { name: 'Mulberry',  bg: '#F4D7E0', text: '#B43A5F' }, // warm red-violet
+  { name: 'Wine',      bg: '#F0CCD4', text: '#A83A4A' }, // danger-sibling
+  { name: 'Plum',      bg: '#DCC8E8', text: '#7E3E9E' }, // cool sister
+  { name: 'Indigo',    bg: '#C4CEE0', text: '#3B5A8C' }, // azure
+  { name: 'Teal',      bg: '#D4EFEC', text: '#0D5C52' }, // ground
+  { name: 'Viridian',  bg: '#C9E6DB', text: '#2B8A6E' }, // success family
+  { name: 'Moss',      bg: '#D9E2C5', text: '#5F6E32' }, // muted olive
+  { name: 'Persimmon', bg: '#F4D3BA', text: '#D0682A' }, // warning family
+  { name: 'Honey',     bg: '#F3E1B6', text: '#9C6F1A' }, // warm gold
+  { name: 'Clay',      bg: '#EBD7C8', text: '#8B5438' }, // terracotta
+  { name: 'Slate',     bg: '#E0EDEA', text: '#4D7D7D' }, // sage-adjacent
+  { name: 'Navy',      bg: '#D6DEE9', text: '#334A66' }, // stage
+  { name: 'Dust',      bg: '#EFEAE6', text: '#6B5E55' }, // warm neutral
+  { name: 'Smoke',     bg: '#DEE1DE', text: '#5A5F5C' }, // cool neutral
 ]
 
 // Shared state across all usages (singleton)

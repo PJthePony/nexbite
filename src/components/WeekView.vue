@@ -664,7 +664,7 @@ defineExpose({
 }
 
 .grid-header.is-today {
-  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), inset 0 2px 0 0 var(--color-primary), 0 4px 20px rgba(71, 85, 105, 0.12);
+  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), inset 0 2px 0 0 var(--color-primary), 0 4px 20px rgba(11, 20, 30, 0.1);
   background: var(--color-today);
   color: var(--color-text);
   font-size: 0.92rem;
@@ -711,7 +711,7 @@ defineExpose({
 }
 
 .grid-header.is-today .column-count {
-  background: rgba(71, 85, 105, 0.12);
+  background: rgba(11, 20, 30, 0.1);
   color: var(--color-primary);
   font-weight: 600;
 }
@@ -767,7 +767,7 @@ defineExpose({
   left: 0;
   right: 0;
   height: 20px;
-  background: linear-gradient(to bottom, transparent, rgba(71, 85, 105, 0.1));
+  background: linear-gradient(to bottom, transparent, rgba(11, 20, 30, 0.08));
   opacity: 0;
   transition: opacity 0.2s;
   pointer-events: none;
@@ -860,12 +860,12 @@ defineExpose({
 }
 
 .week-grid :deep(.workstream-cell.is-today) {
-  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), 0 4px 20px rgba(71, 85, 105, 0.12);
+  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), 0 4px 20px rgba(11, 20, 30, 0.1);
   background-color: var(--color-today);
 }
 
 .week-grid :deep(.workstream-cell.is-today.is-last-row) {
-  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), inset 0 -2px 0 0 var(--color-primary), 0 4px 20px rgba(71, 85, 105, 0.12);
+  box-shadow: inset 2px 0 0 0 var(--color-primary), inset -2px 0 0 0 var(--color-primary), inset 0 -2px 0 0 var(--color-primary), 0 4px 20px rgba(11, 20, 30, 0.1);
   background-color: var(--color-today);
 }
 
