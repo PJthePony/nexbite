@@ -20,6 +20,8 @@ export const WORKSTREAM_COLORS = [
   { name: 'Navy',      bg: '#D6DEE9', text: '#334A66' }, // stage
   { name: 'Dust',      bg: '#EFEAE6', text: '#6B5E55' }, // warm neutral
   { name: 'Smoke',     bg: '#DEE1DE', text: '#5A5F5C' }, // cool neutral
+  { name: 'Stone',     bg: '#EDEBE7', text: '#78716C' }, // true light neutral
+  { name: 'Charcoal',  bg: '#DCDAD6', text: '#454545' }, // true dark neutral
 ]
 
 // Shared state across all usages (singleton)

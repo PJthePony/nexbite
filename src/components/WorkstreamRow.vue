@@ -212,6 +212,19 @@ const handleAdd = () => {
   letter-spacing: 0.06em;
 }
 
+@media (max-width: 768px) {
+  .workstream-header {
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+  }
+
+  .workstream-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+}
+
 .workstream-tasks {
   display: flex;
   flex-direction: column;
