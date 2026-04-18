@@ -999,5 +999,10 @@ const handleToggleDay = (dayId) => {
     width: 44px;
     height: 44px;
   }
+
+  /* On mobile the tag-filter collapses to a single button — cluster it
+     with the other header buttons on the right side of the bar. */
+  :deep(.tag-filter) { margin-left: auto; }
+  .view-toggle-btn { margin-left: 0; }
 }
 </style>
