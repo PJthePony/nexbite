@@ -697,8 +697,10 @@ const handleToggleDay = (dayId) => {
     </header>
 
     <div class="page-header">
-      <div class="page-date">{{ dateStr }}</div>
-      <h1 class="page-title">The Hit List</h1>
+      <div>
+        <div class="page-date">{{ dateStr }}</div>
+        <h1 class="page-title">The Hit List</h1>
+      </div>
     </div>
 
     <!-- Mobile day navigation (between title and content) -->
@@ -873,24 +875,15 @@ const handleToggleDay = (dayId) => {
 }
 
 .page-header {
-  padding: 28px 24px 12px;
-  position: relative;
-}
-
-.page-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 24px;
-  width: 1px;
-  height: 16px;
-  background: var(--color-accent);
-  opacity: 0.55;
+  padding: 24px 24px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .page-date {
   font-family: var(--nxb-font-family);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -900,12 +893,12 @@ const handleToggleDay = (dayId) => {
 
 .page-title {
   font-family: var(--nxb-font-serif);
-  font-style: italic;
   font-size: 2rem;
-  font-weight: 600;
-  font-variation-settings: 'opsz' 96, 'WONK' 1;
-  letter-spacing: -0.035em;
+  font-weight: 700;
+  font-variation-settings: 'opsz' 48, 'WONK' 1;
+  letter-spacing: -0.025em;
   color: var(--color-text);
+  line-height: 1.1;
   margin: 0;
   text-wrap: balance;
 }
@@ -913,9 +906,6 @@ const handleToggleDay = (dayId) => {
 @media (max-width: 768px) {
   .page-header {
     padding: 16px 16px 8px;
-  }
-  .page-header::before {
-    left: 16px;
   }
   .page-title {
     font-size: 1.6rem;
@@ -973,27 +963,33 @@ const handleToggleDay = (dayId) => {
   width: 34px;
   height: 34px;
   color: var(--color-text-secondary);
-  background: transparent;
+  background: var(--sage-50);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--transition);
+  transition:
+    background var(--nxb-transition-fast),
+    color var(--nxb-transition-fast),
+    border-color var(--nxb-transition-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .view-toggle-btn { margin-left: auto; }
 
 .view-toggle-btn:hover,
+.view-toggle-btn:active,
 .settings-btn:hover,
-.logout-btn:hover {
-  background: var(--color-primary-ghost);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+.settings-btn:active,
+.logout-btn:hover,
+.logout-btn:active {
+  background: var(--sage-50);
+  color: var(--fuchsia-600);
+  border-color: rgba(212, 36, 111, 0.25);
 }
 
 .view-toggle-btn.is-calendar {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-  background: var(--color-primary-ghost);
+  color: var(--fuchsia-600);
+  border-color: rgba(212, 36, 111, 0.25);
 }
 
 @media (max-width: 768px) {

@@ -11,25 +11,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Pinstripe overlay — the stage-scrim texture. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent 0,
-    transparent 39px,
-    rgba(11, 20, 30, 0.025) 39px,
-    rgba(11, 20, 30, 0.025) 40px
-  );
-}
-
-/* Keep app chrome above the scrim. */
-#app { position: relative; z-index: 1; }
-
 ::selection {
   background: var(--fuchsia-100);
   color: var(--fuchsia-900);

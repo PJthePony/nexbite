@@ -90,24 +90,43 @@ button { font-family: inherit; }
 }
 
 .app-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: rgba(240, 245, 243, 0.78);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  padding: 18px 24px;
+  background: var(--sage-100);
   border-bottom: 1px solid var(--color-border);
-  padding: 14px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  position: relative;
 }
+
+/* Pinstripe — the "stage scrim" motif scoped to the header */
+.app-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 39px,
+    rgba(11, 20, 30, 0.02) 39px,
+    rgba(11, 20, 30, 0.02) 40px
+  );
+}
+
+.app-header > * { position: relative; z-index: 1; }
 
 .app-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  color: var(--color-text);
+  transition: color var(--transition);
+}
+
+.app-title:hover {
+  color: var(--fuchsia-800);
 }
 
 .header-icon {
@@ -124,12 +143,11 @@ button { font-family: inherit; }
 
 .app-name {
   font-family: var(--nxb-font-serif);
-  font-style: italic;
-  font-weight: 600;
-  font-size: 1.25rem;
-  letter-spacing: -0.025em;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
   font-variation-settings: 'opsz' 24, 'WONK' 1;
-  color: var(--color-accent);
+  color: inherit;
   line-height: 1;
 }
 
