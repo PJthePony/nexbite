@@ -11,6 +11,7 @@ import DailyReview from '../components/DailyReview.vue'
 import SettingsModal from '../components/SettingsModal.vue'
 import LaterDatePrompt from '../components/LaterDatePrompt.vue'
 import CalendarView from '../components/CalendarView.vue'
+import MoveTaskSheet from '../components/MoveTaskSheet.vue'
 
 import { useTasks } from '../composables/useTasks'
 import { useTags } from '../composables/useTags'
@@ -139,6 +140,10 @@ const weekAdvanced = computed(() => {
 // Bite modal
 const showBiteModal = ref(false)
 const biteParentTask = ref(null)
+
+// Move-task bottom sheet (mobile long-press)
+const showMoveSheet = ref(false)
+const moveSheetTask = ref(null)
 
 // Hide completed tasks from prior weeks (reactive — updates when week is advanced)
 const weekStartMs = computed(() => {
@@ -542,6 +547,36 @@ const editingTaskBites = computed(() => {
     .filter(Boolean)
 })
 
+const handleLongPressTask = (task) => {
+  if (!task) return
+  moveSheetTask.value = task
+  showMoveSheet.value = true
+}
+
+const handleMoveSheetSelect = ({ taskId, target }) => {
+  if (!taskId) return
+  if (target === 'tomorrow') {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const dateStr = toLocalDateString(tomorrow)
+    const resolved = dateToLocation(dateStr)
+    if (resolved === 'later') {
+      moveTask(taskId, 'later')
+      updateTask(taskId, { activateAt: dateStr })
+    } else if (resolved === 'next-week') {
+      moveTask(taskId, 'next-week')
+      updateTask(taskId, { activateAt: null })
+    } else {
+      // Day of this week
+      moveTask(taskId, resolved)
+      updateTask(taskId, { activateAt: null })
+    }
+  } else if (target === 'next-week') {
+    moveTask(taskId, 'next-week')
+    updateTask(taskId, { activateAt: null })
+  }
+}
+
 const handleAdvanceWeek = async () => {
   isAdvancingWeek.value = true
   rolledOverTasks.value = getRolledOverTasks()
@@ -752,6 +787,7 @@ const handleToggleDay = (dayId) => {
         @edit="handleEditTask"
         @delete="handleDeleteTask"
         @bite="handleBiteTask"
+        @longpress="handleLongPressTask"
         @move="handleMoveTask"
         @reorder="handleReorder"
         @reorder-workstreams="handleReorderWorkstreams"
@@ -830,6 +866,14 @@ const handleToggleDay = (dayId) => {
       @delete-tag="handleDeleteTag"
       @recolor-tag="handleRecolorTag"
       @toggle-day="handleToggleDay"
+    />
+
+    <!-- Move Task bottom sheet (mobile long-press) -->
+    <MoveTaskSheet
+      :show="showMoveSheet"
+      :task="moveSheetTask"
+      @close="showMoveSheet = false"
+      @move="handleMoveSheetSelect"
     />
 
     <!-- Later Date Prompt -->

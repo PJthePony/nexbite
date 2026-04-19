@@ -29,7 +29,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'move', 'reorder', 'createWorkstream', 'reorderWorkstreams', 'multi-drop', 'update-workstream-color'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'longpress', 'move', 'reorder', 'createWorkstream', 'reorderWorkstreams', 'multi-drop', 'update-workstream-color'])
 
 const { isToday, LOCATIONS, getColumnDate } = useWeekLogic()
 
@@ -504,6 +504,7 @@ defineExpose({
       @edit="emit('edit', $event)"
       @delete="emit('delete', $event)"
       @bite="emit('bite', $event)"
+      @longpress="emit('longpress', $event)"
       @update:tasks="(tasks) => handleUpdateTasks(column.id, tasks, null)"
       @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
     />
@@ -548,6 +549,7 @@ defineExpose({
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
         @bite="emit('bite', $event)"
+        @longpress="emit('longpress', $event)"
         @update:tasks="(tasks) => handleUpdateTasks(column.id, tasks, wsName)"
         @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
       />
@@ -608,6 +610,7 @@ defineExpose({
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
         @bite="emit('bite', $event)"
+        @longpress="emit('longpress', $event)"
         @update:tasks="(tasks, ws) => handleUpdateTasks(column.id, tasks, ws)"
         @create-workstream="emit('createWorkstream', $event)"
         @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"

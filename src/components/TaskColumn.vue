@@ -41,7 +41,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'createWorkstream', 'multi-drop', 'mobile-drag-start', 'mobile-drag-end'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'longpress', 'update:tasks', 'createWorkstream', 'multi-drop', 'mobile-drag-start', 'mobile-drag-end'])
 
 const taskCount = computed(() => {
   return props.tasks.filter(t => !t.completed).length
@@ -129,6 +129,7 @@ const handleAdd = (location, workstream) => {
         @edit="emit('edit', $event)"
         @delete="emit('delete', $event)"
         @bite="emit('bite', $event)"
+        @longpress="emit('longpress', $event)"
         @update:tasks="handleUpdateTasks(ws, $event)"
         @multi-drop="(location, workstream, draggedId) => emit('multi-drop', location, workstream, draggedId)"
         @mobile-drag-start="emit('mobile-drag-start')"

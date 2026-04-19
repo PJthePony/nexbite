@@ -42,7 +42,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'multi-drop'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'longpress', 'update:tasks', 'multi-drop'])
 
 const getParentTask = (task) => {
   if (!task.parentTaskId) return null
@@ -188,6 +188,7 @@ const handleCellClick = (e) => {
             @edit="emit('edit', $event)"
             @delete="emit('delete', $event)"
             @bite="emit('bite', $event)"
+            @longpress="emit('longpress', $event)"
           />
         </template>
         <template #footer v-if="localTasks.length === 0 && showEmptyState">

@@ -40,7 +40,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['toggle', 'edit', 'delete', 'bite'])
+const emit = defineEmits(['toggle', 'edit', 'delete', 'bite', 'longpress'])
 
 const isBite = computed(() => !!props.task.parentTaskId)
 const hasBites = computed(() => props.biteCount > 0)
@@ -72,7 +72,65 @@ const handleMouseDown = (e) => {
   }
 }
 
-const handleClick = () => {
+// ── Mobile long-press → open the "move to a future day" sheet.
+// Drag-and-drop on touch is unusable; long-press is the mobile
+// equivalent of the desktop hover actions.
+const LONG_PRESS_MS = 500
+const LONG_PRESS_SLOP = 8 // px; cancel if the finger moves this far
+const longPressTimer = ref(null)
+const longPressFired = ref(false)
+const touchStartPos = ref(null)
+
+const cancelLongPress = () => {
+  if (longPressTimer.value) {
+    clearTimeout(longPressTimer.value)
+    longPressTimer.value = null
+  }
+}
+
+const handleTouchStart = (e) => {
+  if (!props.isMobile) return
+  if (isSelectMode.value) return
+  // Taps on the checkbox or action buttons shouldn't open the move sheet
+  const target = e.target
+  if (target.closest('.task-checkbox, .task-action-btn, .task-actions, button, input')) {
+    return
+  }
+  const t = e.touches?.[0]
+  touchStartPos.value = t ? { x: t.clientX, y: t.clientY } : null
+  longPressFired.value = false
+  cancelLongPress()
+  longPressTimer.value = setTimeout(() => {
+    longPressFired.value = true
+    longPressTimer.value = null
+    if (navigator.vibrate) { try { navigator.vibrate(25) } catch (_) {} }
+    emit('longpress', props.task)
+  }, LONG_PRESS_MS)
+}
+
+const handleTouchMove = (e) => {
+  if (!longPressTimer.value || !touchStartPos.value) return
+  const t = e.touches?.[0]
+  if (!t) return
+  const dx = t.clientX - touchStartPos.value.x
+  const dy = t.clientY - touchStartPos.value.y
+  if (Math.hypot(dx, dy) > LONG_PRESS_SLOP) {
+    cancelLongPress()
+  }
+}
+
+const handleTouchEnd = () => {
+  cancelLongPress()
+}
+
+const handleClick = (e) => {
+  // Swallow the synthesized click that follows a long-press
+  if (longPressFired.value) {
+    longPressFired.value = false
+    e?.preventDefault?.()
+    e?.stopPropagation?.()
+    return
+  }
   if (isSelectMode.value) {
     // Already handled in mousedown
     return
@@ -119,6 +177,10 @@ const getTagStyle = (tag) => {
     :style="cardStyle"
     @mousedown="handleMouseDown"
     @click="handleClick"
+    @touchstart.passive="handleTouchStart"
+    @touchmove.passive="handleTouchMove"
+    @touchend="handleTouchEnd"
+    @touchcancel="handleTouchEnd"
   >
     <div class="task-header">
       <input
@@ -174,6 +236,10 @@ const getTagStyle = (tag) => {
     :style="cardStyle"
     @mousedown="handleMouseDown"
     @click="handleClick"
+    @touchstart.passive="handleTouchStart"
+    @touchmove.passive="handleTouchMove"
+    @touchend="handleTouchEnd"
+    @touchcancel="handleTouchEnd"
   >
     <div class="task-header">
       <input

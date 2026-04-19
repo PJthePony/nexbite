@@ -46,7 +46,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'update:tasks', 'multi-drop', 'mobile-drag-start', 'mobile-drag-end'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'longpress', 'update:tasks', 'multi-drop', 'mobile-drag-start', 'mobile-drag-end'])
 
 const getParentTask = (task) => {
   if (!task.parentTaskId) return null
@@ -158,8 +158,8 @@ const handleAdd = () => {
       :force-fallback="true"
       :animation="150"
       :move="checkMove"
-      :delay="isMobile ? 300 : 0"
-      :delay-on-touch-only="true"
+      :delay="0"
+      :disabled="isMobile"
       @start="handleDragStart"
       @end="handleDragEnd"
       @change="handleDragChange"
@@ -177,6 +177,7 @@ const handleAdd = () => {
           @edit="emit('edit', $event)"
           @delete="emit('delete', $event)"
           @bite="emit('bite', $event)"
+          @longpress="emit('longpress', $event)"
         />
       </template>
     </draggable>
