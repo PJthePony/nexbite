@@ -422,17 +422,23 @@ button { font-family: inherit; }
     border-color var(--transition),
     box-shadow var(--transition),
     transform var(--transition);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.task-item:hover {
-  border-color: var(--color-border-light);
-  box-shadow: var(--shadow-suspend);
-  transform: translateY(-1px);
-}
+/* Only hover/active animate on devices that actually have a pointer —
+   on touch devices the hover state fires briefly while scrolling and
+   reads as a flicker. */
+@media (hover: hover) and (pointer: fine) {
+  .task-item:hover {
+    border-color: var(--color-border-light);
+    box-shadow: var(--shadow-suspend);
+    transform: translateY(-1px);
+  }
 
-.task-item:active {
-  cursor: grabbing;
-  transform: translateY(0);
+  .task-item:active {
+    cursor: grabbing;
+    transform: translateY(0);
+  }
 }
 
 .task-item.is-dragging {
@@ -472,10 +478,12 @@ button { font-family: inherit; }
   border-radius: var(--radius-sm);
 }
 
-.task-item.is-collapsed:hover {
-  background: rgba(11, 20, 30, 0.04);
-  transform: none;
-  box-shadow: none;
+@media (hover: hover) and (pointer: fine) {
+  .task-item.is-collapsed:hover {
+    background: rgba(11, 20, 30, 0.04);
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 .task-item.is-collapsed .task-title {
