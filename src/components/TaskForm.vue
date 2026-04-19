@@ -262,7 +262,7 @@ const handleCreateWorkstream = (wsData) => {
             />
           </div>
 
-          <!-- Linked tasks info -->
+          <!-- Parent task (if this task is itself a bite) -->
           <div v-if="isEditing && isBite && parentTask" class="form-group linked-tasks-section">
             <label class="form-label">Parent Task</label>
             <div
@@ -274,7 +274,8 @@ const handleCreateWorkstream = (wsData) => {
             </div>
           </div>
 
-          <div v-if="isEditing && hasBites" class="form-group linked-tasks-section">
+          <!-- Bites — existing + "break into bites" action -->
+          <div v-if="isEditing" class="form-group linked-tasks-section">
             <label class="form-label">Bites</label>
             <div
               v-for="bite in biteTasks"
@@ -292,6 +293,14 @@ const handleCreateWorkstream = (wsData) => {
               <span class="linked-task-title">{{ bite.title }}</span>
               <span class="linked-task-arrow">&rarr;</span>
             </div>
+            <button
+              type="button"
+              class="bite-add-btn"
+              @click="emit('bite', task); emit('close')"
+            >
+              <span aria-hidden="true">+</span>
+              <span>{{ hasBites ? 'Add another bite' : 'Break into bites' }}</span>
+            </button>
           </div>
         </div>
 
@@ -304,15 +313,7 @@ const handleCreateWorkstream = (wsData) => {
           >
             Delete
           </button>
-          <button
-            v-if="isEditing"
-            type="button"
-            class="btn btn-bite"
-            @click="emit('bite', task); emit('close')"
-          >
-            Bite
-          </button>
-          <div style="flex: 1"></div>
+          <div class="footer-spacer"></div>
           <button
             type="button"
             class="btn btn-secondary"
@@ -337,6 +338,7 @@ const handleCreateWorkstream = (wsData) => {
 .task-form-modal {
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 .task-form {
@@ -344,16 +346,19 @@ const handleCreateWorkstream = (wsData) => {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  max-width: 100%;
 }
 
 .task-form-modal .modal-body {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-bottom: 16px;
 }
 
 .modal-footer-sticky {
   display: flex;
+  align-items: center;
   gap: 10px;
   padding: 14px 22px;
   border-top: 1px solid var(--color-border);
@@ -362,6 +367,8 @@ const handleCreateWorkstream = (wsData) => {
   bottom: 0;
   margin-top: auto;
 }
+
+.footer-spacer { flex: 1; }
 
 .btn:disabled {
   opacity: 0.5;
@@ -427,14 +434,36 @@ select.form-input {
   font-size: 0.8rem;
 }
 
-.btn-bite {
-  background: var(--color-bg);
-  color: var(--color-text);
-  border: 1px solid var(--color-border);
+/* "Break into bites" — tertiary, dashed add-affordance.
+   Lives inside the form body, not the footer. */
+.bite-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border: 1px dashed var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
 }
 
-.btn-bite:hover {
-  background: var(--color-border);
+.bite-add-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-primary-ghost);
+}
+
+.bite-add-btn span[aria-hidden] {
+  font-size: 1.05rem;
+  line-height: 1;
+  font-weight: 600;
 }
 
 .form-label-hint {
@@ -530,9 +559,16 @@ select.form-input {
     height: 44px;
   }
 
+  /* Single row on mobile: Delete | spacer | Cancel | Save. */
   .modal-footer-sticky {
     padding: 12px 16px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .modal-footer-sticky .btn {
+    padding: 0.55rem 0.9rem;
+    white-space: nowrap;
   }
 
   .linked-task-item {
