@@ -1508,18 +1508,28 @@ button { font-family: inherit; }
     display: flex;
     touch-action: pan-y;
     width: 100%;
+    will-change: transform;
+    /* Hint the compositor so iOS Safari paints the transform on the GPU
+       and doesn't leave sub-pixel ghosts during swipes between pages. */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
 
   .task-column {
-    min-width: 100%;
-    max-width: 100%;
-    width: 100%;
-    flex-shrink: 0;
+    flex: 0 0 100vw;
+    min-width: 100vw;
+    max-width: 100vw;
+    width: 100vw;
     border-radius: 0;
     border-left: none;
     border-right: none;
     min-height: calc(100dvh - 120px);
     overflow-x: hidden;
+    /* Each column becomes its own compositing layer so neighbours can't
+       bleed into the active page while the wrapper is transforming. */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
   }
 
   .task-column.is-today {

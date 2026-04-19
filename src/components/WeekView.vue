@@ -590,7 +590,7 @@ defineExpose({
     <div
       class="mobile-columns-wrapper"
       :style="{
-        transform: `translateX(calc(-${currentColumnIndex * 100}% + ${interimOffset}px))`,
+        transform: `translate3d(calc(${-currentColumnIndex * 100}vw + ${interimOffset}px), 0, 0)`,
         transition: isSwiping ? 'none' : 'transform 0.3s ease'
       }"
     >
