@@ -1060,7 +1060,6 @@ button { font-family: inherit; }
    ────────────────────────────────────────────── */
 .search-bar {
   position: relative;
-  width: 260px;
 }
 
 .search-input {
