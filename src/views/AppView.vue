@@ -712,23 +712,25 @@ const handleToggleDay = (dayId) => {
         {{ selectedTaskIds.size > 0 ? `${selectedTaskIds.size} selected` : 'Select Mode' }}
       </div>
 
-      <button
-        class="view-toggle-btn"
-        :class="{ 'is-calendar': activeView === 'calendar' }"
-        @click="activeView = activeView === 'week' ? 'calendar' : 'week'"
-        :title="activeView === 'week' ? 'Calendar view' : 'Week view'"
-      >
-        <svg v-if="activeView === 'week'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      </button>
+      <div class="app-header-actions">
+        <button
+          class="header-btn view-toggle-btn"
+          :class="{ 'is-calendar': activeView === 'calendar' }"
+          @click="activeView = activeView === 'week' ? 'calendar' : 'week'"
+          :title="activeView === 'week' ? 'Calendar view' : 'Week view'"
+        >
+          <svg v-if="activeView === 'week'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </button>
 
-      <button class="settings-btn" @click="showSettings = true" title="Settings" aria-label="Settings">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-      </button>
+        <button class="header-btn settings-btn" @click="showSettings = true" title="Settings" aria-label="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
 
-      <button class="logout-btn" @click="handleLogout" title="Sign out" aria-label="Sign out">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
+        <button class="header-btn logout-btn" @click="handleLogout" title="Sign out" aria-label="Sign out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
     </header>
 
     <div class="page-header">
@@ -933,14 +935,15 @@ const handleToggleDay = (dayId) => {
   text-transform: uppercase;
   letter-spacing: 0.2em;
   margin-bottom: 6px;
+  font-feature-settings: "c2sc", "smcp";
 }
 
 .page-title {
   font-family: var(--nxb-font-serif);
   font-size: 2rem;
-  font-weight: 700;
-  font-variation-settings: 'opsz' 48, 'WONK' 1;
-  letter-spacing: -0.025em;
+  font-weight: 600;
+  font-variation-settings: 'opsz' 36;
+  letter-spacing: -0.018em;
   color: var(--color-text);
   line-height: 1.1;
   margin: 0;
@@ -998,34 +1001,33 @@ const handleToggleDay = (dayId) => {
   color: var(--color-accent);
 }
 
-.view-toggle-btn,
-.settings-btn,
-.logout-btn {
+.app-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.header-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 34px;
   height: 34px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   background: var(--sage-50);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition:
-    background var(--nxb-transition-fast),
-    color var(--nxb-transition-fast),
-    border-color var(--nxb-transition-fast);
+    background var(--transition),
+    color var(--transition),
+    border-color var(--transition);
   -webkit-tap-highlight-color: transparent;
 }
 
-.view-toggle-btn { margin-left: auto; }
-
-.view-toggle-btn:hover,
-.view-toggle-btn:active,
-.settings-btn:hover,
-.settings-btn:active,
-.logout-btn:hover,
-.logout-btn:active {
+.header-btn:hover,
+.header-btn:active {
   background: var(--sage-50);
   color: var(--fuchsia-600);
   border-color: rgba(212, 36, 111, 0.25);
@@ -1037,16 +1039,16 @@ const handleToggleDay = (dayId) => {
 }
 
 @media (max-width: 768px) {
-  .view-toggle-btn,
-  .settings-btn,
-  .logout-btn {
+  .header-btn {
     width: 44px;
     height: 44px;
   }
 
+  .app-header-actions { gap: 8px; }
+
   /* On mobile the tag-filter collapses to a single button — cluster it
      with the other header buttons on the right side of the bar. */
   :deep(.tag-filter) { margin-left: auto; }
-  .view-toggle-btn { margin-left: 0; }
+  .app-header-actions { margin-left: 0; }
 }
 </style>

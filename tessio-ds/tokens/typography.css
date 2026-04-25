@@ -1,9 +1,9 @@
 /* Tessio — typography aligned to tanzillo.ai.
-   Fraunces (display/editorial), Bricolage Grotesque (UI/body),
+   Newsreader (display/editorial), Bricolage Grotesque (UI/body),
    JetBrains Mono (code/labels). Loaded via Google Fonts at index.html. */
 
 :root {
-  --nxb-font-serif:  'Fraunces', 'Times New Roman', Georgia, serif;
+  --nxb-font-serif:  'Newsreader', 'Times New Roman', Georgia, serif;
   --nxb-font-family: 'Bricolage Grotesque', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --nxb-font-mono:   'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 

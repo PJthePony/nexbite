@@ -111,8 +111,8 @@ button { font-family: inherit; }
     90deg,
     transparent,
     transparent 39px,
-    rgba(11, 20, 30, 0.02) 39px,
-    rgba(11, 20, 30, 0.02) 40px
+    rgba(20, 34, 53, 0.02) 39px,
+    rgba(20, 34, 53, 0.02) 40px
   );
 }
 
@@ -147,7 +147,7 @@ button { font-family: inherit; }
   font-weight: 700;
   font-size: 1.1rem;
   letter-spacing: -0.02em;
-  font-variation-settings: 'opsz' 24, 'WONK' 1;
+  font-variation-settings: 'opsz' 24;
   color: inherit;
   line-height: 1;
 }
@@ -1424,7 +1424,7 @@ button { font-family: inherit; }
    ────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .app-header {
-    padding: 12px 16px;
+    padding: 14px 16px;
     flex-wrap: nowrap;
     gap: 8px;
   }
