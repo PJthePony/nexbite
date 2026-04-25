@@ -872,6 +872,12 @@ defineExpose({
   background-color: var(--color-today);
 }
 
+/* Cards sitting in the today column pop against the sage-100 backdrop —
+   matches the mobile feel where cards read as raised on the tinted column. */
+.week-grid :deep(.workstream-cell.is-today .task-item) {
+  background: var(--color-surface);
+}
+
 /* Mobile styles */
 .week-view.is-mobile {
   position: relative;
