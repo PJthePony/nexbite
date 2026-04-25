@@ -742,18 +742,19 @@ const handleToggleDay = (dayId) => {
 
     <!-- Mobile day navigation (between title and content) -->
     <div v-if="activeView === 'week' && weekViewRef?.isMobile" class="column-nav-bar">
-      <button
-        v-for="(column, index) in weekViewRef.visibleColumns"
-        :key="column.id"
-        class="nav-pill"
-        :class="{
-          'is-active': index === weekViewRef.currentColumnIndex,
-          'is-today': weekViewRef.isActiveColumn(column.id)
-        }"
-        @click="weekViewRef.goToColumn(index)"
-      >
-        {{ column.shortLabel || column.label }}
-      </button>
+      <template v-for="(column, index) in weekViewRef.visibleColumns" :key="column.id">
+        <button
+          v-if="column.id !== 'later'"
+          class="nav-pill"
+          :class="{
+            'is-active': index === weekViewRef.currentColumnIndex,
+            'is-today': weekViewRef.isActiveColumn(column.id)
+          }"
+          @click="weekViewRef.goToColumn(index)"
+        >
+          {{ column.shortLabel || column.label }}
+        </button>
+      </template>
     </div>
 
     <!-- Weekend advance-week CTA -->

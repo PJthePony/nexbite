@@ -34,14 +34,14 @@ export const DAY_LOCATIONS = [
 
 export const ALL_COLUMNS = [
   { id: LOCATIONS.THIS_WEEK, label: 'This Week', shortLabel: 'Wk', hideWhenEmpty: true },
-  { id: LOCATIONS.SUNDAY, label: 'Sunday', shortLabel: 'Sun', isDay: true },
-  { id: LOCATIONS.MONDAY, label: 'Monday', shortLabel: 'Mon', isDay: true },
-  { id: LOCATIONS.TUESDAY, label: 'Tuesday', shortLabel: 'Tue', isDay: true },
-  { id: LOCATIONS.WEDNESDAY, label: 'Wednesday', shortLabel: 'Wed', isDay: true },
-  { id: LOCATIONS.THURSDAY, label: 'Thursday', shortLabel: 'Thu', isDay: true },
-  { id: LOCATIONS.FRIDAY, label: 'Friday', shortLabel: 'Fri', isDay: true },
-  { id: LOCATIONS.SATURDAY, label: 'Saturday', shortLabel: 'Sat', isDay: true },
-  { id: LOCATIONS.NEXT_WEEK, label: 'Next Week', shortLabel: 'Next' },
+  { id: LOCATIONS.SUNDAY, label: 'Sunday', shortLabel: 'Su', isDay: true },
+  { id: LOCATIONS.MONDAY, label: 'Monday', shortLabel: 'M', isDay: true },
+  { id: LOCATIONS.TUESDAY, label: 'Tuesday', shortLabel: 'T', isDay: true },
+  { id: LOCATIONS.WEDNESDAY, label: 'Wednesday', shortLabel: 'W', isDay: true },
+  { id: LOCATIONS.THURSDAY, label: 'Thursday', shortLabel: 'Th', isDay: true },
+  { id: LOCATIONS.FRIDAY, label: 'Friday', shortLabel: 'F', isDay: true },
+  { id: LOCATIONS.SATURDAY, label: 'Saturday', shortLabel: 'Sa', isDay: true },
+  { id: LOCATIONS.NEXT_WEEK, label: 'Next Week', shortLabel: 'Nxt' },
   { id: LOCATIONS.LATER, label: 'Later', shortLabel: 'Later' }
 ]
 
