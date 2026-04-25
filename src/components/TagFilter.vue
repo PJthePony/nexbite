@@ -77,23 +77,28 @@ onUnmounted(() => {
       <span v-if="selectedTags.length > 0" class="tag-filter-badge">{{ selectedTags.length }}</span>
     </button>
     <div v-if="open" class="tag-filter-dropdown">
-      <button
-        v-for="tag in tags"
-        :key="tag"
-        class="tag-filter-btn"
-        :class="{ 'is-active': isActive(tag) }"
-        :style="getTagStyle(tag)"
-        @click="toggleTag(tag)"
-      >
-        {{ tag }}
-      </button>
-      <button
-        v-if="selectedTags.length > 0"
-        class="tag-filter-clear"
-        @click="clearFilters"
-      >
-        Clear all
-      </button>
+      <div class="tag-filter-header">
+        <span class="tag-filter-title">Filter</span>
+        <button
+          v-if="selectedTags.length > 0"
+          class="tag-filter-clear"
+          @click="clearFilters"
+        >
+          Clear all
+        </button>
+      </div>
+      <div class="tag-filter-list">
+        <button
+          v-for="tag in tags"
+          :key="tag"
+          class="tag-filter-btn"
+          :class="{ 'is-active': isActive(tag) }"
+          :style="getTagStyle(tag)"
+          @click="toggleTag(tag)"
+        >
+          {{ tag }}
+        </button>
+      </div>
     </div>
   </div>
 </template>

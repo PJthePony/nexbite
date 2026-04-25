@@ -1008,42 +1008,12 @@ const handleToggleDay = (dayId) => {
   margin-left: auto;
 }
 
-.header-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  color: var(--color-text-muted);
-  background: var(--sage-50);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition:
-    background var(--transition),
-    color var(--transition),
-    border-color var(--transition);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.header-btn:hover,
-.header-btn:active {
-  background: var(--sage-50);
-  color: var(--fuchsia-600);
-  border-color: rgba(212, 36, 111, 0.25);
-}
-
 .view-toggle-btn.is-calendar {
   color: var(--fuchsia-600);
   border-color: rgba(212, 36, 111, 0.25);
 }
 
 @media (max-width: 768px) {
-  .header-btn {
-    width: 44px;
-    height: 44px;
-  }
-
   .app-header-actions { gap: 8px; }
 }
 </style>
