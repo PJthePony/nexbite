@@ -701,18 +701,18 @@ const handleToggleDay = (dayId) => {
         <span class="app-name">Tessio</span>
       </div>
 
-      <TagFilter
-        :tags="allTags"
-        v-model:selected-tags="selectedTagFilters"
-      />
-
-      <SearchBar v-model="searchQuery" />
-
       <div v-if="isSelectMode || selectedTaskIds.size > 0" class="select-mode-badge">
         {{ selectedTaskIds.size > 0 ? `${selectedTaskIds.size} selected` : 'Select Mode' }}
       </div>
 
       <div class="app-header-actions">
+        <TagFilter
+          :tags="allTags"
+          v-model:selected-tags="selectedTagFilters"
+        />
+
+        <SearchBar v-model="searchQuery" />
+
         <button
           class="header-btn view-toggle-btn"
           :class="{ 'is-calendar': activeView === 'calendar' }"
@@ -1045,10 +1045,5 @@ const handleToggleDay = (dayId) => {
   }
 
   .app-header-actions { gap: 8px; }
-
-  /* On mobile the tag-filter collapses to a single button — cluster it
-     with the other header buttons on the right side of the bar. */
-  :deep(.tag-filter) { margin-left: auto; }
-  .app-header-actions { margin-left: 0; }
 }
 </style>

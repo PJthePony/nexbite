@@ -1101,22 +1101,11 @@ button { font-family: inherit; }
 .tag-filter {
   display: flex;
   align-items: center;
-  gap: 8px;
   position: relative;
 }
 
-.tag-filter-label {
-  font-family: var(--nxb-font-family);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: var(--nxb-letter-eyebrow);
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.tag-filter-list {
-  display: flex;
-  gap: 6px;
+.tag-filter-toggle {
+  position: relative;
 }
 
 .tag-filter-btn {
@@ -1153,8 +1142,43 @@ button { font-family: inherit; }
   color: var(--color-accent);
 }
 
-.tag-filter-toggle { display: none; }
-.tag-filter-dropdown { display: none; }
+.tag-filter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--color-primary);
+  color: var(--sage-50);
+  font-family: var(--nxb-font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tag-filter-dropdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  padding: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  min-width: 200px;
+}
+
+.header-btn.is-active {
+  color: var(--fuchsia-600);
+  border-color: rgba(212, 36, 111, 0.25);
+}
 
 /* ──────────────────────────────────────────────
    Review modal
@@ -1427,65 +1451,6 @@ button { font-family: inherit; }
     padding: 14px 16px;
     flex-wrap: nowrap;
     gap: 8px;
-  }
-
-  .tag-filter-label { display: none; }
-  .tag-filter-desktop { display: none; }
-
-  .tag-filter-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface);
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    position: relative;
-    transition: all var(--transition);
-  }
-
-  .tag-filter-toggle:hover,
-  .tag-filter-toggle:active {
-    background: var(--color-primary-ghost);
-    color: var(--color-accent);
-    border-color: var(--color-accent);
-  }
-
-  .tag-filter-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: var(--color-primary);
-    color: var(--sage-50);
-    font-family: var(--nxb-font-mono);
-    font-size: 0.6rem;
-    font-weight: 700;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .tag-filter-dropdown {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 8px;
-    padding: 12px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 100;
-    min-width: 200px;
   }
 
   .app-main {

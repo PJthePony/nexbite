@@ -15,7 +15,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:selectedTags'])
 
-const mobileOpen = ref(false)
+const open = ref(false)
 const dropdownRef = ref(null)
 
 const toggleTag = (tag) => {
@@ -49,8 +49,8 @@ const getTagStyle = (tag) => {
 }
 
 const handleClickOutside = (e) => {
-  if (mobileOpen.value && dropdownRef.value && !dropdownRef.value.contains(e.target)) {
-    mobileOpen.value = false
+  if (open.value && dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    open.value = false
   }
 }
 
@@ -65,30 +65,18 @@ onUnmounted(() => {
 
 <template>
   <div v-if="tags.length > 0" class="tag-filter" ref="dropdownRef">
-    <!-- Desktop: inline tag list -->
-    <span class="tag-filter-label">Filter:</span>
-    <div class="tag-filter-list tag-filter-desktop">
-      <button
-        v-for="tag in tags"
-        :key="tag"
-        class="tag-filter-btn"
-        :class="{ 'is-active': isActive(tag) }"
-        :style="getTagStyle(tag)"
-        @click="toggleTag(tag)"
-      >
-        {{ tag }}
-      </button>
-    </div>
-
-    <!-- Mobile: toggle button + dropdown -->
     <button
-      class="tag-filter-toggle"
-      @click.stop="mobileOpen = !mobileOpen"
+      class="header-btn tag-filter-toggle"
+      :class="{ 'is-active': selectedTags.length > 0 }"
+      @click.stop="open = !open"
+      title="Filter by tag"
+      aria-label="Filter by tag"
+      type="button"
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
       <span v-if="selectedTags.length > 0" class="tag-filter-badge">{{ selectedTags.length }}</span>
     </button>
-    <div v-if="mobileOpen" class="tag-filter-dropdown">
+    <div v-if="open" class="tag-filter-dropdown">
       <button
         v-for="tag in tags"
         :key="tag"
@@ -107,13 +95,5 @@ onUnmounted(() => {
         Clear all
       </button>
     </div>
-
-    <button
-      v-if="selectedTags.length > 0"
-      class="tag-filter-clear tag-filter-desktop"
-      @click="clearFilters"
-    >
-      Clear
-    </button>
   </div>
 </template>
