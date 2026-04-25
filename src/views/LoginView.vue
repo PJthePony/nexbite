@@ -1,368 +1,79 @@
 <script setup>
-import { ref } from 'vue'
-import { useAuth } from '../composables/useAuth'
+const FAMILY_URL = 'https://family.tanzillo.ai'
 
-const { signIn } = useAuth()
-
-const email = ref('')
-const error = ref('')
-const linkSent = ref(false)
-const submitting = ref(false)
-
-const handleSubmit = async () => {
-  error.value = ''
-  submitting.value = true
-
-  try {
-    await signIn(email.value.trim())
-    linkSent.value = true
-  } catch (err) {
-    error.value = err.message || "Something got lost on the way to the docks. Try again."
-  } finally {
-    submitting.value = false
-  }
+function goToFamily() {
+  window.location.href = `${FAMILY_URL}/?return_app=tessio`
 }
 </script>
 
 <template>
-  <div class="login-container">
-    <div class="string-from-above" aria-hidden="true"></div>
+  <main class="page">
+    <header class="bar">
+      <a class="brand" :href="FAMILY_URL">
+        <span class="dot" />
+        <span class="word">Tessio</span>
+      </a>
+      <button class="btn ghost" @click="goToFamily">Sign in to The Family</button>
+    </header>
 
-    <div class="login-card">
-      <div class="login-logo">
-        <div class="login-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D4246F" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        </div>
-        <span class="login-app-name">Tessio</span>
-      </div>
-      <p class="login-subtitle">The family's organizer. A week at a time, one bite at a time.</p>
+    <section class="hero">
+      <div class="eyebrow">tanzillo.ai · Tasks</div>
+      <h1 class="display-italic title">Tessio gets things done.</h1>
+      <p class="lead">A task system built around how the work actually moves — workstreams, daily focus, no ceremony, no project hierarchy you'll just abandon.</p>
+      <button class="btn primary" @click="goToFamily">Sign in to The Family</button>
+    </section>
 
-      <div v-if="linkSent" class="link-sent">
-        <div class="link-sent-rule" aria-hidden="true"></div>
-        <h2 class="link-sent-title">Word has been sent</h2>
-        <p class="link-sent-body">A link is on its way to <strong>{{ email }}</strong>.</p>
-        <p class="link-sent-hint">Click it and you're in. You can close this tab.</p>
-        <button class="login-btn secondary" @click="linkSent = false; email = ''">
-          Use a different address
-        </button>
-      </div>
+    <section class="features">
+      <article class="feature">
+        <h3>Workstreams over projects</h3>
+        <p>Group tasks by the real shape of your week — recurring efforts, current pushes — not a forced project hierarchy.</p>
+      </article>
+      <article class="feature">
+        <h3>Daily focus, weekly intent</h3>
+        <p>Plan today against this week's commitments. The backlog doesn't shame you; you just don't see it.</p>
+      </article>
+      <article class="feature">
+        <h3>Friction-free capture</h3>
+        <p>Anything you tell Tessio — a thought, an email follow-up, a thing you owe someone — lands as a task you can sort later.</p>
+      </article>
+    </section>
 
-      <form v-else @submit.prevent="handleSubmit" class="login-form">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="you@example.com"
-            required
-            autofocus
-            :disabled="submitting"
-          />
-        </div>
-
-        <div v-if="error" class="login-error">{{ error }}</div>
-
-        <button
-          type="submit"
-          class="login-btn primary"
-          :disabled="submitting || !email.trim()"
-        >
-          {{ submitting ? 'Sending…' : 'Send word' }}
-        </button>
-
-        <p class="login-hint">
-          No password. We'll send a link you can use once.
-        </p>
-      </form>
-
-      <div class="login-legal">
-        <a href="https://tanzillo.ai/privacy.html" target="_blank">Privacy</a>
-        <span class="legal-sep" aria-hidden="true">·</span>
-        <a href="https://tanzillo.ai/terms.html" target="_blank">Terms</a>
-      </div>
-    </div>
-
-    <div class="login-foot">
-      <span>tanzillo.ai · the family</span>
-    </div>
-  </div>
+    <footer class="footer">
+      <span>The Family · tanzillo.ai</span>
+      <span class="sep">·</span>
+      <a href="https://tanzillo.ai/terms.html">Terms</a>
+      <span class="sep">·</span>
+      <a href="https://tanzillo.ai/privacy.html">Privacy</a>
+    </footer>
+  </main>
 </template>
 
 <style scoped>
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background-color: var(--color-bg);
-  position: relative;
-  overflow: hidden;
-}
+.page { min-height: 100dvh; background: var(--bg); display: flex; flex-direction: column; }
+.bar { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; background: var(--bg); backdrop-filter: saturate(140%) blur(8px); }
+.brand { display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: var(--text); }
+.dot { width: 10px; height: 10px; border-radius: var(--radius-pill); background: var(--accent); display: inline-block; }
+.word { font-family: var(--font-serif); font-weight: 600; font-size: var(--step-1); letter-spacing: -0.01em; }
 
-/* Vertical rule descending from above — the "string from above" motif */
-.string-from-above {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 1px;
-  height: calc(50% - 120px);
-  background: linear-gradient(to bottom, transparent, var(--color-accent) 60%, var(--color-accent));
-  opacity: 0.4;
-}
+.hero { max-width: 720px; margin: 0 auto; padding: var(--space-9) var(--space-5) var(--space-7); text-align: center; }
+.title { font-size: var(--step-5); color: var(--accent); margin: var(--space-3) 0 var(--space-5); }
+.lead { margin: 0 auto var(--space-7); max-width: 52ch; text-align: center; }
 
-.login-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: 48px 40px;
-  width: 100%;
-  max-width: 440px;
-  text-align: center;
-  position: relative;
-  z-index: 1;
-}
+.features { max-width: 920px; margin: 0 auto; padding: 0 var(--space-5) var(--space-9); display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-6); }
+.feature { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); }
+.feature h3 { font-family: var(--font-serif); font-size: var(--step-2); font-weight: 600; font-variation-settings: 'opsz' 36; letter-spacing: -0.014em; color: var(--text); margin: 0 0 var(--space-3); }
+.feature p { font-size: var(--step--1); color: var(--text-muted); line-height: 1.6; margin: 0; }
 
-.login-logo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
-}
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: var(--space-3) var(--space-5); font-family: var(--font-sans); font-size: var(--step-0); font-weight: 600; border-radius: var(--radius-md); cursor: pointer; transition: background var(--dur-2) var(--ease-out-expo), border-color var(--dur-2) var(--ease-out-expo), transform var(--dur-2) var(--ease-out-expo); border: 1px solid transparent; }
+.btn.primary { color: white; background: var(--accent); padding: var(--space-4) var(--space-6); }
+.btn.primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn.ghost { color: var(--text); background: transparent; border-color: var(--border-strong); font-size: var(--step--1); padding: var(--space-2) var(--space-4); }
+.btn.ghost:hover { background: var(--bg-elevated); }
 
-.login-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-xl);
-  background: rgba(212, 36, 111, 0.08);
-  border: 1px solid rgba(212, 36, 111, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.footer { margin-top: auto; padding: var(--space-5) var(--space-5) var(--space-6); display: flex; justify-content: center; align-items: center; gap: var(--space-3); font-size: var(--step--1); color: var(--text-muted); border-top: 1px solid var(--border); }
+.footer a { color: var(--text-muted); text-decoration: none; }
+.footer a:hover { color: var(--accent); }
+.sep { opacity: 0.5; }
 
-.login-app-name {
-  font-family: var(--nxb-font-serif);
-  font-style: italic;
-  font-weight: 600;
-  font-size: 1.75rem;
-  font-variation-settings: 'opsz' 48, 'WONK' 1;
-  letter-spacing: -0.03em;
-  color: var(--color-accent);
-  line-height: 1;
-}
-
-.login-subtitle {
-  font-family: var(--nxb-font-serif);
-  font-style: italic;
-  color: var(--color-text-muted);
-  font-size: 1rem;
-  line-height: 1.5;
-  max-width: 32ch;
-  margin: 0 auto 32px;
-  font-variation-settings: 'opsz' 24;
-  text-wrap: balance;
-}
-
-.login-form {
-  text-align: left;
-}
-
-.form-group {
-  margin-bottom: 18px;
-}
-
-.form-group label {
-  display: block;
-  font-family: inherit;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--color-text-muted);
-  margin-bottom: 8px;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 11px 12px;
-  font-family: inherit;
-  font-size: 0.95rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
-  transition: border-color var(--transition), box-shadow var(--transition);
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-primary-ring);
-}
-
-.form-group input:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.login-btn {
-  width: 100%;
-  padding: 12px 16px;
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.login-btn.primary {
-  background: var(--color-primary);
-  color: var(--sage-50);
-}
-
-.login-btn.primary:hover:not(:disabled) {
-  background: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-suspend);
-}
-
-.login-btn.primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.login-btn.secondary {
-  background: transparent;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-  margin-top: 16px;
-}
-
-.login-btn.secondary:hover {
-  background: var(--color-primary-ghost);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.login-error {
-  background: var(--danger-100);
-  color: var(--color-danger);
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  font-family: var(--nxb-font-serif);
-  font-style: italic;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  margin-bottom: 16px;
-}
-
-.login-hint {
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: 0.74rem;
-  margin-top: 14px;
-  font-style: italic;
-  font-family: var(--nxb-font-serif);
-}
-
-.link-sent {
-  padding: 6px 0 2px;
-}
-
-.link-sent-rule {
-  width: 40px;
-  height: 1px;
-  background: var(--color-accent);
-  margin: 4px auto 20px;
-  opacity: 0.7;
-}
-
-.link-sent-title {
-  font-family: var(--nxb-font-serif);
-  font-style: italic;
-  font-size: 1.5rem;
-  font-weight: 600;
-  font-variation-settings: 'opsz' 48, 'WONK' 1;
-  letter-spacing: -0.025em;
-  color: var(--color-text);
-  margin: 0 0 12px;
-}
-
-.link-sent-body {
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-  margin: 0 0 4px;
-}
-
-.link-sent-body strong {
-  color: var(--color-text);
-  font-weight: 600;
-}
-
-.link-sent-hint {
-  color: var(--color-text-muted);
-  font-size: 0.78rem;
-  font-style: italic;
-  font-family: var(--nxb-font-serif);
-  margin: 12px 0 4px;
-}
-
-.login-legal {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-border);
-}
-
-.legal-sep {
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
-}
-
-.login-legal a {
-  font-family: inherit;
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
-  text-decoration: none;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
-  transition: color var(--transition);
-}
-
-.login-legal a:hover {
-  color: var(--color-accent);
-}
-
-.login-foot {
-  margin-top: 28px;
-  font-family: inherit;
-  font-size: 0.66rem;
-  color: var(--color-text-muted);
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  z-index: 1;
-}
-
-@media (max-width: 640px) {
-  .login-card {
-    padding: 36px 24px;
-  }
-
-  .login-btn,
-  .form-group input {
-    min-height: 48px;
-  }
-}
+@media (max-width: 640px) { .hero { padding-top: var(--space-7); } }
 </style>
