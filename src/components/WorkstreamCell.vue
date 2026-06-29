@@ -42,7 +42,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'longpress', 'update:tasks', 'multi-drop'])
+const emit = defineEmits(['add', 'toggle', 'edit', 'delete', 'bite', 'longpress', 'update:tasks', 'multi-drop', 'drag-start', 'drag-end'])
 
 const getParentTask = (task) => {
   if (!task.parentTaskId) return null
@@ -75,6 +75,9 @@ const localTasks = computed({
 })
 
 const handleDragStart = (evt) => {
+  // Tell the grid owner to freeze its geometry before any DOM mutation
+  emit('drag-start')
+
   const taskId = localTasks.value[evt.oldIndex]?.id
   if (taskId) startDrag(taskId)
 
@@ -90,6 +93,7 @@ const handleDragStart = (evt) => {
 
 const handleDragEnd = () => {
   endDrag()
+  emit('drag-end')
 }
 
 const handleDragChange = (evt) => {

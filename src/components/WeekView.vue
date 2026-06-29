@@ -406,6 +406,36 @@ const gridTemplateColumns = computed(() => {
   return `120px ${colSizes.join(' ')}`
 })
 
+// While a task is being dragged, freeze the grid geometry so nothing resizes:
+// pin the flexible column widths to their current pixels, and lock each cell's
+// min-height so the source column can't collapse when the card leaves it.
+const frozenGridColumns = ref(null)
+const lockedCells = []
+
+// Use the frozen pixel track sizes during a drag; otherwise the reactive template
+const effectiveGridColumns = computed(() => frozenGridColumns.value || gridTemplateColumns.value)
+
+const handleTaskDragStart = () => {
+  const gridEl = gridWrapper.value?.querySelector('.week-grid')
+  if (!gridEl) return
+
+  // Freeze column widths to their currently resolved pixel values
+  frozenGridColumns.value = getComputedStyle(gridEl).gridTemplateColumns
+
+  // Lock each cell's floor at its current height so it can't shrink mid-drag
+  // (target cells can still grow past this to make room for an incoming card)
+  gridEl.querySelectorAll('.workstream-cell').forEach(cell => {
+    cell.style.minHeight = cell.offsetHeight + 'px'
+    lockedCells.push(cell)
+  })
+}
+
+const handleTaskDragEnd = () => {
+  frozenGridColumns.value = null
+  lockedCells.forEach(cell => { cell.style.minHeight = '' })
+  lockedCells.length = 0
+}
+
 // Scroll to active column on desktop
 const scrollToToday = () => {
   if (isMobile.value || !gridWrapper.value) return
@@ -458,7 +488,7 @@ defineExpose({
 <template>
   <!-- Desktop View - Grid Layout -->
   <div v-if="!isMobile" ref="gridWrapper" class="week-grid-wrapper">
-    <div class="week-grid" :style="{ gridTemplateColumns }">
+    <div class="week-grid" :style="{ gridTemplateColumns: effectiveGridColumns }">
     <!-- Header row -->
     <div class="grid-header-corner"></div>
     <div
@@ -499,6 +529,8 @@ defineExpose({
       :is-past-day="isPastDay(column.id)"
       :show-empty-state="isActiveColumn(column.id) && todayHasNoTasks"
       :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': visibleWorkstreamNames.length === 0, 'is-first-bucket': isFirstBucket(column.id) }"
+      @drag-start="handleTaskDragStart"
+      @drag-end="handleTaskDragEnd"
       @add="(location, workstream) => emit('add', location, workstream)"
       @toggle="emit('toggle', $event)"
       @edit="emit('edit', $event)"
@@ -544,6 +576,8 @@ defineExpose({
         :is-today="isActiveColumn(column.id)"
         :is-past-day="isPastDay(column.id)"
         :class="{ 'is-today': isActiveColumn(column.id), 'is-last-row': isLastRow(wsName), 'is-first-bucket': isFirstBucket(column.id) }"
+        @drag-start="handleTaskDragStart"
+        @drag-end="handleTaskDragEnd"
         @add="(location, workstream) => emit('add', location, workstream)"
         @toggle="emit('toggle', $event)"
         @edit="emit('edit', $event)"
